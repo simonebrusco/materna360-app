@@ -1,7 +1,13 @@
+import { BuilderComponent, builder } from '@builder.io/react'
+
+// inicializa o Builder com a chave da Vite (variável de ambiente)
+builder.init(import.meta.env.VITE_BUILDER_API_KEY)
+
 export default function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-8">
-      <h1 className="text-3xl font-bold">materna360 🚀</h1>
+    <div className="min-h-screen">
+      {/* Renderiza a página "/" criada no Builder */}
+      <BuilderComponent model="page" />
     </div>
   )
 }
