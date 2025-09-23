@@ -1,4 +1,4 @@
-// api/ai.ts — Edge Function (não usa @vercel/node)
+// api/ai.ts — Edge Function (sem @vercel/node)
 export const config = { runtime: 'edge' };
 
 import OpenAI from 'openai';
@@ -20,18 +20,17 @@ export default async function handler(req: Request): Promise<Response> {
     const completion = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages,
-      temperature: 0.7
+      temperature: 0.7,
     });
 
     return new Response(JSON.stringify(completion), {
       status: 200,
-      headers: { 'content-type': 'application/json' }
+      headers: { 'content-type': 'application/json' },
     });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err?.message ?? 'Erro interno' }), {
       status: 500,
-      headers: { 'content-type': 'application/json' }
+      headers: { 'content-type': 'application/json' },
     });
   }
 }
-
