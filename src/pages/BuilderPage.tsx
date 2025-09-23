@@ -1,61 +1,51 @@
 // src/pages/BuilderPage.tsx
 import React, { useEffect } from "react";
-import { BuilderComponent } from "@builder.io/react";
+import { BuilderComponent, builder } from "@builder.io/react";
 import { useLocation, useNavigate } from "react-router-dom";
-// Importação por efeito colateral para garantir que builder.init rode
-import "../lib/builder";
+
+// inicializa o Builder com sua API Key pública
+builder.init(import.meta.env.VITE_BUILDER_API_KEY || "");
 
 export default function BuilderPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // 1) Diz para o Builder qual é a URL atual (chave para ele buscar a página certa)
   useEffect(() => {
-    // Intercepta cliques em QUALQUER <a> e usa o React Router p/ navegar
-    const onAnchorClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      const anchor = target?.closest("a") as HTMLAnchorElement | null;
-      if (!anchor) return;
+    builder.setUserAttributes({ urlPath: location.pathname });
+    // scroll para o topo ao trocar de rota (opcional)
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, [location.pathname]);
 
-      const href = anchor.getAttribute("href") || "";
+  // 2) Intercepta cliques em links "internos" do Builder para usar o React Router
+  useEffect(() => {
+    const handler = (event: any) => {
+      const href: string | undefined = event?.detail?.href;
       if (!href) return;
 
-      // Deixa externos seguirem normal
-      if (/^(https?:\/\/|mailto:|tel:)/i.test(href)) return;
-
-      // Internos: navegação SPA
-      e.preventDefault();
-      const path = href.startsWith("/") ? href : `/${href}`;
-      navigate(path);
-    };
-
-    document.addEventListener("click", onAnchorClick);
-
-    // Evento que o Builder dispara para links internos
-    const onBuilderLink = (ev: any) => {
-      const url: string | undefined = ev?.detail?.url || ev?.detail?.href;
-      if (!url) return;
-
-      if (/^https?:\/\//i.test(url)) {
-        window.location.href = url;
-      } else {
-        navigate(url.startsWith("/") ? url : `/${url}`);
+      // Links absolutos (http/https) seguem o fluxo normal do navegador
+      if (href.startsWith("http://") || href.startsWith("https://")) {
+        window.location.href = href;
+        return;
       }
+
+      // Navegação SPA sem recarregar
+      event.preventDefault?.();
+      navigate(href);
     };
 
-    window.addEventListener("builder:linkClick", onBuilderLink as EventListener);
-
-    return () => {
-      document.removeEventListener("click", onAnchorClick);
-      window.removeEventListener("builder:linkClick", onBuilderLink as EventListener);
-    };
+    window.addEventListener("builder:linkClick", handler as any);
+    return () => window.removeEventListener("builder:linkClick", handler as any);
   }, [navigate]);
 
   return (
     <BuilderComponent
+      // 3) Força o remount quando a rota muda (garante novo fetch)
+      key={location.pathname}
       model="page"
-      urlPath={location.pathname + location.search}
       options={{ includeRefs: true }}
-      data={{}}
+      // 4) Também passamos a urlPath via data (reforça a seleção do conteúdo)
+      data={{ urlPath: location.pathname }}
     />
   );
 }
