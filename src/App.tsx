@@ -1,25 +1,41 @@
-// src/App.tsx
-import { BuilderComponent, builder } from '@builder.io/react'
-import '@builder.io/react' // mantém side-effects do SDK
+import { NavLink, Routes, Route } from "react-router-dom";
 
-// Inicia o SDK do Builder com a sua chave (pegaremos da env da Vite na Vercel)
-builder.init(import.meta.env.VITE_BUILDER_API_KEY)
+import Home from "./pages/Home";
+import Atividades from "./pages/Atividades";
+import BemEstar from "./pages/BemEstar";
+import Recursos from "./pages/Recursos";
+import Mentoria from "./pages/Mentoria";
+import Perfil from "./pages/Perfil";
 
 export default function App() {
   return (
-    <div>
-      {/* NAV simples (opcional). Pode mudar os textos à vontade */}
-      <header style={{ display: 'flex', gap: 16, padding: 16 }}>
-        <a href="/">Início</a>
-        <a href="/atividades">Atividades</a>
-        <a href="/bem-estar">Bem-estar</a>
-        <a href="/recursos">Recursos</a>
-        <a href="/mentoria">Mentoria</a>
-        <a href="/perfil">Perfil</a>
+    <>
+      {/* Topbar simples só pra navegar entre as rotas */}
+      <header style={{ borderBottom: "1px solid #eee" }}>
+        <nav style={{ maxWidth: 1080, margin: "0 auto", padding: "12px 16px" }}>
+          <ul style={{ display: "flex", gap: 16, listStyle: "none", margin: 0 }}>
+            <li><NavLink to="/" end>Início</NavLink></li>
+            <li><NavLink to="/atividades">Atividades</NavLink></li>
+            <li><NavLink to="/bem-estar">Bem-estar</NavLink></li>
+            <li><NavLink to="/recursos">Recursos</NavLink></li>
+            <li><NavLink to="/mentoria">Mentoria</NavLink></li>
+            <li><NavLink to="/perfil">Perfil</NavLink></li>
+          </ul>
+        </nav>
       </header>
 
-      {/* O Builder decide o que mostrar com base na URL atual */}
-      <BuilderComponent model="page" />
-    </div>
-  )
+      <main style={{ maxWidth: 1080, margin: "0 auto", padding: 16 }}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/atividades" element={<Atividades />} />
+          <Route path="/bem-estar" element={<BemEstar />} />
+          <Route path="/recursos" element={<Recursos />} />
+          <Route path="/mentoria" element={<Mentoria />} />
+          <Route path="/perfil" element={<Perfil />} />
+          {/* fallback: qualquer caminho desconhecido volta pra Home */}
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </main>
+    </>
+  );
 }
