@@ -1,9 +1,10 @@
+// src/App.tsx
 import { Routes, Route } from "react-router-dom";
 import BuilderPage from "./pages/BuilderPage";
 
 export default function App() {
   return (
-    <>
+    <main style={{ maxWidth: 1080, margin: "0 auto", padding: 16 }}>
       <Routes>
         <Route path="/" element={<BuilderPage />} />
         <Route path="/atividades" element={<BuilderPage />} />
@@ -11,12 +12,9 @@ export default function App() {
         <Route path="/recursos" element={<BuilderPage />} />
         <Route path="/mentoria" element={<BuilderPage />} />
         <Route path="/perfil" element={<BuilderPage />} />
+        {/* fallback: qualquer caminho desconhecido volta pro Builder */}
         <Route path="*" element={<BuilderPage />} />
       </Routes>
-
-      <footer style={{ padding: 24, textAlign: "center", color: "#777" }}>
-        Materna360 © {new Date().getFullYear()}
-      </footer>
-    </>
+    </main>
   );
 }
