@@ -1,52 +1,39 @@
 // src/pages/BuilderPage.tsx
 import { useEffect } from "react";
-import { BuilderComponent, builder } from "@builder.io/react";
+import { BuilderComponent } from "@builder.io/react";
 import { useLocation, useNavigate } from "react-router-dom";
-
-// Inicializa o Builder com a sua API Key (via Vite)
-builder.init(import.meta.env.VITE_BUILDER_API_KEY || "");
+import builder from "../lib/builder";
 
 export default function BuilderPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Intercepta cliques em <a> para navegar via SPA (React Router)
+  // Intercepta cliques em links do Builder para navegar com o React Router
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (!t) return;
+    const handler = (event: any) => {
+      const href: string | undefined = event?.detail?.href;
+      if (!href) return;
 
-      const a = t.closest("a") as HTMLAnchorElement | null;
-      if (!a) return;
-
-      // Permite abrir nova aba / downloads / atalhos
-      if (
-        a.target === "_blank" ||
-        a.hasAttribute("download") ||
-        e.defaultPrevented ||
-        e.button !== 0 ||
-        e.metaKey ||
-        e.ctrlKey ||
-        e.shiftKey ||
-        e.altKey
-      ) {
+      // Links absolutos saem do app normalmente
+      if (href.startsWith("http://") || href.startsWith("https://")) {
+        window.location.href = href;
         return;
       }
 
-      const url = new URL(a.href, window.location.origin);
-      if (url.origin !== window.location.origin) return;
-
-      e.preventDefault();
-      navigate(url.pathname + url.search + url.hash);
+      // Links internos navegam via router (sem recarregar)
+      event.preventDefault?.();
+      navigate(href);
     };
 
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
+    window.addEventListener("builder:linkClick", handler as any);
+    return () => window.removeEventListener("builder:linkClick", handler as any);
   }, [navigate]);
 
   return (
-    <div style={{ maxWidth: 1080, margin: "0 auto", padding: "24px 16px" }}>
-      <BuilderComponent
-        model="page"
-        options={{ includeRefs: true }}
-        data={{}}
+    <BuilderComponent
+      model="page"
+      // Diz ao Builder qual rota está ativa para buscar o conteúdo correto
+      urlPath={location.pathname}
+    />
+  );
+}
