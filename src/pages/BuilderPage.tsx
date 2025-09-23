@@ -1,37 +1,40 @@
 import { useEffect } from "react";
-import { BuilderComponent } from "@builder.io/react";
+import { BuilderComponent, builder } from "@builder.io/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import builder from "../lib/builder";
+
+// Inicializa o Builder usando a env var do Vite
+builder.init(import.meta.env.VITE_BUILDER_API_KEY || "");
 
 export default function BuilderPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Intercepta cliques em <a> internos para usar SPA em vez de reload
+  // Intercepta cliques em <a> para navegar via SPA (React Router)
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
 
-      const anchor = target.closest("a") as HTMLAnchorElement | null;
-      if (!anchor) return;
+      const a = t.closest("a") as HTMLAnchorElement | null;
+      if (!a) return;
 
-      // atalhos/condições que devem manter o comportamento padrão
+      // deixa passar novos tabs/atalhos/baixar, etc
       if (
-        anchor.target === "_blank" ||
-        anchor.hasAttribute("download") ||
+        a.target === "_blank" ||
+        a.hasAttribute("download") ||
         e.defaultPrevented ||
-        e.button !== 0 || // apenas botão esquerdo
-        e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
       ) {
         return;
       }
 
-      // só intercepta se for link da mesma origem
-      const url = new URL(anchor.href, window.location.origin);
+      const url = new URL(a.href, window.location.origin);
       if (url.origin !== window.location.origin) return;
 
-      // Evita reload e navega com o Router
       e.preventDefault();
       navigate(url.pathname + url.search + url.hash);
     };
@@ -46,8 +49,6 @@ export default function BuilderPage() {
         model="page"
         options={{ includeRefs: true }}
         data={{}}
-        apiKey={builder.apiKey!}
-        locale="pt-BR"
         urlPath={location.pathname}
       />
     </div>
