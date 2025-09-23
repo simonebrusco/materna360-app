@@ -1,102 +1,58 @@
 // src/pages/BuilderPage.tsx
-import { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { BuilderComponent } from "@builder.io/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import builder from "../lib/builder";
+import builder from "../lib/builder"; // ajustamos antes
 
 export default function BuilderPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [hasContent, setHasContent] = useState<boolean | null>(null);
-  const [lastError, setLastError] = useState<unknown>(null);
-
-  // Verifica se existe conteúdo publicado no Builder para a URL atual
   useEffect(() => {
-    let mounted = true;
-    setHasContent(null);
-    setLastError(null);
+    // 1) Intercepta cliques em QUALQUER <a> dentro do app
+    const onAnchorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest("a") as HTMLAnchorElement | null;
+      if (!anchor) return;
 
-    console.log("[BuilderPage] checking content for", location.pathname);
-
-    builder
-      .get("page", { url: location.pathname, cachebust: true })
-      .toPromise()
-      .then((res) => {
-        if (!mounted) return;
-        console.log("[BuilderPage] get('page') result:", res);
-        setHasContent(!!res);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        console.error("[BuilderPage] get('page') error:", err);
-        setLastError(err);
-        setHasContent(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [location.pathname]);
-
-  // Intercepta cliques em links internos renderizados pelo Builder
-  useEffect(() => {
-    const handler = (event: Event) => {
-      const href: string | undefined = (event as CustomEvent<any>).detail?.href;
+      const href = anchor.getAttribute("href") || "";
       if (!href) return;
 
-      const url = new URL(href, window.location.origin);
+      // Externos (http/https, mailto, tel) — deixar seguir normal
+      if (/^(https?:\/\/|mailto:|tel:)/i.test(href)) return;
 
-      // link externo → navega normal
-      if (url.origin !== window.location.origin) {
-        console.log("[BuilderPage] external link →", href);
-        window.location.href = href;
-        return;
-      }
-
-      // link interno → navega via Router
-      event.preventDefault?.();
-      const next = `${url.pathname}${url.search}${url.hash}`;
-      console.log("[BuilderPage] internal link → navigate:", next);
-      navigate(next);
+      // SPA: navegação interna com React Router
+      e.preventDefault();
+      const path = href.startsWith("/") ? href : `/${href}`;
+      navigate(path);
     };
 
-    window.addEventListener("builder:linkClick", handler as any);
-    return () => window.removeEventListener("builder:linkClick", handler as any);
+    document.addEventListener("click", onAnchorClick);
+
+    // 2) Também escuta o evento do Builder (quando eles disparam navegação)
+    const onBuilderLink = (ev: any) => {
+      const url: string | undefined = ev?.detail?.url || ev?.detail?.href;
+      if (!url) return;
+
+      if (/^https?:\/\//i.test(url)) {
+        window.location.href = url; // externos
+      } else {
+        navigate(url.startsWith("/") ? url : `/${url}`); // internos
+      }
+    };
+
+    window.addEventListener("builder:linkClick", onBuilderLink as EventListener);
+
+    return () => {
+      document.removeEventListener("click", onAnchorClick);
+      window.removeEventListener("builder:linkClick", onBuilderLink as EventListener);
+    };
   }, [navigate]);
-
-  // estados de carregamento/fallback visíveis
-  if (hasContent === null) {
-    return <div style={{ padding: 24 }}>Carregando conteúdo do Builder…</div>;
-  }
-
-  if (!hasContent) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h3>Nenhum conteúdo encontrado para “{location.pathname}”.</h3>
-        {lastError && (
-          <pre style={{ whiteSpace: "pre-wrap", color: "tomato" }}>
-            {String(lastError)}
-          </pre>
-        )}
-        <ul>
-          <li>
-            No Builder.io, confirme que existe uma entrada <b>model: "page"</b>{" "}
-            publicada para essa URL.
-          </li>
-          <li>
-            Na Vercel, confira a variável <code>VITE_BUILDER_API_KEY</code> no
-            projeto atual (Settings → Environment Variables).
-          </li>
-        </ul>
-      </div>
-    );
-  }
 
   return (
     <BuilderComponent
       model="page"
-      urlPath={location.pathname}
+      urlPath={location.pathname + location.search}
       options={{ includeRefs: true }}
       data={{}}
     />
