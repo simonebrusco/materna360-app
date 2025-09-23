@@ -1,8 +1,9 @@
+// src/pages/BuilderPage.tsx
 import { useEffect } from "react";
 import { BuilderComponent, builder } from "@builder.io/react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-// Inicializa o Builder usando a env var do Vite
+// Inicializa o Builder com a sua API Key (via Vite)
 builder.init(import.meta.env.VITE_BUILDER_API_KEY || "");
 
 export default function BuilderPage() {
@@ -18,7 +19,7 @@ export default function BuilderPage() {
       const a = t.closest("a") as HTMLAnchorElement | null;
       if (!a) return;
 
-      // deixa passar novos tabs/atalhos/baixar, etc
+      // Permite abrir nova aba / downloads / atalhos
       if (
         a.target === "_blank" ||
         a.hasAttribute("download") ||
@@ -49,8 +50,3 @@ export default function BuilderPage() {
         model="page"
         options={{ includeRefs: true }}
         data={{}}
-        urlPath={location.pathname}
-      />
-    </div>
-  );
-}
