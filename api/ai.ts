@@ -1,16 +1,38 @@
-// api/ai.ts  — handler sem dependências de @vercel/node
-export default async function handler(req: any, res: any) {
-  try {
-    // Se quiser testar método:
-    // if (req.method !== 'GET') {
-    //   res.status(405).json({ ok: false, error: 'Method not allowed' });
-    //   return;
-    // }
+// api/ai.ts — Edge Function (sem @vercel/node)
+export const config = { runtime: 'edge' };
 
-    res.setHeader('Content-Type', 'application/json');
-    res.status(200).send({ ok: true, ping: 'pong' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ ok: false, error: 'internal_error' });
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export default async function handler(req: Request): Promise<Response> {
+  try {
+    const body = await req.json();
+    const messages = body?.messages;
+
+    if (!Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: 'messages deve ser um array' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
+    const completion = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages,
+      temperature: 0.7,
+    });
+
+    return new Response(JSON.stringify(completion), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err?.message ?? 'Erro interno' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
   }
 }
