@@ -1,11 +1,9 @@
-// api/ai.ts — Edge Function (sem @vercel/node)
+// api/ai.ts — Edge Function (não usa @vercel/node)
 export const config = { runtime: 'edge' };
 
 import OpenAI from 'openai';
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req: Request): Promise<Response> {
   try {
