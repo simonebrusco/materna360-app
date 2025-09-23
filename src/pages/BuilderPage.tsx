@@ -2,14 +2,15 @@
 import React, { useEffect } from "react";
 import { BuilderComponent } from "@builder.io/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import builder from "../lib/builder"; // ajustamos antes
+// Importação por efeito colateral para garantir que builder.init rode
+import "../lib/builder";
 
 export default function BuilderPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 1) Intercepta cliques em QUALQUER <a> dentro do app
+    // Intercepta cliques em QUALQUER <a> e usa o React Router p/ navegar
     const onAnchorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       const anchor = target?.closest("a") as HTMLAnchorElement | null;
@@ -18,10 +19,10 @@ export default function BuilderPage() {
       const href = anchor.getAttribute("href") || "";
       if (!href) return;
 
-      // Externos (http/https, mailto, tel) — deixar seguir normal
+      // Deixa externos seguirem normal
       if (/^(https?:\/\/|mailto:|tel:)/i.test(href)) return;
 
-      // SPA: navegação interna com React Router
+      // Internos: navegação SPA
       e.preventDefault();
       const path = href.startsWith("/") ? href : `/${href}`;
       navigate(path);
@@ -29,15 +30,15 @@ export default function BuilderPage() {
 
     document.addEventListener("click", onAnchorClick);
 
-    // 2) Também escuta o evento do Builder (quando eles disparam navegação)
+    // Evento que o Builder dispara para links internos
     const onBuilderLink = (ev: any) => {
       const url: string | undefined = ev?.detail?.url || ev?.detail?.href;
       if (!url) return;
 
       if (/^https?:\/\//i.test(url)) {
-        window.location.href = url; // externos
+        window.location.href = url;
       } else {
-        navigate(url.startsWith("/") ? url : `/${url}`); // internos
+        navigate(url.startsWith("/") ? url : `/${url}`);
       }
     };
 
