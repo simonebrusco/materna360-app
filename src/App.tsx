@@ -1,158 +1,36 @@
-// src/App.tsx
 import { NavLink, Routes, Route } from "react-router-dom";
-
-import Home from "./pages/Home";
-import Atividades from "./pages/Atividades";
-import BemEstar from "./pages/BemEstar";
-import Recursos from "./pages/Recursos";
-import Mentoria from "./pages/Mentoria";
-import Perfil from "./pages/Perfil";
+import BuilderPage from "./pages/BuilderPage";
 
 export default function App() {
-  const linkBase = {
-    textDecoration: "none",
-    padding: "8px 12px",
-    borderRadius: 8,
-    fontWeight: 600,
-  } as const;
-
-  const activeStyle = {
-    background: "#ff6a00",
-    color: "white",
-  };
-
   return (
     <>
-      {/* Topbar de navegação */}
-      <header
-        style={{
-          borderBottom: "1px solid #eee",
-          padding: "14px 16px",
-          position: "sticky",
-          top: 0,
-          background: "#fff",
-          zIndex: 10,
-        }}
-      >
+      {/* Topbar simples só pra navegar entre as rotas */}
+      <header style={{ borderBottom: "1px solid #eee", padding: "12px 16px" }}>
         <nav style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <ul
-            style={{
-              display: "flex",
-              gap: 12,
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <li>
-              <NavLink
-                to="/"
-                style={({ isActive }) => ({
-                  ...linkBase,
-                  color: isActive ? "white" : "#222",
-                  ...(isActive ? activeStyle : {}),
-                })}
-                end
-              >
-                Início
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink
-                to="/atividades"
-                style={({ isActive }) => ({
-                  ...linkBase,
-                  color: isActive ? "white" : "#222",
-                  ...(isActive ? activeStyle : {}),
-                })}
-              >
-                Atividades
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink
-                to="/bem-estar"
-                style={({ isActive }) => ({
-                  ...linkBase,
-                  color: isActive ? "white" : "#222",
-                  ...(isActive ? activeStyle : {}),
-                })}
-              >
-                Bem-estar
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink
-                to="/recursos"
-                style={({ isActive }) => ({
-                  ...linkBase,
-                  color: isActive ? "white" : "#222",
-                  ...(isActive ? activeStyle : {}),
-                })}
-              >
-                Recursos
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink
-                to="/mentoria"
-                style={({ isActive }) => ({
-                  ...linkBase,
-                  color: isActive ? "white" : "#222",
-                  ...(isActive ? activeStyle : {}),
-                })}
-              >
-                Mentoria
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink
-                to="/perfil"
-                style={({ isActive }) => ({
-                  ...linkBase,
-                  color: isActive ? "white" : "#222",
-                  ...(isActive ? activeStyle : {}),
-                })}
-              >
-                Perfil
-              </NavLink>
-            </li>
+          <ul style={{ display: "flex", gap: 16, listStyle: "none", margin: 0 }}>
+            <li><NavLink to="/">Início</NavLink></li>
+            <li><NavLink to="/atividades">Atividades</NavLink></li>
+            <li><NavLink to="/bem-estar">Bem-estar</NavLink></li>
+            <li><NavLink to="/recursos">Recursos</NavLink></li>
+            <li><NavLink to="/mentoria">Mentoria</NavLink></li>
+            <li><NavLink to="/perfil">Perfil</NavLink></li>
           </ul>
         </nav>
       </header>
 
-      {/* Conteúdo das rotas */}
-      <main style={{ maxWidth: 1080, margin: "0 auto", padding: 16 }}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/atividades" element={<Atividades />} />
-          <Route path="/bem-estar" element={<BemEstar />} />
-          <Route path="/recursos" element={<Recursos />} />
-          <Route path="/mentoria" element={<Mentoria />} />
-          <Route path="/perfil" element={<Perfil />} />
+      {/* Cada rota pede ao Builder o conteúdo pela URL atual */}
+      <Routes>
+        <Route path="/" element={<BuilderPage />} />
+        <Route path="/atividades" element={<BuilderPage />} />
+        <Route path="/bem-estar" element={<BuilderPage />} />
+        <Route path="/recursos" element={<BuilderPage />} />
+        <Route path="/mentoria" element={<BuilderPage />} />
+        <Route path="/perfil" element={<BuilderPage />} />
+        {/* fallback: qualquer caminho desconhecido */}
+        <Route path="*" element={<BuilderPage />} />
+      </Routes>
 
-          {/* fallback: qualquer caminho desconhecido volta pra Home */}
-          <Route path="*" element={<Home />} />
-        </Routes>
-      </main>
-
-      {/* Rodapé simples (opcional) */}
-      <footer
-        style={{
-          borderTop: "1px solid #eee",
-          padding: "16px",
-          textAlign: "center",
-          color: "#666",
-          marginTop: 24,
-        }}
-      >
+      <footer style={{ padding: 24, textAlign: "center", color: "#777" }}>
         Materna360 © {new Date().getFullYear()}
       </footer>
     </>
