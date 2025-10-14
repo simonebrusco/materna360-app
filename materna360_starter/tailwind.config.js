@@ -1,20 +1,17 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        'm360-orange': '#F17324',
-        'm360-rose': '#fda4af',
-        'm360-violet': '#6C4AB6',
-      },
-      borderRadius: {
-        '2xl': '1rem',
-      }
+extend: {
+  colors: {
+    brand: {
+      primary:  '#ff005e',
+      secondary:'#ffd8e6',
+      ink:      '#2f3a56',
+      slate:    '#59636f',
+      white:    '#ffffff',
     },
   },
-  plugins: [],
-};
+  borderRadius: { xl: '14px', '2xl': '20px' },
+  boxShadow: {
+    soft:  '0 6px 24px rgba(31,41,55,0.06)',
+    glass: 'inset 0 1px rgba(255,255,255,0.6), 0 8px 28px rgba(17,17,17,0.06)',
+  },
+  backdropBlur: { xs: '2px' },
+}
