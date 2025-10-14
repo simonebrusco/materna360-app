@@ -1,15 +1,21 @@
+import "../styles/globals.css";
+import { Poppins, Quicksand } from "next/font/google";
+
+const poppins = Poppins({ subsets: ["latin"], weight: ["500","600","700"], variable: '--font-title' });
+const quick = Quicksand({ subsets: ["latin"], weight: ["400","500","600"], variable: '--font-body' });
+
 export const metadata = {
   title: "Materna360",
   description: "Seu hub diário de conexão entre mãe e filhos",
-  themeColor: "#ffffff",
+  themeColor: "#ff005e",
 };
-
-import "../styles/globals.css";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR">
-      <body>{children}</body>
+    <html lang="pt-BR" className={`${poppins.variable} ${quick.variable}`}>
+      <body className="font-[var(--font-body)] text-brand-ink bg-gradient-to-b from-brand-secondary via-white to-white">
+        {children}
+      </body>
     </html>
   );
 }
