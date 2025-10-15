@@ -1,0 +1,20 @@
+/* materna360_starter/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Vars suaves para fallback de cores e tipografia */
+:root {
+  --m360-bg-from: #ffe4e6; /* rose-100 */
+  --m360-bg-to: #ffffff;
+  --m360-text: #2F3A56;
+}
+
+/* Fallback caso a classe de gradiente não aplique */
+body {
+  color: var(--m360-text);
+  background: linear-gradient(to bottom, var(--m360-bg-from), var(--m360-bg-to));
+}
+
+/* Pequenos refinamentos */
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
