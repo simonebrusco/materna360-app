@@ -1,70 +1,61 @@
+// materna360_starter/components/FilterChips.jsx
 'use client';
 
-function classNames(...values) {
-  return values.filter(Boolean).join(' ');
-}
+import React from 'react';
+import clsx from 'clsx';
 
-export default function FilterChips({
-  zeroMaterial,
-  quickOnly,
-  indoorOnly,
-  onToggleZero,
-  onToggleQuick,
-  onToggleIndoor,
-  onClear,
-}) {
-  const baseClasses =
-    "min-h-10 rounded-2xl border px-4 py-2 text-sm font-medium flex items-center gap-2 transition-colors";
-  const inactiveClasses = "bg-white text-brand-ink border-brand-secondary/40";
-  const activeClasses = "bg-brand-primary text-white border-brand-primary";
+/**
+ * Componente de chips de filtro acessíveis.
+ * Espera um state "filters" (obj) e um setFilters(fn).
+ *
+ * Exemplo de shape:
+ *  filters = {
+ *    zeroMaterial: false,
+ *    under10: false,
+ *    indoor: false,
+ *  }
+ */
+const CHIP_SPEC = [
+  { key: 'zeroMaterial', label: 'Zero material', icon: '🧰' },
+  { key: 'under10',     label: '≤ 10 min',      icon: '⏱️' },
+  { key: 'indoor',      label: 'Dentro de casa', icon: '🏠' },
+];
 
-  const showClear = zeroMaterial || quickOnly || indoorOnly;
+export default function FilterChips({ filters, setFilters, className }) {
+  const onToggle = (key) => {
+    setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <button
-        type="button"
-        role="switch"
-        aria-pressed={zeroMaterial}
-        onClick={onToggleZero}
-        className={classNames(baseClasses, zeroMaterial ? activeClasses : inactiveClasses)}
-      >
-        <span aria-hidden className="text-base">🎒</span>
-        <span>Zero material</span>
-      </button>
-
-      <button
-        type="button"
-        role="switch"
-        aria-pressed={quickOnly}
-        onClick={onToggleQuick}
-        className={classNames(baseClasses, quickOnly ? activeClasses : inactiveClasses)}
-      >
-        <span aria-hidden className="text-base">⏱️</span>
-        <span>≤ 10 min</span>
-      </button>
-
-      <button
-        type="button"
-        role="switch"
-        aria-pressed={indoorOnly}
-        onClick={onToggleIndoor}
-        className={classNames(baseClasses, indoorOnly ? activeClasses : inactiveClasses)}
-      >
-        <span aria-hidden className="text-base">🏠</span>
-        <span>Dentro de casa</span>
-      </button>
-
-      {showClear && (
-        <button
-          type="button"
-          role="button"
-          onClick={onClear}
-          className={classNames(baseClasses, inactiveClasses)}
-        >
-          Limpar
-        </button>
+    <div
+      className={clsx(
+        'flex flex-wrap items-center gap-2',
+        className
       )}
+    >
+      {CHIP_SPEC.map(({ key, label, icon }) => {
+        const active = !!filters?.[key];
+
+        return (
+          <button
+            key={key}
+            type="button"
+            // Acessibilidade: usamos "button" com aria-pressed em vez de role="switch".
+            role="button"
+            aria-pressed={active}
+            onClick={() => onToggle(key)}
+            className={clsx(
+              'px-3 py-[7px] rounded-xl text-[13px] sm:text-[14px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40',
+              active
+                ? 'bg-brand/10 text-brand-ink/90 border border-brand/20'
+                : 'bg-white/70 text-ink/70 border border-ink/10 hover:bg-white'
+            )}
+          >
+            <span className="mr-2">{icon}</span>
+            <span className="align-middle">{label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
