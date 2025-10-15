@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import GlassCard from "@/components/GlassCard";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function HomePage() {
@@ -50,10 +49,10 @@ export default function HomePage() {
 
       {/* CONTEÚDO */}
       <div className="mx-auto max-w-md px-4 py-6 space-y-10">
-        {/* Seção de CHECK-IN logo no topo */}
-        <section className="space-y-4">
-          <GlassCard className="p-4 bg-brand-secondary/50 border-brand-secondary/70">
-            <h1 className="text-2xl font-semibold mb-1">Meu Dia</h1>
+        {/* CHECK-IN bem visível */}
+        <section>
+          <div className="rounded-2xl bg-white border-2 border-brand-primary/30 shadow-lg p-4">
+            <h1 className="text-2xl font-semibold mb-3">Meu Dia</h1>
 
             <h3 className="font-medium">Como você está hoje?</h3>
             <p className="text-sm text-brand-slate mt-1">Registre seu humor de hoje</p>
@@ -91,16 +90,14 @@ export default function HomePage() {
             )}
 
             {moodTip && (
-              <div className="mt-3 text-sm text-brand-ink">
-                {moodTip}
-              </div>
+              <div className="mt-3 text-sm text-brand-ink">{moodTip}</div>
             )}
-          </GlassCard>
+          </div>
         </section>
 
-        {/* Dica rápida para navegação (temporária) */}
+        {/* Dica temporária de navegação */}
         <div className="text-center text-sm text-brand-slate">
-          Use o menu abaixo para navegar • Essa tela é só para garantir que o check-in aparece ✅
+          Use o menu abaixo para navegar • Agora o check-in deve aparecer ✅
         </div>
       </div>
 
