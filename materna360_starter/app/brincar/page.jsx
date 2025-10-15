@@ -4,6 +4,8 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import FiltersBar from "@/components/FiltersBar";
 import GlassCard from "@/components/GlassCard";
+import AppBar from "@/components/AppBar";
+import BottomNav from "@/components/BottomNav";
 
 export default function BrincarPage() {
   const [zeroMat, setZeroMat] = useState(false);
@@ -34,52 +36,58 @@ export default function BrincarPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-4">
-      <div className="py-4">
-        <h1 className="text-2xl font-semibold">Brincar</h1>
-        <p className="text-brand-slate">Ideias rápidas com filtros de tempo e materiais.</p>
-      </div>
+    <main className="mx-auto max-w-md">
+      <AppBar title="Brincar" backHref="/" />
 
-      <FiltersBar
-        zeroMat={zeroMat} setZeroMat={setZeroMat}
-        short={short} setShort={setShort}
-        indoorOnly={indoorOnly} setIndoorOnly={setIndoorOnly}
-        q={q} setQ={setQ}
-      />
+      <div className="px-4">
+        <div className="py-4">
+          <h1 className="text-2xl font-semibold">Brincar</h1>
+          <p className="text-brand-slate">Ideias rápidas com filtros de tempo e materiais.</p>
+        </div>
 
-      <div className="py-4 space-y-3">
-        {loading && <div className="animate-pulse space-y-3">
-          {[...Array(4)].map((_,i)=> <div key={i} className="h-20 rounded-2xl bg-brand-secondary/60" />)}
-        </div>}
+        <FiltersBar
+          zeroMat={zeroMat} setZeroMat={setZeroMat}
+          short={short} setShort={setShort}
+          indoorOnly={indoorOnly} setIndoorOnly={setIndoorOnly}
+          q={q} setQ={setQ}
+        />
 
-        {!loading && items.length === 0 && (
-          <GlassCard className="p-4 text-brand-slate">
-            Nada por aqui com esses filtros. Tente remover algum filtro ou limpar a busca.
-          </GlassCard>
-        )}
+        <div className="py-4 space-y-3">
+          {loading && <div className="animate-pulse space-y-3">
+            {[...Array(4)].map((_,i)=> <div key={i} className="h-20 rounded-2xl bg-brand-secondary/60" />)}
+          </div>}
 
-        {!loading && items.map((a,i)=>(
-          <Link key={i} href={`/brincar/${a.slug || '#'}`}>
-            <div className="rounded-2xl border border-brand-secondary/60 bg-white p-4 shadow-soft">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">{a.icon || "🎯"}</div>
-                <div className="flex-1">
-                  <div className="font-medium">{a.title}</div>
-                  {a.subtitle && <div className="text-sm text-brand-slate">{a.subtitle}</div>}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                    {a.zero_material && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">0 materiais</span>}
-                    {a.duration_min && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">{a.duration_min} min</span>}
-                    {(a.age_min || a.age_max) && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">
-                      {a.age_min ?? "?"}–{a.age_max ?? "?"} anos
-                    </span>}
-                    {a.indoor && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">dentro de casa</span>}
+          {!loading && items.length === 0 && (
+            <GlassCard className="p-4 text-brand-slate">
+              Nada por aqui com esses filtros. Tente remover algum filtro ou limpar a busca.
+            </GlassCard>
+          )}
+
+          {!loading && items.map((a,i)=>(
+            <Link key={i} href={`/brincar/${a.slug || '#'}`}>
+              <div className="rounded-2xl border border-brand-secondary/60 bg-white p-4 shadow-soft">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">{a.icon || "🎯"}</div>
+                  <div className="flex-1">
+                    <div className="font-medium">{a.title}</div>
+                    {a.subtitle && <div className="text-sm text-brand-slate">{a.subtitle}</div>}
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                      {a.zero_material && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">0 materiais</span>}
+                      {a.duration_min && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">{a.duration_min} min</span>}
+                      {(a.age_min || a.age_max) && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">
+                        {a.age_min ?? "?"}–{a.age_max ?? "?"} anos
+                      </span>}
+                      {a.indoor && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">dentro de casa</span>}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
+        </div>
       </div>
+
+      <BottomNav />
     </main>
   );
 }
