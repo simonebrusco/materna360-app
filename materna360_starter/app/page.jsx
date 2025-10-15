@@ -11,13 +11,13 @@ import Goal from "@/components/Goal";
 export default function TodayPage() {
   const name = "Simone";
 
-  // Mensagem do dia (fallback até carregar)
+  // Estado: Mensagem do dia (fallback até carregar)
   const [quote, setQuote] = useState({
     text: "Pequenos gestos diários constroem grandes memórias.",
     author: "Materna360",
   });
 
-  // Atalhos e metas (dinâmicos)
+  // Estado: Atividades (com href) e Metas
   const [activities, setActivities] = useState([]);
   const [goals, setGoals] = useState([]);
 
@@ -26,7 +26,7 @@ export default function TodayPage() {
       const now = new Date().toISOString();
 
       // Daily quote
-      const { data: q, error: qErr } = await supabase
+      const { data: q } = await supabase
         .from("daily_quotes")
         .select("text, author, starts_at")
         .lte("starts_at", now)
@@ -34,21 +34,21 @@ export default function TodayPage() {
         .order("starts_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!qErr && q) setQuote({ text: q.text, author: q.author || "Materna360" });
+      if (q) setQuote({ text: q.text, author: q.author || "Materna360" });
 
-      // Activities
-      const { data: acts, error: aErr } = await supabase
+      // Activities (AGORA COM href)
+      const { data: acts } = await supabase
         .from("activities")
-        .select("title, subtitle, icon, highlight, sort")
+        .select("title, subtitle, icon, highlight, sort, href")
         .order("sort", { ascending: true });
-      if (!aErr && acts) setActivities(acts);
+      if (acts) setActivities(acts);
 
       // Goals
-      const { data: g, error: gErr } = await supabase
+      const { data: g } = await supabase
         .from("goals")
         .select("label, sort")
         .order("sort", { ascending: true });
-      if (!gErr && g) setGoals(g);
+      if (g) setGoals(g);
     }
 
     loadAll();
@@ -68,7 +68,7 @@ export default function TodayPage() {
         </div>
       </div>
 
-      {/* Content wrapper */}
+      {/* Content */}
       <div className="mx-auto max-w-md px-4 py-6 space-y-16">
         {/* Saudação + Mensagem do dia */}
         <section className="space-y-4">
@@ -82,28 +82,33 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Quatro cards (2x2) dinâmicos */}
+        {/* Atalhos do dia (2x2) — usando href */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Atalhos do dia</h2>
+
           <div className="grid grid-cols-2 gap-3">
-            {(activities.length ? activities : [
-              { title: "Rotina da Casa", subtitle: "Organizar tarefas", icon: "🏠", highlight: false },
-              { title: "Tempo com Meu Filho", subtitle: "Registre momentos", icon: "💕", highlight: false },
-              { title: "Atividade do Dia", subtitle: "Brincadeira educativa", icon: "🎨", highlight: true },
-              { title: "Momento para Mim", subtitle: "Pausa e autocuidado", icon: "🌿", highlight: false },
-            ]).map((a, i) => (
+            {(activities.length
+              ? activities
+              : [
+                  { title: "Rotina da Casa",      subtitle: "Organizar tarefas",     icon: "🏠", highlight: false, href: "/activities/house" },
+                  { title: "Tempo com Meu Filho", subtitle: "Registre momentos",     icon: "💕", highlight: false, href: "/activities/moments" },
+                  { title: "Atividade do Dia",    subtitle: "Brincadeira educativa", icon: "🎨", highlight: true,  href: "/activities/daily" },
+                  { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",   icon: "🌿", highlight: false, href: "/wellbeing" },
+                ]
+            ).map((a, i) => (
               <ActionCard
                 key={i}
                 icon={a.icon || "✨"}
                 title={a.title}
                 subtitle={a.subtitle || ""}
                 highlight={!!a.highlight}
+                href={a.href || "/activities"}
               />
             ))}
           </div>
         </section>
 
-        {/* Progresso + Planner 7 dias */}
+        {/* Progresso + Planner (placeholder) */}
         <section className="space-y-5">
           <GlassCard className="p-4">
             <div className="flex items-center justify-between">
@@ -132,7 +137,7 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Metas (dinâmico) + Bem-estar */}
+        {/* Metas + Bem-estar */}
         <section className="space-y-5">
           <GlassCard className="p-4">
             <h3 className="font-medium mb-3">Minhas Metas de Hoje</h3>
@@ -175,10 +180,10 @@ export default function TodayPage() {
           <div className="mx-4 rounded-2xl bg-white/90 backdrop-blur-xs border border-white/60 shadow-soft">
             <ul className="grid grid-cols-4 text-center text-sm">
               {[
-                { label: "Hoje", icon: "🏡" },
+                { label: "Hoje",       icon: "🏡" },
                 { label: "Atividades", icon: "🎯" },
-                { label: "Bem-Estar", icon: "🧘" },
-                { label: "Perfil", icon: "👤" },
+                { label: "Bem-Estar",  icon: "🧘" },
+                { label: "Perfil",     icon: "👤" },
               ].map((t, i) => (
                 <li key={i} className="py-3 flex flex-col items-center gap-1">
                   <span className="text-lg">{t.icon}</span>
