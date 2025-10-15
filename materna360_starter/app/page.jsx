@@ -6,6 +6,7 @@ import DailyMessage from "@/components/DailyMessage";
 import GlassCard from "@/components/GlassCard";
 import ActionCard from "@/components/ActionCard";
 import Goal from "@/components/Goal";
+import CheckinCard from "@/components/CheckinCard";
 
 export default function TodayPage() {
   const name = "Simone";
@@ -109,26 +110,11 @@ export default function TodayPage() {
           </div>
         </section>
 
-        {/* ✅ CHECK-IN (mínimo, sem dependências) */}
+        {/* // CODEx:checkin:start */}
         <section id="checkin" className="mt-2">
-          <div className="rounded-2xl border border-brand-secondary/70 bg-white p-4 shadow-soft">
-            <h3 className="font-medium">Como você está hoje?</h3>
-            <p className="text-sm text-brand-slate mt-1">Registre seu humor de hoje</p>
-
-            <div className="mt-3 flex items-center gap-3 text-2xl">
-              <button title="Triste"  className="hover:scale-110 transition-transform">😞</button>
-              <button title="Neutro"  className="hover:scale-110 transition-transform">😐</button>
-              <button title="Ok"      className="hover:scale-110 transition-transform">🙂</button>
-              <button title="Feliz"   className="hover:scale-110 transition-transform">😊</button>
-              <button title="Uhul!"   className="hover:scale-110 transition-transform">🤩</button>
-            </div>
-
-            <div className="mt-3 text-sm text-brand-ink">
-              Dica: se estiver pesado, experimente 2 min de respiração em{" "}
-              <a href="/cuidar" className="underline">Cuidar</a> 💗
-            </div>
-          </div>
+          <CheckinCard />
         </section>
+        {/* // CODEx:checkin:end */}
 
         {/* Mensagem do dia */}
         <section className="space-y-4">
