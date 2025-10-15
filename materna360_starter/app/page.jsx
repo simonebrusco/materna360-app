@@ -11,13 +11,13 @@ import Goal from "@/components/Goal";
 export default function TodayPage() {
   const name = "Simone";
 
-  // Estado: Mensagem do dia (fallback até carregar)
+  // Mensagem do dia (fallback até carregar)
   const [quote, setQuote] = useState({
     text: "Pequenos gestos diários constroem grandes memórias.",
     author: "Materna360",
   });
 
-  // Estado: Atividades (com href) e Metas
+  // Atividades (com href) e Metas
   const [activities, setActivities] = useState([]);
   const [goals, setGoals] = useState([]);
 
@@ -36,7 +36,7 @@ export default function TodayPage() {
         .maybeSingle();
       if (q) setQuote({ text: q.text, author: q.author || "Materna360" });
 
-      // Activities (AGORA COM href)
+      // Activities (inclui href)
       const { data: acts } = await supabase
         .from("activities")
         .select("title, subtitle, icon, highlight, sort, href")
@@ -62,9 +62,12 @@ export default function TodayPage() {
           <div className="flex items-center gap-2">
             <img src="/logo-header.png" alt="Materna360" className="h-7 w-auto" />
           </div>
-          <button className="text-sm rounded-full px-3 py-1 bg-white border border-brand-secondary/60 text-brand-slate hover:bg-brand-secondary/40 transition">
-            Perfil
-          </button>
+          <a
+            href="/eu360"
+            className="text-sm rounded-full px-3 py-1 bg-white border border-brand-secondary/60 text-brand-slate hover:bg-brand-secondary/40 transition"
+          >
+            Eu360
+          </a>
         </div>
       </div>
 
@@ -90,10 +93,10 @@ export default function TodayPage() {
             {(activities.length
               ? activities
               : [
-                  { title: "Rotina da Casa",      subtitle: "Organizar tarefas",     icon: "🏠", highlight: false, href: "/activities/house" },
-                  { title: "Tempo com Meu Filho", subtitle: "Registre momentos",     icon: "💕", highlight: false, href: "/activities/moments" },
-                  { title: "Atividade do Dia",    subtitle: "Brincadeira educativa", icon: "🎨", highlight: true,  href: "/activities/daily" },
-                  { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",   icon: "🌿", highlight: false, href: "/wellbeing" },
+                  { title: "Rotina da Casa",      subtitle: "Organizar tarefas",     icon: "🏠", highlight: false, href: "/brincar" },
+                  { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",     icon: "💕", highlight: false, href: "/brincar/moments" },
+                  { title: "Atividade do Dia",    subtitle: "Brincadeira educativa", icon: "🎨", highlight: true,  href: "/brincar/daily" },
+                  { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",   icon: "🌿", highlight: false, href: "/cuidar" },
                 ]
             ).map((a, i) => (
               <ActionCard
@@ -102,13 +105,13 @@ export default function TodayPage() {
                 title={a.title}
                 subtitle={a.subtitle || ""}
                 highlight={!!a.highlight}
-                href={a.href || "/activities"}
+                href={a.href || "/brincar"}
               />
             ))}
           </div>
         </section>
 
-        {/* Progresso + Planner (placeholder) */}
+        {/* Progresso + Planner (placeholder por enquanto) */}
         <section className="space-y-5">
           <GlassCard className="p-4">
             <div className="flex items-center justify-between">
@@ -123,8 +126,8 @@ export default function TodayPage() {
 
           <GlassCard className="p-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium">Planner da Semana</h3>
-              <button className="text-xs underline text-brand-slate">Ver tudo</button>
+              <h3 className="font-medium">Planner da Família</h3>
+              <a href="/eu360" className="text-xs underline text-brand-slate">Abrir</a>
             </div>
             <div className="mt-3 grid grid-cols-7 gap-2 text-center">
               {["S", "T", "Q", "Q", "S", "S", "D"].map((d, i) => (
@@ -175,19 +178,21 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Bottom nav */}
+        {/* Bottom nav (Meu Dia / Brincar / Cuidar / Eu360) */}
         <nav className="sticky bottom-4 mx-auto max-w-md">
           <div className="mx-4 rounded-2xl bg-white/90 backdrop-blur-xs border border-white/60 shadow-soft">
             <ul className="grid grid-cols-4 text-center text-sm">
               {[
-                { label: "Hoje",       icon: "🏡" },
-                { label: "Atividades", icon: "🎯" },
-                { label: "Bem-Estar",  icon: "🧘" },
-                { label: "Perfil",     icon: "👤" },
+                { label: "Meu Dia",  icon: "🏡", href: "/" },
+                { label: "Brincar",  icon: "🎯", href: "/brincar" },
+                { label: "Cuidar",   icon: "🧘", href: "/cuidar" },
+                { label: "Eu360",    icon: "👤", href: "/eu360" },
               ].map((t, i) => (
                 <li key={i} className="py-3 flex flex-col items-center gap-1">
-                  <span className="text-lg">{t.icon}</span>
-                  <span className={`text-[11px] ${i === 0 ? "font-medium" : "text-brand-slate"}`}>{t.label}</span>
+                  <a href={t.href} className="text-lg">{t.icon}</a>
+                  <span className={`text-[11px] ${i === 0 ? "font-medium" : "text-brand-slate"}`}>
+                    {t.label}
+                  </span>
                 </li>
               ))}
             </ul>
