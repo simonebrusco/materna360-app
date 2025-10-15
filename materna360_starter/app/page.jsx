@@ -11,16 +11,22 @@ import Goal from "@/components/Goal";
 export default function TodayPage() {
   const name = "Simone";
 
-  // Fallback inicial (mostrado até carregar do Supabase)
+  // Mensagem do dia (fallback até carregar)
   const [quote, setQuote] = useState({
     text: "Pequenos gestos diários constroem grandes memórias.",
     author: "Materna360",
   });
 
+  // Atalhos e metas (dinâmicos)
+  const [activities, setActivities] = useState([]);
+  const [goals, setGoals] = useState([]);
+
   useEffect(() => {
-    async function loadQuote() {
+    async function loadAll() {
       const now = new Date().toISOString();
-      const { data, error } = await supabase
+
+      // Daily quote
+      const { data: q, error: qErr } = await supabase
         .from("daily_quotes")
         .select("text, author, starts_at")
         .lte("starts_at", now)
@@ -28,15 +34,24 @@ export default function TodayPage() {
         .order("starts_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (!qErr && q) setQuote({ text: q.text, author: q.author || "Materna360" });
 
-      if (!error && data) {
-        setQuote({
-          text: data.text,
-          author: data.author || "Materna360",
-        });
-      }
+      // Activities
+      const { data: acts, error: aErr } = await supabase
+        .from("activities")
+        .select("title, subtitle, icon, highlight, sort")
+        .order("sort", { ascending: true });
+      if (!aErr && acts) setActivities(acts);
+
+      // Goals
+      const { data: g, error: gErr } = await supabase
+        .from("goals")
+        .select("label, sort")
+        .order("sort", { ascending: true });
+      if (!gErr && g) setGoals(g);
     }
-    loadQuote();
+
+    loadAll();
   }, []);
 
   return (
@@ -67,14 +82,24 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Quatro cards (2x2) */}
+        {/* Quatro cards (2x2) dinâmicos */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Atalhos do dia</h2>
           <div className="grid grid-cols-2 gap-3">
-            <ActionCard icon="🏠" title="Rotina da Casa" subtitle="Organizar tarefas" />
-            <ActionCard icon="💕" title="Tempo com Meu Filho" subtitle="Registre momentos" />
-            <ActionCard icon="🎨" title="Atividade do Dia" subtitle="Brincadeira educativa" highlight />
-            <ActionCard icon="🌿" title="Momento para Mim" subtitle="Pausa e autocuidado" />
+            {(activities.length ? activities : [
+              { title: "Rotina da Casa", subtitle: "Organizar tarefas", icon: "🏠", highlight: false },
+              { title: "Tempo com Meu Filho", subtitle: "Registre momentos", icon: "💕", highlight: false },
+              { title: "Atividade do Dia", subtitle: "Brincadeira educativa", icon: "🎨", highlight: true },
+              { title: "Momento para Mim", subtitle: "Pausa e autocuidado", icon: "🌿", highlight: false },
+            ]).map((a, i) => (
+              <ActionCard
+                key={i}
+                icon={a.icon || "✨"}
+                title={a.title}
+                subtitle={a.subtitle || ""}
+                highlight={!!a.highlight}
+              />
+            ))}
           </div>
         </section>
 
@@ -107,14 +132,18 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Metas (3 corações) + Bem-estar */}
+        {/* Metas (dinâmico) + Bem-estar */}
         <section className="space-y-5">
           <GlassCard className="p-4">
             <h3 className="font-medium mb-3">Minhas Metas de Hoje</h3>
             <div className="flex items-center gap-3">
-              <Goal label="Beber água" done />
-              <Goal label="Brincar 15 min" done />
-              <Goal label="Respirar 2 min" />
+              {(goals.length ? goals : [
+                { label: "Beber água" },
+                { label: "Brincar 15 min" },
+                { label: "Respirar 2 min" },
+              ]).map((g, i) => (
+                <Goal key={i} label={g.label} done={i < 2} />
+              ))}
             </div>
           </GlassCard>
 
