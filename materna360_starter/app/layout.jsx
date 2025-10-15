@@ -1,12 +1,20 @@
 import "../styles/globals.css";
 import { Poppins, Quicksand } from "next/font/google";
 
-const poppins = Poppins({ subsets: ["latin"], weight: ["500","600","700"], variable: '--font-title' });
-const quick = Quicksand({ subsets: ["latin"], weight: ["400","500","600"], variable: '--font-body' });
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-title",
+});
+const quick = Quicksand({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-body",
+});
 
 export const metadata = {
-  title: "Materna360",
-  description: "Seu hub diário de conexão entre mãe e filhos",
+  title: "Meu Dia • Materna360",
+  description: "Seu centro diário com brincadeiras, planner e autocuidado.",
   themeColor: "#ff005e",
 };
 
