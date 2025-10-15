@@ -1,83 +1,171 @@
 'use client';
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import FiltersBar from "@/components/FiltersBar";
+import FilterChips from "@/components/FilterChips";
 import GlassCard from "@/components/GlassCard";
 import AppBar from "@/components/AppBar";
 import BottomNav from "@/components/BottomNav";
 
 export default function BrincarPage() {
-  const [zeroMat, setZeroMat] = useState(false);
-  const [short, setShort] = useState(false);
-  const [indoorOnly, setIndoorOnly] = useState(false);
-  const [q, setQ] = useState("");
-  const [items, setItems] = useState([]);
+  const [zeroMaterial, setZeroMaterial] = useState(false);
+  const [quickOnly, setQuickOnly] = useState(false);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [missingSchema, setMissingSchema] = useState(false);
 
-  useEffect(()=>{ fetchData(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zeroMat, short, indoorOnly, q]);
+  useEffect(() => {
+    let isActive = true;
 
-  async function fetchData() {
-    setLoading(true);
-    let query = supabase
-      .from("activities")
-      .select("title, subtitle, icon, duration_min, zero_material, indoor, age_min, age_max, slug")
-      .order("sort", { ascending: true });
+    async function loadActivities() {
+      setLoading(true);
+      setHasError(false);
 
-    if (zeroMat) query = query.eq("zero_material", true);
-    if (short) query = query.lte("duration_min", 10);
-    if (indoorOnly) query = query.eq("indoor", true);
-    if (q?.trim()) query = query.ilike("title", `%${q.trim()}%`);
+      // CODEX:brincar:filters:start
+      let query = supabase
+        .from("activities")
+        .select(
+          "title, subtitle, icon, duration_min, zero_material, indoor, age_min, age_max, slug"
+        )
+        .order("title", { ascending: true });
 
-    const { data } = await query;
-    setItems(data || []);
-    setLoading(false);
-  }
+      if (zeroMaterial) {
+        query = query.eq("zero_material", true);
+      }
+
+      if (quickOnly) {
+        query = query.lte("duration_min", 10);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        const combinedMessage = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
+        const missingColumn =
+          combinedMessage.includes("zero_material") || combinedMessage.includes("duration_min");
+
+        if (missingColumn) {
+          if (isActive) {
+            setMissingSchema(true);
+            if (zeroMaterial) {
+              setZeroMaterial(false);
+            }
+            if (quickOnly) {
+              setQuickOnly(false);
+            }
+          }
+
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("activities")
+            .select("title, subtitle, icon, indoor, age_min, age_max, slug")
+            .order("title", { ascending: true });
+
+          if (fallbackError) {
+            if (isActive) {
+              setHasError(true);
+              setActivities([]);
+            }
+          } else if (isActive) {
+            setActivities(fallbackData ?? []);
+          }
+        } else if (isActive) {
+          setHasError(true);
+          setActivities([]);
+        }
+      } else if (isActive) {
+        setMissingSchema(false);
+        setActivities(data ?? []);
+      }
+      // CODEX:brincar:filters:end
+
+      if (isActive) {
+        setLoading(false);
+      }
+    }
+
+    loadActivities();
+
+    return () => {
+      isActive = false;
+    };
+  }, [zeroMaterial, quickOnly]);
+
+  const handleClearFilters = () => {
+    setZeroMaterial(false);
+    setQuickOnly(false);
+  };
+
+  const showEmptyState = !loading && !hasError && activities.length === 0 && (zeroMaterial || quickOnly);
 
   return (
     <main className="mx-auto max-w-md">
       <AppBar title="Brincar" backHref="/" />
 
       <div className="px-4">
-        <div className="py-4">
+        <div className="py-4 space-y-1">
           <h1 className="text-2xl font-semibold">Brincar</h1>
-          <p className="text-brand-slate">Ideias rápidas com filtros de tempo e materiais.</p>
+          <p className="text-brand-slate">Ideias rápidas para momentos especiais em família.</p>
         </div>
 
-        <FiltersBar
-          zeroMat={zeroMat} setZeroMat={setZeroMat}
-          short={short} setShort={setShort}
-          indoorOnly={indoorOnly} setIndoorOnly={setIndoorOnly}
-          q={q} setQ={setQ}
-        />
+        <div className="sticky top-12 z-10 -mx-4 border-b border-white/60 bg-white/90 px-4 pb-3 pt-4 backdrop-blur-xs">
+          <FilterChips
+            zeroMaterial={zeroMaterial}
+            quickOnly={quickOnly}
+            onToggleZero={() => setZeroMaterial((prev) => !prev)}
+            onToggleQuick={() => setQuickOnly((prev) => !prev)}
+            onClear={handleClearFilters}
+            disabled={missingSchema}
+          />
+        </div>
 
-        <div className="py-4 space-y-3">
-          {loading && <div className="animate-pulse space-y-3">
-            {[...Array(4)].map((_,i)=> <div key={i} className="h-20 rounded-2xl bg-brand-secondary/60" />)}
-          </div>}
+        <div className="space-y-3 py-4">
+          {loading && (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="h-20 rounded-2xl border border-brand-secondary/40 bg-white/60" />
+              ))}
+            </div>
+          )}
 
-          {!loading && items.length === 0 && (
+          {!loading && hasError && (
             <GlassCard className="p-4 text-brand-slate">
-              Nada por aqui com esses filtros. Tente remover algum filtro ou limpar a busca.
+              Não foi possível carregar as atividades agora.
             </GlassCard>
           )}
 
-          {!loading && items.map((a,i)=>(
-            <Link key={i} href={`/brincar/${a.slug || '#'}`}>
-              <div className="rounded-2xl border border-brand-secondary/60 bg-white p-4 shadow-soft">
+          {showEmptyState && (
+            <GlassCard className="p-4 text-brand-slate">
+              Nenhuma atividade com esses filtros. Tente limpar os filtros.
+            </GlassCard>
+          )}
+
+          {!loading && !hasError && activities.map((activity, index) => (
+            <Link key={index} href={`/brincar/${activity.slug ?? "#"}`}>
+              <div className="rounded-2xl border border-brand-secondary/60 bg-white p-4 shadow-soft transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">{a.icon || "🎯"}</div>
+                  <div className="text-2xl">{activity.icon || "🎯"}</div>
                   <div className="flex-1">
-                    <div className="font-medium">{a.title}</div>
-                    {a.subtitle && <div className="text-sm text-brand-slate">{a.subtitle}</div>}
-                    <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                      {a.zero_material && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">0 materiais</span>}
-                      {a.duration_min && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">{a.duration_min} min</span>}
-                      {(a.age_min || a.age_max) && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">
-                        {a.age_min ?? "?"}–{a.age_max ?? "?"} anos
-                      </span>}
-                      {a.indoor && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">dentro de casa</span>}
+                    <div className="font-medium text-brand-ink">{activity.title}</div>
+                    {activity.subtitle && (
+                      <div className="text-sm text-brand-slate">{activity.subtitle}</div>
+                    )}
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-brand-slate">
+                      {activity.zero_material && (
+                        <span className="text-xs px-2 py-1 rounded-full border bg-white">Zero material</span>
+                      )}
+                      {typeof activity.duration_min === "number" && activity.duration_min <= 10 && (
+                        <span className="text-xs px-2 py-1 rounded-full border bg-white">≤10 min</span>
+                      )}
+                      {(activity.age_min || activity.age_max) && (
+                        <span className="text-xs px-2 py-1 rounded-full border bg-white">
+                          {activity.age_min ?? "?"}–{activity.age_max ?? "?"} anos
+                        </span>
+                      )}
+                      {activity.indoor && (
+                        <span className="text-xs px-2 py-1 rounded-full border bg-white">Dentro de casa</span>
+                      )}
                     </div>
                   </div>
                 </div>
