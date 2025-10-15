@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 import DailyMessage from "@/components/DailyMessage";
 import GlassCard from "@/components/GlassCard";
@@ -11,7 +10,7 @@ import Goal from "@/components/Goal";
 export default function TodayPage() {
   const name = "Simone";
 
-  // ------ Estados de conteúdo ------
+  // ---------------- estados ----------------
   const [quote, setQuote] = useState({
     text: "Pequenos gestos diários constroem grandes memórias.",
     author: "Materna360",
@@ -19,12 +18,7 @@ export default function TodayPage() {
   const [activities, setActivities] = useState([]);
   const [goals, setGoals] = useState([]);
 
-  // ------ Estados do Check-in ------
-  const [showMoodPicker, setShowMoodPicker] = useState(false);
-  const [moodTip, setMoodTip] = useState("");
-  const [toast, setToast] = useState("");
-
-  // ------ Carregamento Supabase ------
+  // --------------- carregar dados ---------------
   useEffect(() => {
     async function loadAll() {
       const now = new Date().toISOString();
@@ -57,31 +51,10 @@ export default function TodayPage() {
     loadAll();
   }, []);
 
-  // ------ Salvar humor ------
-  async function saveMood(moodKey) {
-    const moodMessages = {
-      sad:    "Tudo bem ir devagar hoje. Experimente 2 min de respiração em Cuidar. 💗",
-      neutral:"Que tal algo leve de 5 min? Tenho uma ideia em Brincar. 🙂",
-      ok:     "Você está estável — escolha uma pequena ação para manter o ritmo. 💪",
-      happy:  "Que delícia! Registre um momento com seu filho para lembrar depois. ✨",
-      super:  "Uhul! Aproveite para planejar algo especial hoje. 🎉",
-    };
-
-    try {
-      await supabase.from("mood_checkins").insert({ mood: moodKey });
-      setToast("Check-in salvo!");
-      setMoodTip(moodMessages[moodKey] || "");
-    } catch {
-      setToast("Não deu para salvar agora. Tente novamente.");
-    } finally {
-      setTimeout(() => setToast(""), 2200);
-    }
-  }
-
-  // ------ Fallbacks ------
+  // --------------- fallbacks (segurança) ---------------
   const fallbackActivities = [
     { title: "Rotina da Casa",      subtitle: "Organizar tarefas",      icon: "🏠", highlight: false, href: "/brincar" },
-    { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",      icon: "💕", highlight: false, href: "/brincar/moments" },
+    { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",     icon: "💕", highlight: false, href: "/brincar/moments" },
     { title: "Atividade do Dia",    subtitle: "Brincadeira educativa",  icon: "🎨", highlight: true,  href: "/brincar/daily" },
     { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",    icon: "🌿", highlight: false, href: "/cuidar" },
   ];
@@ -94,6 +67,7 @@ export default function TodayPage() {
   ];
   const safeGoals = goals?.length ? goals : fallbackGoals;
 
+  // ---------------- UI ----------------
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-secondary via-white to-white text-brand-ink">
       {/* App bar */}
@@ -111,7 +85,6 @@ export default function TodayPage() {
         </div>
       </div>
 
-      {/* Conteúdo */}
       <div className="mx-auto max-w-md px-4 py-6 space-y-16">
         {/* Saudação */}
         <section className="space-y-1">
@@ -136,48 +109,25 @@ export default function TodayPage() {
           </div>
         </section>
 
-        {/* ✅ CHECK-IN — logo após Atalhos */}
-        <section className="space-y-4">
-          <GlassCard className="p-4 bg-white border-brand-secondary/70">
+        {/* ✅ CHECK-IN (mínimo, sem dependências) */}
+        <section id="checkin" className="mt-2">
+          <div className="rounded-2xl border border-brand-secondary/70 bg-white p-4 shadow-soft">
             <h3 className="font-medium">Como você está hoje?</h3>
             <p className="text-sm text-brand-slate mt-1">Registre seu humor de hoje</p>
 
-            {!showMoodPicker && (
-              <div className="mt-3">
-                <button
-                  onClick={() => setShowMoodPicker(true)}
-                  className="rounded-xl bg-brand-primary text-white px-4 py-2 text-sm"
-                >
-                  Registrar
-                </button>
-              </div>
-            )}
+            <div className="mt-3 flex items-center gap-3 text-2xl">
+              <button title="Triste"  className="hover:scale-110 transition-transform">😞</button>
+              <button title="Neutro"  className="hover:scale-110 transition-transform">😐</button>
+              <button title="Ok"      className="hover:scale-110 transition-transform">🙂</button>
+              <button title="Feliz"   className="hover:scale-110 transition-transform">😊</button>
+              <button title="Uhul!"   className="hover:scale-110 transition-transform">🤩</button>
+            </div>
 
-            {showMoodPicker && (
-              <div className="mt-3 flex gap-3 text-2xl">
-                {["😞","😐","🙂","😊","🤩"].map((emoji, i) => {
-                  const keys = ["sad","neutral","ok","happy","super"];
-                  const key = keys[i];
-                  return (
-                    <motion.button
-                      key={key}
-                      className="hover:scale-110 active:scale-95 transition-transform"
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => saveMood(key)}
-                      aria-label={`mood-${key}`}
-                      title={`mood-${key}`}
-                    >
-                      {emoji}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            )}
-
-            {moodTip && (
-              <div className="mt-3 text-sm text-brand-ink">{moodTip}</div>
-            )}
-          </GlassCard>
+            <div className="mt-3 text-sm text-brand-ink">
+              Dica: se estiver pesado, experimente 2 min de respiração em{" "}
+              <a href="/cuidar" className="underline">Cuidar</a> 💗
+            </div>
+          </div>
         </section>
 
         {/* Mensagem do dia */}
@@ -221,11 +171,7 @@ export default function TodayPage() {
           <GlassCard className="p-4 bg-white border-white/70">
             <h3 className="font-medium mb-3">Minhas Metas de Hoje</h3>
             <div className="flex items-center gap-3">
-              {(goals?.length ? goals : [
-                { label: "Beber água" },
-                { label: "Brincar 15 min" },
-                { label: "Respirar 2 min" },
-              ]).map((g, i) => (
+              {(safeGoals).map((g, i) => (
                 <Goal key={i} label={g.label} done={i < 2} />
               ))}
             </div>
@@ -252,15 +198,6 @@ export default function TodayPage() {
             </ul>
           </div>
         </nav>
-
-        {/* Toast do check-in */}
-        {toast && (
-          <div className="fixed inset-x-0 bottom-20 mx-auto max-w-md px-4">
-            <div className="rounded-xl bg-brand-primary text-white px-3 py-2 text-sm text-center shadow-soft">
-              {toast}
-            </div>
-          </div>
-        )}
 
         <div className="h-2" />
       </div>
