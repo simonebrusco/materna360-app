@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/lib/supabaseClient";
 import DailyMessage from "@/components/DailyMessage";
 import GlassCard from "@/components/GlassCard";
 import ActionCard from "@/components/ActionCard";
@@ -8,10 +10,34 @@ import Goal from "@/components/Goal";
 
 export default function TodayPage() {
   const name = "Simone";
-  const quote = {
+
+  // Fallback inicial (mostrado até carregar do Supabase)
+  const [quote, setQuote] = useState({
     text: "Pequenos gestos diários constroem grandes memórias.",
     author: "Materna360",
-  };
+  });
+
+  useEffect(() => {
+    async function loadQuote() {
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("daily_quotes")
+        .select("text, author, starts_at")
+        .lte("starts_at", now)
+        .gte("ends_at", now)
+        .order("starts_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        setQuote({
+          text: data.text,
+          author: data.author || "Materna360",
+        });
+      }
+    }
+    loadQuote();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-secondary via-white to-white text-brand-ink">
