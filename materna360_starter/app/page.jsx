@@ -11,27 +11,25 @@ import Goal from "@/components/Goal";
 export default function TodayPage() {
   const name = "Simone";
 
-  // Estado: Mensagem do dia (fallback até carregar)
+  // ------ Estados de conteúdo ------
   const [quote, setQuote] = useState({
     text: "Pequenos gestos diários constroem grandes memórias.",
     author: "Materna360",
   });
-
-  // Estado: Atividades (com href) e Metas
   const [activities, setActivities] = useState([]);
   const [goals, setGoals] = useState([]);
 
-  // Check-in empático
+  // ------ Estados do Check-in ------
   const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [moodTip, setMoodTip] = useState("");
   const [toast, setToast] = useState("");
 
-  // Carregar dados
+  // ------ Carregamento Supabase ------
   useEffect(() => {
     async function loadAll() {
       const now = new Date().toISOString();
 
-      // Daily quote
+      // Mensagem do dia ativa
       const { data: q } = await supabase
         .from("daily_quotes")
         .select("text, author, starts_at, ends_at")
@@ -42,25 +40,24 @@ export default function TodayPage() {
         .maybeSingle();
       if (q) setQuote({ text: q.text, author: q.author || "Materna360" });
 
-      // Activities (inclui href)
+      // Atalhos
       const { data: acts } = await supabase
         .from("activities")
         .select("title, subtitle, icon, highlight, sort, href")
         .order("sort", { ascending: true });
       if (acts) setActivities(acts);
 
-      // Goals
+      // Metas
       const { data: g } = await supabase
         .from("goals")
         .select("label, sort")
         .order("sort", { ascending: true });
       if (g) setGoals(g);
     }
-
     loadAll();
   }, []);
 
-  // Salva humor e mostra mensagem relacionada
+  // ------ Salvar humor ------
   async function saveMood(moodKey) {
     const moodMessages = {
       sad:    "Tudo bem ir devagar hoje. Experimente 2 min de respiração em Cuidar. 💗",
@@ -74,19 +71,19 @@ export default function TodayPage() {
       await supabase.from("mood_checkins").insert({ mood: moodKey });
       setToast("Check-in salvo!");
       setMoodTip(moodMessages[moodKey] || "");
-    } catch (e) {
+    } catch {
       setToast("Não deu para salvar agora. Tente novamente.");
     } finally {
       setTimeout(() => setToast(""), 2200);
     }
   }
 
-  // Fallbacks
+  // ------ Fallbacks ------
   const fallbackActivities = [
-    { title: "Rotina da Casa",      subtitle: "Organizar tarefas",     icon: "🏠", highlight: false, href: "/brincar" },
-    { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",     icon: "💕", highlight: false, href: "/brincar/moments" },
-    { title: "Atividade do Dia",    subtitle: "Brincadeira educativa", icon: "🎨", highlight: true,  href: "/brincar/daily" },
-    { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",   icon: "🌿", highlight: false, href: "/cuidar" },
+    { title: "Rotina da Casa",      subtitle: "Organizar tarefas",      icon: "🏠", highlight: false, href: "/brincar" },
+    { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",      icon: "💕", highlight: false, href: "/brincar/moments" },
+    { title: "Atividade do Dia",    subtitle: "Brincadeira educativa",  icon: "🎨", highlight: true,  href: "/brincar/daily" },
+    { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",    icon: "🌿", highlight: false, href: "/cuidar" },
   ];
   const safeActivities = activities?.length ? activities : fallbackActivities;
 
@@ -114,24 +111,17 @@ export default function TodayPage() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Conteúdo */}
       <div className="mx-auto max-w-md px-4 py-6 space-y-16">
-        {/* Saudação + Mensagem do dia */}
-        <section className="space-y-4">
-          <div>
-            <p className="text-sm text-brand-slate">Hoje</p>
-            <h1 className="text-2xl font-semibold">Olá, {name} 👋</h1>
-          </div>
-
-          <GlassCard className="p-4 bg-white border-white/70">
-            <DailyMessage text={quote.text} author={quote.author} />
-          </GlassCard>
+        {/* Saudação */}
+        <section className="space-y-1">
+          <p className="text-sm text-brand-slate">Hoje</p>
+          <h1 className="text-2xl font-semibold">Olá, {name} 👋</h1>
         </section>
 
-        {/* Atalhos do dia (2x2) */}
+        {/* Atalhos */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Atalhos do dia</h2>
-
           <div className="grid grid-cols-2 gap-3">
             {safeActivities.map((a, i) => (
               <ActionCard
@@ -146,36 +136,7 @@ export default function TodayPage() {
           </div>
         </section>
 
-        {/* Progresso + Planner */}
-        <section className="space-y-5">
-          <GlassCard className="p-4 bg-white border-white/70">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">Seu Progresso</h3>
-              <span className="text-sm text-brand-slate">Hoje</span>
-            </div>
-            <div className="mt-3 h-2 rounded-full bg-brand-secondary/60">
-              <div className="h-2 w-2/3 rounded-full bg-brand-primary" />
-            </div>
-            <p className="mt-2 text-sm text-brand-slate">2 de 3 metas concluídas</p>
-          </GlassCard>
-
-          <GlassCard className="p-4 bg-white border-white/70">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">Planner da Família</h3>
-              <a href="/eu360" className="text-xs underline text-brand-slate">Abrir</a>
-            </div>
-            <div className="mt-3 grid grid-cols-7 gap-2 text-center">
-              {["S", "T", "Q", "Q", "S", "S", "D"].map((d, i) => (
-                <div key={i} className="py-2 rounded-xl border border-brand-secondary/60 bg-white text-sm">
-                  <div className="font-medium">{d}</div>
-                  <div className="text-[11px] text-brand-slate">{10 + i} / 06</div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-        </section>
-
-        {/* Check-in empático */}
+        {/* ✅ CHECK-IN — logo após Atalhos */}
         <section className="space-y-4">
           <GlassCard className="p-4 bg-white border-brand-secondary/70">
             <h3 className="font-medium">Como você está hoje?</h3>
@@ -214,10 +175,44 @@ export default function TodayPage() {
             )}
 
             {moodTip && (
-              <div className="mt-3 text-sm text-brand-ink">
-                {moodTip}
-              </div>
+              <div className="mt-3 text-sm text-brand-ink">{moodTip}</div>
             )}
+          </GlassCard>
+        </section>
+
+        {/* Mensagem do dia */}
+        <section className="space-y-4">
+          <GlassCard className="p-4 bg-white border-white/70">
+            <DailyMessage text={quote.text} author={quote.author} />
+          </GlassCard>
+        </section>
+
+        {/* Progresso + Planner */}
+        <section className="space-y-5">
+          <GlassCard className="p-4 bg-white border-white/70">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Seu Progresso</h3>
+              <span className="text-sm text-brand-slate">Hoje</span>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-brand-secondary/60">
+              <div className="h-2 w-2/3 rounded-full bg-brand-primary" />
+            </div>
+            <p className="mt-2 text-sm text-brand-slate">2 de 3 metas concluídas</p>
+          </GlassCard>
+
+          <GlassCard className="p-4 bg-white border-white/70">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Planner da Família</h3>
+              <a href="/eu360" className="text-xs underline text-brand-slate">Abrir</a>
+            </div>
+            <div className="mt-3 grid grid-cols-7 gap-2 text-center">
+              {["S","T","Q","Q","S","S","D"].map((d, i) => (
+                <div key={i} className="py-2 rounded-xl border border-brand-secondary/60 bg-white text-sm">
+                  <div className="font-medium">{d}</div>
+                  <div className="text-[11px] text-brand-slate">{10 + i} / 06</div>
+                </div>
+              ))}
+            </div>
           </GlassCard>
         </section>
 
@@ -226,7 +221,11 @@ export default function TodayPage() {
           <GlassCard className="p-4 bg-white border-white/70">
             <h3 className="font-medium mb-3">Minhas Metas de Hoje</h3>
             <div className="flex items-center gap-3">
-              {safeGoals.map((g, i) => (
+              {(goals?.length ? goals : [
+                { label: "Beber água" },
+                { label: "Brincar 15 min" },
+                { label: "Respirar 2 min" },
+              ]).map((g, i) => (
                 <Goal key={i} label={g.label} done={i < 2} />
               ))}
             </div>
@@ -254,7 +253,7 @@ export default function TodayPage() {
           </div>
         </nav>
 
-        {/* Toast */}
+        {/* Toast do check-in */}
         {toast && (
           <div className="fixed inset-x-0 bottom-20 mx-auto max-w-md px-4">
             <div className="rounded-xl bg-brand-primary text-white px-3 py-2 text-sm text-center shadow-soft">
