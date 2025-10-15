@@ -21,6 +21,11 @@ export default function TodayPage() {
   const [activities, setActivities] = useState([]);
   const [goals, setGoals] = useState([]);
 
+  // Estados do check-in
+  const [showMoodPicker, setShowMoodPicker] = useState(false);
+  const [moodTip, setMoodTip] = useState("");     // mensagem pós-clique
+  const [toast, setToast] = useState("");         // feedback curto
+
   useEffect(() => {
     async function loadAll() {
       const now = new Date().toISOString();
@@ -53,6 +58,27 @@ export default function TodayPage() {
 
     loadAll();
   }, []);
+
+  // Salva humor e mostra mensagem empática
+  async function saveMood(moodKey) {
+    const moodMessages = {
+      sad:    "Tudo bem ir devagar hoje. Experimente 2 min de respiração em Cuidar. 💗",
+      neutral:"Que tal algo leve de 5 min? Tenho uma ideia em Brincar. 🙂",
+      ok:     "Você está estável — escolha uma pequena ação para manter o ritmo. 💪",
+      happy:  "Que delícia! Registre um momento com seu filho para lembrar depois. ✨",
+      super:  "Uhul! Aproveite para planejar algo especial hoje. 🎉",
+    };
+
+    try {
+      await supabase.from("mood_checkins").insert({ mood: moodKey });
+      setToast("Check-in salvo!");
+      setMoodTip(moodMessages[moodKey] || "");
+    } catch (e) {
+      setToast("Não deu para salvar agora. Tente novamente.");
+    } finally {
+      setTimeout(() => setToast(""), 2200);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-secondary via-white to-white text-brand-ink">
@@ -140,7 +166,53 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Metas + Bem-estar */}
+        {/* Check-in empático (novo fluxo) */}
+        <section className="space-y-4">
+          <GlassCard className="p-4 bg-brand-secondary/50 border-brand-secondary/70">
+            <h3 className="font-medium">Como você está hoje?</h3>
+            <p className="text-sm text-brand-slate mt-1">Registre seu humor de hoje</p>
+
+            {!showMoodPicker && (
+              <div className="mt-3">
+                <button
+                  onClick={() => setShowMoodPicker(true)}
+                  className="rounded-xl bg-brand-primary text-white px-4 py-2 text-sm"
+                >
+                  Registrar
+                </button>
+              </div>
+            )}
+
+            {showMoodPicker && (
+              <div className="mt-3 flex gap-3 text-2xl">
+                {["😞","😐","🙂","😊","🤩"].map((emoji, i) => {
+                  const keys = ["sad","neutral","ok","happy","super"];
+                  const key = keys[i];
+                  return (
+                    <motion.button
+                      key={key}
+                      className="hover:scale-110 active:scale-95 transition-transform"
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => saveMood(key)}
+                      aria-label={`mood-${key}`}
+                      title={`mood-${key}`}
+                    >
+                      {emoji}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
+
+            {moodTip && (
+              <div className="mt-3 text-sm text-brand-ink">
+                {moodTip}
+              </div>
+            )}
+          </GlassCard>
+        </section>
+
+        {/* Metas */}
         <section className="space-y-5">
           <GlassCard className="p-4">
             <h3 className="font-medium mb-3">Minhas Metas de Hoje</h3>
@@ -154,31 +226,9 @@ export default function TodayPage() {
               ))}
             </div>
           </GlassCard>
-
-          <GlassCard className="p-4 bg-brand-secondary/50 border-brand-secondary/70">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🙂</span>
-              <div>
-                <h3 className="font-medium">Como você está hoje?</h3>
-                <p className="text-sm text-brand-slate mt-1">Faça um check-in rápido do seu humor</p>
-                <div className="mt-3 flex gap-2 text-2xl">
-                  {"😞😐🙂😊🤩".split("")?.map((m, i) => (
-                    <motion.button
-                      key={i}
-                      className="hover:scale-110 active:scale-95 transition-transform"
-                      whileTap={{ scale: 0.9 }}
-                      aria-label={`mood-${i}`}
-                    >
-                      {m}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </GlassCard>
         </section>
 
-        {/* Bottom nav (Meu Dia / Brincar / Cuidar / Eu360) */}
+        {/* Bottom nav */}
         <nav className="sticky bottom-4 mx-auto max-w-md">
           <div className="mx-4 rounded-2xl bg-white/90 backdrop-blur-xs border border-white/60 shadow-soft">
             <ul className="grid grid-cols-4 text-center text-sm">
@@ -198,6 +248,15 @@ export default function TodayPage() {
             </ul>
           </div>
         </nav>
+
+        {/* Toast */}
+        {toast && (
+          <div className="fixed inset-x-0 bottom-20 mx-auto max-w-md px-4">
+            <div className="rounded-xl bg-brand-primary text-white px-3 py-2 text-sm text-center shadow-soft">
+              {toast}
+            </div>
+          </div>
+        )}
 
         <div className="h-2" />
       </div>
