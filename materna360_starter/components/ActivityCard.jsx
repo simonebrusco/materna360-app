@@ -1,87 +1,43 @@
-function formatDuration(durationMin) {
-  if (typeof durationMin !== "number") return null;
-  if (durationMin <= 10) return "≤10 min";
-  return `${durationMin} min`;
-}
+"use client";
 
-function classNames(...values) {
-  return values.filter(Boolean).join(" ");
-}
-
-export default function ActivityCard({
-  title,
-  emoji,
-  shortDesc,
-  tags = [],
-  durationMin,
-  zeroMaterial,
-  indoor,
-  className,
-  href,
-}) {
-  const chips = [];
-
-  const durationLabel = formatDuration(durationMin);
-  if (durationLabel) {
-    chips.push({ label: durationLabel, key: "duration", highlight: durationMin <= 10 });
-  }
-
-  if (zeroMaterial) {
-    chips.push({ label: "Zero material", key: "zero" });
-  }
-
-  if (indoor) {
-    chips.push({ label: "Dentro de casa", key: "indoor" });
-  }
-
-  for (const tag of tags ?? []) {
-    if (typeof tag === "string" && tag.trim()) {
-      chips.push({ label: tag.trim(), key: `tag-${tag}` });
-    }
-  }
-
-  const cardContent = (
-    <div
-      className={classNames(
-        "flex h-full flex-col gap-3 rounded-2xl border border-brand-secondary/60 bg-white p-4 shadow-soft transition-shadow hover:shadow-md",
-        className
-      )}
+export default function ActivityCard({ icon, title, desc, tags = [], duration, indoor, zero }) {
+  return (
+    <article
+      className="
+        group relative rounded-2xl border border-brand-secondary/40 bg-white/70
+        backdrop-blur-xs shadow-[0_6px_24px_rgba(47,58,86,0.06)]
+        hover:shadow-[0_10px_30px_rgba(47,58,86,0.10)] hover:-translate-y-0.5
+        transition-all overflow-hidden
+      "
     >
-      <div className="flex items-start gap-3">
-        <div className="text-3xl" aria-hidden>
-          {emoji || "🎯"}
-        </div>
-        <div className="flex-1 space-y-2">
-          <h3 className="text-base font-semibold text-brand-ink">{title}</h3>
-          {shortDesc && <p className="text-sm text-brand-slate">{shortDesc}</p>}
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl shrink-0">{icon ?? "🎯"}</div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[17px] sm:text-[18px] font-semibold text-brand-ink/95">
+              {title}
+            </h3>
+
+            {desc ? (
+              <p className="mt-1 text-[13.5px] text-brand-ink/70 clamp-2">
+                {desc}
+              </p>
+            ) : null}
+
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {duration ? (
+                <span className="chip chip-soft">⏱ {duration} min</span>
+              ) : null}
+              {indoor ? <span className="chip">🏠 Dentro de casa</span> : null}
+              {zero ? <span className="chip">🧰 Zero material</span> : null}
+
+              {tags?.slice(0, 3).map((t, i) => (
+                <span key={i} className="chip chip-outline">{t}</span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-
-      {chips.length > 0 && (
-        <div className="flex flex-wrap gap-2 text-xs text-brand-slate">
-          {chips.map((chip) => (
-            <span
-              key={chip.key}
-              className={classNames(
-                "rounded-full border border-brand-secondary/40 bg-white px-3 py-1",
-                chip.highlight && "border-brand-primary/70 bg-brand-primary/5 text-brand-primary"
-              )}
-            >
-              {chip.label}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
+    </article>
   );
-
-  if (href) {
-    return (
-      <a href={href} className="block no-underline text-inherit">
-        {cardContent}
-      </a>
-    );
-  }
-
-  return cardContent;
 }
