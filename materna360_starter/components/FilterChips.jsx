@@ -2,7 +2,11 @@
 'use client';
 
 import React from 'react';
-import clsx from 'clsx';
+
+// Helper simples para juntar classes sem precisar de 'clsx'
+function cx(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
 
 /**
  * Componente de chips de filtro acessíveis.
@@ -27,12 +31,7 @@ export default function FilterChips({ filters, setFilters, className }) {
   };
 
   return (
-    <div
-      className={clsx(
-        'flex flex-wrap items-center gap-2',
-        className
-      )}
-    >
+    <div className={cx('flex flex-wrap items-center gap-2', className)}>
       {CHIP_SPEC.map(({ key, label, icon }) => {
         const active = !!filters?.[key];
 
@@ -40,11 +39,11 @@ export default function FilterChips({ filters, setFilters, className }) {
           <button
             key={key}
             type="button"
-            // Acessibilidade: usamos "button" com aria-pressed em vez de role="switch".
+            // Acessibilidade: usamos "button" com aria-pressed (em vez de role="switch")
             role="button"
             aria-pressed={active}
             onClick={() => onToggle(key)}
-            className={clsx(
+            className={cx(
               'px-3 py-[7px] rounded-xl text-[13px] sm:text-[14px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40',
               active
                 ? 'bg-brand/10 text-brand-ink/90 border border-brand/20'
