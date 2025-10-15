@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-labelledby="title desc">
+  <title id="title">Programa Calma Materna</title>
+  <desc id="desc">Ilustração abstrata em tons rosados suaves com formas fluídas</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe6f0" />
+      <stop offset="100%" stop-color="#ffd1e4" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)" rx="36" />
+  <circle cx="320" cy="80" r="70" fill="#ff9bbd" opacity="0.35" />
+  <circle cx="110" cy="220" r="90" fill="#ff5f9d" opacity="0.25" />
+  <path d="M60 120 Q140 40 240 140 T380 160" fill="none" stroke="#ff5e8b" stroke-width="18" stroke-linecap="round" opacity="0.35" />
+  <text x="40" y="190" font-family="'Poppins', 'Helvetica', sans-serif" font-size="34" fill="#b6286b" font-weight="600">Calma Materna</text>
+  <text x="40" y="226" font-family="'Poppins', 'Helvetica', sans-serif" font-size="18" fill="#b6286b" opacity="0.72">Respire e acolha seus dias</text>
+</svg>

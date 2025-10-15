@@ -20,7 +20,9 @@ function readLocalProgress(slug) {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((value) => Number.isInteger(value));
+    const sanitized = parsed.filter((value) => Number.isInteger(value));
+    sanitized.sort((a, b) => a - b);
+    return sanitized;
   } catch (error) {
     console.warn("Unable to parse local progress", error);
     return [];

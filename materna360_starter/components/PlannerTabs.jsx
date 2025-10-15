@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 const TABS = [
@@ -14,37 +14,48 @@ export default function PlannerTabs() {
   const [newText, setNewText] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{ load(); }, [tab]);
-
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("planner_items")
-      .select("*")
-      .eq("tab", tab)
-      .order("due_date", { ascending: true });
-    setItems(data || []);
-    setLoading(false);
-  }
+    try {
+      const { data, error } = await supabase
+        .from("planner_items")
+        .select("*")
+        .eq("tab", tab)
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      setItems(data || []);
+    } catch (error) {
+      console.warn("Erro ao carregar planner", error);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function addItem() {
     if (!newText.trim()) return;
     await supabase.from("planner_items").insert({ tab, title: newText.trim() });
     setNewText("");
-    load();
+    await load();
   }
 
   async function toggle(id, done) {
     await supabase.from("planner_items").update({ done: !done }).eq("id", id);
-    setItems(list => list.map(it => it.id === id ? { ...it, done: !done } : it));
+    setItems((list) => list.map((it) => (it.id === id ? { ...it, done: !done } : it)));
   }
 
   async function remove(id) {
     await supabase.from("planner_items").delete().eq("id", id);
-    setItems(list => list.filter(it => it.id !== id));
+    setItems((list) => list.filter((it) => it.id !== id));
   }
 
-  const progress = items.length ? Math.round(items.filter(i=>i.done).length / items.length * 100) : 0;
+  const progress = items.length
+    ? Math.round((items.filter((item) => item.done).length / items.length) * 100)
+    : 0;
 
   return (
     <div className="space-y-4">

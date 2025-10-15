@@ -3,7 +3,7 @@ export const PROGRAMS_7D = [
     slug: "calma-materna-7d",
     title: "Calma Materna • 7 dias",
     subtitle: "Respiração, áudio curto e 1 micro-ação/dia",
-    cover_url: "/images/programs/calma.jpg",
+    cover_url: "/images/programs/calma.svg",
     days: [
       {
         day: 1,
@@ -60,7 +60,7 @@ export const PROGRAMS_7D = [
     slug: "brincar-todo-dia-7d",
     title: "Brincar Todo Dia • 7 dias",
     subtitle: "Atividades curtas ‘zero material’",
-    cover_url: "/images/programs/brincar.jpg",
+    cover_url: "/images/programs/brincar.svg",
     days: [
       {
         day: 1,
@@ -117,7 +117,7 @@ export const PROGRAMS_7D = [
     slug: "sono-doce-7d",
     title: "Sono Doce • 7 dias",
     subtitle: "Ritual noturno e ambiente tranquilo",
-    cover_url: "/images/programs/sono.jpg",
+    cover_url: "/images/programs/sono.svg",
     days: [
       {
         day: 1,

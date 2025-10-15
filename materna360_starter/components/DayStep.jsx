@@ -33,7 +33,7 @@ export default function DayStep({ dayData, completed = false, onComplete, offlin
         <p className="leading-relaxed text-brand-ink/90">{activity}</p>
       </section>
 
-      <section className="space-y-4 rounded-2xl bg-brand-rose/10 p-4">
+      <section className="space-y-4 rounded-2xl bg-brand-secondary/20 p-4">
         <div>
           <h3 className="text-lg font-semibold text-brand-ink">Micro-ação</h3>
           <p className="mt-1 leading-relaxed text-brand-ink/90">{microAction}</p>

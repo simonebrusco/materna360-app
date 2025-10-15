@@ -1,5 +1,6 @@
 'use client';
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import DailyMessage from "@/components/DailyMessage";
@@ -75,7 +76,14 @@ export default function TodayPage() {
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xs border-b border-white/60">
         <div className="mx-auto max-w-md px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/logo-header.png" alt="Materna360" className="h-7 w-auto" />
+            <Image
+              src="/logo-header.png"
+              alt="Materna360"
+              width={112}
+              height={28}
+              className="h-7 w-auto"
+              priority
+            />
           </div>
           <a
             href="/eu360"
