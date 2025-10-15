@@ -4,11 +4,12 @@ import '@/styles/globals.css';
 export const metadata = {
   title: 'Materna360',
   description: 'Seu dia, leve e organizado.',
-  // nada de themeColor aqui
+  // NÃO coloque themeColor aqui
 };
 
 export const viewport = {
-  themeColor: '#ff005e', // cor principal
+  // theme-color global fica aqui
+  themeColor: '#ff005e',
 };
 
 export default function RootLayout({ children }) {
