@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { getSuggestedActivity } from "@/lib/activities";
 import DailyMessage from "@/components/DailyMessage";
 import GlassCard from "@/components/GlassCard";
 import ActionCard from "@/components/ActionCard";
@@ -19,6 +20,7 @@ export default function TodayPage() {
   });
   const [activities, setActivities] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [suggestion, setSuggestion] = useState(null);
 
   // --------------- carregar dados ---------------
   useEffect(() => {
@@ -37,11 +39,11 @@ export default function TodayPage() {
       if (q) setQuote({ text: q.text, author: q.author || "Materna360" });
 
       // Atalhos
-      const { data: acts } = await supabase
+      const { data: acts, error: actsError } = await supabase
         .from("activities")
         .select("title, subtitle, icon, highlight, sort, href")
         .order("sort", { ascending: true });
-      if (acts) setActivities(acts);
+      if (!actsError && acts) setActivities(acts);
 
       // Metas
       const { data: g } = await supabase
@@ -49,6 +51,9 @@ export default function TodayPage() {
         .select("label, sort")
         .order("sort", { ascending: true });
       if (g) setGoals(g);
+
+      const { data: suggestionData } = await getSuggestedActivity();
+      if (suggestionData) setSuggestion(suggestionData);
     }
     loadAll();
   }, []);
@@ -56,11 +61,24 @@ export default function TodayPage() {
   // --------------- fallbacks (segurança) ---------------
   const fallbackActivities = [
     { title: "Rotina da Casa",      subtitle: "Organizar tarefas",      icon: "🏠", highlight: false, href: "/brincar" },
-    { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",     icon: "💕", highlight: false, href: "/brincar/moments" },
-    { title: "Atividade do Dia",    subtitle: "Brincadeira educativa",  icon: "🎨", highlight: true,  href: "/brincar/daily" },
+    { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",     icon: "💕", highlight: false, href: "/brincar" },
+    { title: "Atividade do Dia",    subtitle: "Brincadeira educativa",  icon: "🎨", highlight: true,  href: "/brincar" },
     { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",    icon: "🌿", highlight: false, href: "/cuidar" },
   ];
   const safeActivities = activities?.length ? activities : fallbackActivities;
+  const resolveHref = (activity) => {
+    if (activity?.href) return activity.href;
+
+    const title = activity?.title ?? "";
+    if (/atividade do dia/i.test(title) || /brincar/i.test(title)) {
+      return "/brincar";
+    }
+    if (/cuidar/i.test(title) || /autocuidado/i.test(title)) {
+      return "/cuidar";
+    }
+
+    return "/brincar";
+  };
 
   const fallbackGoals = [
     { label: "Beber água" },
@@ -101,6 +119,30 @@ export default function TodayPage() {
           <h1 className="text-2xl font-semibold">Olá, {name} 👋</h1>
         </section>
 
+        {/* Sugestão do dia */}
+        {suggestion && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">Sugestão do dia</h2>
+            <GlassCard className="flex items-center justify-between gap-4 border-white/70 bg-white p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-3xl" aria-hidden>
+                  {suggestion.emoji || "🎯"}
+                </span>
+                <div>
+                  <p className="text-sm text-brand-slate">Uma brincadeira para agora</p>
+                  <h3 className="text-base font-semibold text-brand-ink">{suggestion.title}</h3>
+                </div>
+              </div>
+              <a
+                href="/brincar"
+                className="text-sm font-medium text-brand-primary underline-offset-2 hover:underline"
+              >
+                Ver detalhes
+              </a>
+            </GlassCard>
+          </section>
+        )}
+
         {/* Atalhos */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Atalhos do dia</h2>
@@ -112,7 +154,7 @@ export default function TodayPage() {
                 title={a.title}
                 subtitle={a.subtitle || ""}
                 highlight={!!a.highlight}
-                href={a.href || "/brincar"}
+                href={resolveHref(a)}
               />
             ))}
           </div>

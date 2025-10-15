@@ -1,178 +1,116 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
-import FilterChips from "@/components/FilterChips";
-import GlassCard from "@/components/GlassCard";
+import { useEffect, useMemo, useState } from "react";
 import AppBar from "@/components/AppBar";
 import BottomNav from "@/components/BottomNav";
+import FilterChips from "@/components/FilterChips";
+import ActivityCard from "@/components/ActivityCard";
+import GlassCard from "@/components/GlassCard";
+import { listActivities } from "@/lib/activities";
 
 export default function BrincarPage() {
   const [zeroMaterial, setZeroMaterial] = useState(false);
   const [quickOnly, setQuickOnly] = useState(false);
+  const [indoorOnly, setIndoorOnly] = useState(false);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [missingSchema, setMissingSchema] = useState(false);
+  const [error, setError] = useState(null);
+
+  const filters = useMemo(
+    () => ({ zeroMaterial, quick: quickOnly, indoor: indoorOnly }),
+    [zeroMaterial, quickOnly, indoorOnly]
+  );
 
   useEffect(() => {
-    let isActive = true;
+    let active = true;
 
-    async function loadActivities() {
+    async function fetchActivities() {
       setLoading(true);
-      setHasError(false);
+      const { data, error: fetchError } = await listActivities(filters);
 
-      // CODEX:brincar:filters:start
-      let query = supabase
-        .from("activities")
-        .select(
-          "title, subtitle, icon, duration_min, zero_material, indoor, age_min, age_max, slug"
-        )
-        .order("title", { ascending: true });
+      if (!active) return;
 
-      if (zeroMaterial) {
-        query = query.eq("zero_material", true);
+      if (fetchError) {
+        setError(fetchError);
+        setActivities([]);
+      } else {
+        setError(null);
+        setActivities(data);
       }
 
-      if (quickOnly) {
-        query = query.lte("duration_min", 10);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        const combinedMessage = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
-        const missingColumn =
-          combinedMessage.includes("zero_material") || combinedMessage.includes("duration_min");
-
-        if (missingColumn) {
-          if (isActive) {
-            setMissingSchema(true);
-            if (zeroMaterial) {
-              setZeroMaterial(false);
-            }
-            if (quickOnly) {
-              setQuickOnly(false);
-            }
-          }
-
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from("activities")
-            .select("title, subtitle, icon, indoor, age_min, age_max, slug")
-            .order("title", { ascending: true });
-
-          if (fallbackError) {
-            if (isActive) {
-              setHasError(true);
-              setActivities([]);
-            }
-          } else if (isActive) {
-            setActivities(fallbackData ?? []);
-          }
-        } else if (isActive) {
-          setHasError(true);
-          setActivities([]);
-        }
-      } else if (isActive) {
-        setMissingSchema(false);
-        setActivities(data ?? []);
-      }
-      // CODEX:brincar:filters:end
-
-      if (isActive) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
 
-    loadActivities();
+    fetchActivities();
 
     return () => {
-      isActive = false;
+      active = false;
     };
-  }, [zeroMaterial, quickOnly]);
+  }, [filters]);
 
-  const handleClearFilters = () => {
-    setZeroMaterial(false);
-    setQuickOnly(false);
-  };
-
-  const showEmptyState = !loading && !hasError && activities.length === 0 && (zeroMaterial || quickOnly);
+  const showEmptyState = !loading && !error && activities.length === 0;
 
   return (
     <main className="mx-auto max-w-md">
       <AppBar title="Brincar" backHref="/" />
 
-      <div className="px-4">
-        <div className="py-4 space-y-1">
+      <div className="px-4 pb-6">
+        <header className="py-4 space-y-1">
           <h1 className="text-2xl font-semibold">Brincar</h1>
           <p className="text-brand-slate">Ideias rápidas para momentos especiais em família.</p>
-        </div>
+        </header>
 
         <div className="sticky top-12 z-10 -mx-4 border-b border-white/60 bg-white/90 px-4 pb-3 pt-4 backdrop-blur-xs">
           <FilterChips
             zeroMaterial={zeroMaterial}
             quickOnly={quickOnly}
+            indoorOnly={indoorOnly}
             onToggleZero={() => setZeroMaterial((prev) => !prev)}
             onToggleQuick={() => setQuickOnly((prev) => !prev)}
-            onClear={handleClearFilters}
-            disabled={missingSchema}
+            onToggleIndoor={() => setIndoorOnly((prev) => !prev)}
+            onClear={() => {
+              setZeroMaterial(false);
+              setQuickOnly(false);
+              setIndoorOnly(false);
+            }}
           />
         </div>
 
-        <div className="space-y-3 py-4">
+        <section className="space-y-3 py-4">
           {loading && (
             <div className="space-y-3">
               {[...Array(4)].map((_, index) => (
-                <div key={index} className="h-20 rounded-2xl border border-brand-secondary/40 bg-white/60" />
+                <div key={index} className="h-24 rounded-2xl border border-brand-secondary/40 bg-white/60" />
               ))}
             </div>
           )}
 
-          {!loading && hasError && (
+          {!loading && error && (
             <GlassCard className="p-4 text-brand-slate">
-              Não foi possível carregar as atividades agora.
+              Não foi possível carregar as atividades agora. Tente novamente mais tarde.
             </GlassCard>
           )}
 
           {showEmptyState && (
             <GlassCard className="p-4 text-brand-slate">
-              Nenhuma atividade com esses filtros. Tente limpar os filtros.
+              Não encontramos atividades com esses filtros. Ajuste os filtros para ver mais opções.
             </GlassCard>
           )}
 
-          {!loading && !hasError && activities.map((activity, index) => (
-            <Link key={index} href={`/brincar/${activity.slug ?? "#"}`}>
-              <div className="rounded-2xl border border-brand-secondary/60 bg-white p-4 shadow-soft transition-shadow hover:shadow-md">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">{activity.icon || "🎯"}</div>
-                  <div className="flex-1">
-                    <div className="font-medium text-brand-ink">{activity.title}</div>
-                    {activity.subtitle && (
-                      <div className="text-sm text-brand-slate">{activity.subtitle}</div>
-                    )}
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-brand-slate">
-                      {activity.zero_material && (
-                        <span className="text-xs px-2 py-1 rounded-full border bg-white">Zero material</span>
-                      )}
-                      {typeof activity.duration_min === "number" && activity.duration_min <= 10 && (
-                        <span className="text-xs px-2 py-1 rounded-full border bg-white">≤10 min</span>
-                      )}
-                      {(activity.age_min || activity.age_max) && (
-                        <span className="text-xs px-2 py-1 rounded-full border bg-white">
-                          {activity.age_min ?? "?"}–{activity.age_max ?? "?"} anos
-                        </span>
-                      )}
-                      {activity.indoor && (
-                        <span className="text-xs px-2 py-1 rounded-full border bg-white">Dentro de casa</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+          {!loading && !error &&
+            activities.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                title={activity.title}
+                emoji={activity.emoji}
+                shortDesc={activity.short_desc}
+                tags={activity.tags}
+                durationMin={activity.duration_min}
+                zeroMaterial={activity.zero_material}
+                indoor={activity.indoor}
+              />
+            ))}
+        </section>
       </div>
 
       <BottomNav />
