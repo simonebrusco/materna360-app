@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-labelledby="title desc">
+  <title id="title">Programa Sono Doce</title>
+  <desc id="desc">Cena noturna calma com estrelas e lua estilizada</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d9e9ff" />
+      <stop offset="100%" stop-color="#9fc6ff" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)" rx="36" />
+  <path d="M280 90a60 60 0 1 1-85 78 50 50 0 1 0 85-78z" fill="#fff6d6" />
+  <g fill="#fff" opacity="0.8">
+    <circle cx="90" cy="80" r="6" />
+    <circle cx="140" cy="40" r="5" />
+    <circle cx="180" cy="120" r="4" />
+    <circle cx="340" cy="70" r="5" />
+    <circle cx="300" cy="40" r="4" />
+  </g>
+  <path d="M40 240 Q120 200 200 230 T360 236" fill="none" stroke="#4a6fa1" stroke-width="22" stroke-linecap="round" opacity="0.45" />
+  <text x="40" y="210" font-family="'Poppins', 'Helvetica', sans-serif" font-size="34" fill="#2f4a73" font-weight="600">Sono Doce</text>
+  <text x="40" y="246" font-family="'Poppins', 'Helvetica', sans-serif" font-size="18" fill="#2f4a73" opacity="0.75">Rituais de noite tranquila</text>
+</svg>
