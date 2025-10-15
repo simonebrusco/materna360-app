@@ -1,4 +1,3 @@
-// materna360_starter/app/layout.jsx
 import '../estilos/globals.css'; // ✅ caminho correto pro seu projeto
 
 export const metadata = {
