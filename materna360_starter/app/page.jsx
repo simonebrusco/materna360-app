@@ -1,5 +1,6 @@
+// materna360_starter/app/page.jsx
 'use client';
-export const revalidate = 0;
+export const revalidate = 0; // ✅ número (0, 60, ...) — nunca objeto
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -70,4 +71,4 @@ export default function TodayPage() {
       </div>
     </div>
   );
-} 
+}
