@@ -5,8 +5,6 @@ import { supabase } from "@/lib/supabaseClient";
 import FiltersBar from "@/components/FiltersBar";
 import GlassCard from "@/components/GlassCard";
 
-export const metadata = { title: "Brincar • Materna360" };
-
 export default function BrincarPage() {
   const [zeroMat, setZeroMat] = useState(false);
   const [short, setShort] = useState(false);
