@@ -1,41 +1,56 @@
-/* clamps sem plugin */
-.clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* materna360_starter/styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* —— Tokens rápidos do tema —— */
+:root{
+  --brand-primary:#ff005e;
+  --brand-secondary:#ffd8e6;
+  --brand-ink:#2f3a56;
+  --brand-muted:#59636f;
+  --radius-xl:14px;
+  --radius-2xl:20px;
 }
 
-/* chips */
-.chip {
-  padding: 4px 10px;
-  font-size: 12.5px;
-  line-height: 1;
-  border-radius: 999px;
-  background: rgba(47,58,86,0.08);
-  color: rgba(47,58,86,0.80);
-  border: 1px solid rgba(47,58,86,0.12);
+/* Tipografia de títulos (fallback se as fontes não carregarem) */
+h1,h2,h3{ font-family: var(--font-title), system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
+
+/* —— Utilitários usados nos cards/chips —— */
+.clamp-2{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
 
-.chip-outline {
-  background: transparent;
+.chip{
+  padding:4px 10px;
+  font-size:12.5px;
+  line-height:1;
+  border-radius:999px;
+  background:rgba(47,58,86,.08);
+  color:rgba(47,58,86,.80);
+  border:1px solid rgba(47,58,86,.12);
+}
+.chip-outline{ background:transparent; }
+.chip-soft{
+  background:rgba(255,0,94,.07);
+  color:#2f3a56;
+  border-color:rgba(255,0,94,.18);
+}
+.chip-lg{
+  padding:8px 14px;
+  font-size:14px;
+  border-radius:999px;
+  background:rgba(47,58,86,.06);
+  color:rgba(47,58,86,.85);
+  border:1px solid rgba(47,58,86,.14);
+}
+.chip-lg.chip-active{
+  background:rgba(255,0,94,.12);
+  border-color:rgba(255,0,94,.35);
 }
 
-.chip-soft {
-  background: rgba(255,0,94,0.07);
-  color: #2f3a56;
-  border-color: rgba(255,0,94,0.18);
-}
-
-.chip-lg {
-  padding: 8px 14px;
-  font-size: 14px;
-  border-radius: 999px;
-  background: rgba(47,58,86,0.06);
-  color: rgba(47,58,86,0.85);
-  border: 1px solid rgba(47,58,86,0.14);
-}
-.chip-lg.chip-active {
-  background: rgba(255,0,94,0.12);
-  border-color: rgba(255,0,94,0.35);
-}
+/* Sombras suaves usadas nos cards */
+.shadow-brand{ box-shadow:0 8px 30px rgba(47,58,86,.12); }
