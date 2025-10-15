@@ -1,6 +1,7 @@
 'use client';
-
+ 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getSuggestedActivity } from "@/lib/activities";
@@ -188,7 +189,14 @@ export default function TodayPage() {
 
           <GlassCard className="p-4 bg-white border-white/70">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium">Planner da Família</h3>
+              <h3 className="font-medium">
+                <Link
+                  href="/eu360"
+                  className="text-brand-ink transition hover:text-brand-primary"
+                >
+                  Planner da Família
+                </Link>
+              </h3>
               <a href="/eu360" className="text-xs underline text-brand-slate">Abrir</a>
             </div>
             <div className="mt-3 grid grid-cols-7 gap-2 text-center">
