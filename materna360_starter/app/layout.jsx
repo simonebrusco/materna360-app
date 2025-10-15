@@ -1,11 +1,11 @@
-import '../estilos/globals.css'; // ✅ caminho correto pro seu projeto
+// materna360_starter/app/layout.jsx
+import '@/styles/globals.css'; // ✅ caminho correto e estável
 
 export const metadata = {
   title: 'Materna360',
   description: 'Seu dia mais leve, organizado e com carinho.',
 };
 
-// ⚠️ themeColor tem que ir em viewport (não em metadata)
 export const viewport = {
   themeColor: '#ffffff',
 };
