@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import supabase from "@/lib/supabaseClient";
+import { supabase } from '@/lib/supabaseClient';
 import ActivityCard from "@/components/ActivityCard";
 import SectionTitle from "@/components/SectionTitle";
 
