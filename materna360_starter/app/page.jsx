@@ -11,20 +11,20 @@ import Goal from "@/components/Goal";
 export default function TodayPage() {
   const name = "Simone";
 
-  // Mensagem do dia (fallback até carregar)
+  // Estado: Mensagem do dia (fallback até carregar)
   const [quote, setQuote] = useState({
     text: "Pequenos gestos diários constroem grandes memórias.",
     author: "Materna360",
   });
 
-  // Atividades (com href) e Metas
+  // Estado: Atividades (com href) e Metas
   const [activities, setActivities] = useState([]);
   const [goals, setGoals] = useState([]);
 
-  // Estados do check-in
+  // Check-in empático
   const [showMoodPicker, setShowMoodPicker] = useState(false);
-  const [moodTip, setMoodTip] = useState("");     // mensagem pós-clique
-  const [toast, setToast] = useState("");         // feedback curto
+  const [moodTip, setMoodTip] = useState("");
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     async function loadAll() {
@@ -59,7 +59,7 @@ export default function TodayPage() {
     loadAll();
   }, []);
 
-  // Salva humor e mostra mensagem empática
+  // Salva humor e mostra mensagem relacionada
   async function saveMood(moodKey) {
     const moodMessages = {
       sad:    "Tudo bem ir devagar hoje. Experimente 2 min de respiração em Cuidar. 💗",
@@ -111,7 +111,7 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Atalhos do dia (2x2) — usando href */}
+        {/* Atalhos do dia (2x2) */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Atalhos do dia</h2>
 
@@ -137,7 +137,7 @@ export default function TodayPage() {
           </div>
         </section>
 
-        {/* Progresso + Planner (placeholder por enquanto) */}
+        {/* Progresso + Planner (placeholder) */}
         <section className="space-y-5">
           <GlassCard className="p-4">
             <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ export default function TodayPage() {
           </GlassCard>
         </section>
 
-        {/* Check-in empático (novo fluxo) */}
+        {/* Check-in empático */}
         <section className="space-y-4">
           <GlassCard className="p-4 bg-brand-secondary/50 border-brand-secondary/70">
             <h3 className="font-medium">Como você está hoje?</h3>
