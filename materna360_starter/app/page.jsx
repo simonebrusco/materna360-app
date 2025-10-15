@@ -1,15 +1,66 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
+import DailyMessage from "@/components/DailyMessage";
+import GlassCard from "@/components/GlassCard";
+import ActionCard from "@/components/ActionCard";
+import Goal from "@/components/Goal";
 
-export default function HomePage() {
-  // Estados do check-in
+export default function TodayPage() {
+  const name = "Simone";
+
+  // Estado: Mensagem do dia (fallback até carregar)
+  const [quote, setQuote] = useState({
+    text: "Pequenos gestos diários constroem grandes memórias.",
+    author: "Materna360",
+  });
+
+  // Estado: Atividades (com href) e Metas
+  const [activities, setActivities] = useState([]);
+  const [goals, setGoals] = useState([]);
+
+  // Check-in empático
   const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [moodTip, setMoodTip] = useState("");
   const [toast, setToast] = useState("");
 
+  // Carregar dados
+  useEffect(() => {
+    async function loadAll() {
+      const now = new Date().toISOString();
+
+      // Daily quote
+      const { data: q } = await supabase
+        .from("daily_quotes")
+        .select("text, author, starts_at, ends_at")
+        .lte("starts_at", now)
+        .gte("ends_at", now)
+        .order("starts_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (q) setQuote({ text: q.text, author: q.author || "Materna360" });
+
+      // Activities (inclui href)
+      const { data: acts } = await supabase
+        .from("activities")
+        .select("title, subtitle, icon, highlight, sort, href")
+        .order("sort", { ascending: true });
+      if (acts) setActivities(acts);
+
+      // Goals
+      const { data: g } = await supabase
+        .from("goals")
+        .select("label, sort")
+        .order("sort", { ascending: true });
+      if (g) setGoals(g);
+    }
+
+    loadAll();
+  }, []);
+
+  // Salva humor e mostra mensagem relacionada
   async function saveMood(moodKey) {
     const moodMessages = {
       sad:    "Tudo bem ir devagar hoje. Experimente 2 min de respiração em Cuidar. 💗",
@@ -23,12 +74,28 @@ export default function HomePage() {
       await supabase.from("mood_checkins").insert({ mood: moodKey });
       setToast("Check-in salvo!");
       setMoodTip(moodMessages[moodKey] || "");
-    } catch {
+    } catch (e) {
       setToast("Não deu para salvar agora. Tente novamente.");
     } finally {
       setTimeout(() => setToast(""), 2200);
     }
   }
+
+  // Fallbacks
+  const fallbackActivities = [
+    { title: "Rotina da Casa",      subtitle: "Organizar tarefas",     icon: "🏠", highlight: false, href: "/brincar" },
+    { title: "Tempo com Meu Filho", subtitle: "Registrar momentos",     icon: "💕", highlight: false, href: "/brincar/moments" },
+    { title: "Atividade do Dia",    subtitle: "Brincadeira educativa", icon: "🎨", highlight: true,  href: "/brincar/daily" },
+    { title: "Momento para Mim",    subtitle: "Pausa e autocuidado",   icon: "🌿", highlight: false, href: "/cuidar" },
+  ];
+  const safeActivities = activities?.length ? activities : fallbackActivities;
+
+  const fallbackGoals = [
+    { label: "Beber água" },
+    { label: "Brincar 15 min" },
+    { label: "Respirar 2 min" },
+  ];
+  const safeGoals = goals?.length ? goals : fallbackGoals;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-secondary via-white to-white text-brand-ink">
@@ -47,13 +114,70 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* CONTEÚDO */}
-      <div className="mx-auto max-w-md px-4 py-6 space-y-10">
-        {/* CHECK-IN bem visível */}
-        <section>
-          <div className="rounded-2xl bg-white border-2 border-brand-primary/30 shadow-lg p-4">
-            <h1 className="text-2xl font-semibold mb-3">Meu Dia</h1>
+      {/* Content */}
+      <div className="mx-auto max-w-md px-4 py-6 space-y-16">
+        {/* Saudação + Mensagem do dia */}
+        <section className="space-y-4">
+          <div>
+            <p className="text-sm text-brand-slate">Hoje</p>
+            <h1 className="text-2xl font-semibold">Olá, {name} 👋</h1>
+          </div>
 
+          <GlassCard className="p-4 bg-white border-white/70">
+            <DailyMessage text={quote.text} author={quote.author} />
+          </GlassCard>
+        </section>
+
+        {/* Atalhos do dia (2x2) */}
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Atalhos do dia</h2>
+
+          <div className="grid grid-cols-2 gap-3">
+            {safeActivities.map((a, i) => (
+              <ActionCard
+                key={i}
+                icon={a.icon || "✨"}
+                title={a.title}
+                subtitle={a.subtitle || ""}
+                highlight={!!a.highlight}
+                href={a.href || "/brincar"}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Progresso + Planner */}
+        <section className="space-y-5">
+          <GlassCard className="p-4 bg-white border-white/70">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Seu Progresso</h3>
+              <span className="text-sm text-brand-slate">Hoje</span>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-brand-secondary/60">
+              <div className="h-2 w-2/3 rounded-full bg-brand-primary" />
+            </div>
+            <p className="mt-2 text-sm text-brand-slate">2 de 3 metas concluídas</p>
+          </GlassCard>
+
+          <GlassCard className="p-4 bg-white border-white/70">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Planner da Família</h3>
+              <a href="/eu360" className="text-xs underline text-brand-slate">Abrir</a>
+            </div>
+            <div className="mt-3 grid grid-cols-7 gap-2 text-center">
+              {["S", "T", "Q", "Q", "S", "S", "D"].map((d, i) => (
+                <div key={i} className="py-2 rounded-xl border border-brand-secondary/60 bg-white text-sm">
+                  <div className="font-medium">{d}</div>
+                  <div className="text-[11px] text-brand-slate">{10 + i} / 06</div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </section>
+
+        {/* Check-in empático */}
+        <section className="space-y-4">
+          <GlassCard className="p-4 bg-white border-brand-secondary/70">
             <h3 className="font-medium">Como você está hoje?</h3>
             <p className="text-sm text-brand-slate mt-1">Registre seu humor de hoje</p>
 
@@ -90,46 +214,57 @@ export default function HomePage() {
             )}
 
             {moodTip && (
-              <div className="mt-3 text-sm text-brand-ink">{moodTip}</div>
+              <div className="mt-3 text-sm text-brand-ink">
+                {moodTip}
+              </div>
             )}
-          </div>
+          </GlassCard>
         </section>
 
-        {/* Dica temporária de navegação */}
-        <div className="text-center text-sm text-brand-slate">
-          Use o menu abaixo para navegar • Agora o check-in deve aparecer ✅
-        </div>
-      </div>
+        {/* Metas */}
+        <section className="space-y-5">
+          <GlassCard className="p-4 bg-white border-white/70">
+            <h3 className="font-medium mb-3">Minhas Metas de Hoje</h3>
+            <div className="flex items-center gap-3">
+              {safeGoals.map((g, i) => (
+                <Goal key={i} label={g.label} done={i < 2} />
+              ))}
+            </div>
+          </GlassCard>
+        </section>
 
-      {/* Bottom nav */}
-      <nav className="sticky bottom-4 mx-auto max-w-md">
-        <div className="mx-4 rounded-2xl bg-white/90 backdrop-blur-xs border border-white/60 shadow-soft">
-          <ul className="grid grid-cols-4 text-center text-sm">
-            {[
-              { label: "Meu Dia",  icon: "🏡", href: "/" },
-              { label: "Brincar",  icon: "🎯", href: "/brincar" },
-              { label: "Cuidar",   icon: "🧘", href: "/cuidar" },
-              { label: "Eu360",    icon: "👤", href: "/eu360" },
-            ].map((t, i) => (
-              <li key={i} className="py-3 flex flex-col items-center gap-1">
-                <a href={t.href} className="text-lg">{t.icon}</a>
-                <span className={`text-[11px] ${i === 0 ? "font-medium" : "text-brand-slate"}`}>
-                  {t.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
-
-      {/* Toast */}
-      {toast && (
-        <div className="fixed inset-x-0 bottom-20 mx-auto max-w-md px-4">
-          <div className="rounded-xl bg-brand-primary text-white px-3 py-2 text-sm text-center shadow-soft">
-            {toast}
+        {/* Bottom nav */}
+        <nav className="sticky bottom-4 mx-auto max-w-md">
+          <div className="mx-4 rounded-2xl bg-white/90 backdrop-blur-xs border border-white/60 shadow-soft">
+            <ul className="grid grid-cols-4 text-center text-sm">
+              {[
+                { label: "Meu Dia",  icon: "🏡", href: "/" },
+                { label: "Brincar",  icon: "🎯", href: "/brincar" },
+                { label: "Cuidar",   icon: "🧘", href: "/cuidar" },
+                { label: "Eu360",    icon: "👤", href: "/eu360" },
+              ].map((t, i) => (
+                <li key={i} className="py-3 flex flex-col items-center gap-1">
+                  <a href={t.href} className="text-lg">{t.icon}</a>
+                  <span className={`text-[11px] ${i === 0 ? "font-medium" : "text-brand-slate"}`}>
+                    {t.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      )}
+        </nav>
+
+        {/* Toast */}
+        {toast && (
+          <div className="fixed inset-x-0 bottom-20 mx-auto max-w-md px-4">
+            <div className="rounded-xl bg-brand-primary text-white px-3 py-2 text-sm text-center shadow-soft">
+              {toast}
+            </div>
+          </div>
+        )}
+
+        <div className="h-2" />
+      </div>
     </div>
   );
 }
