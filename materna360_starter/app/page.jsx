@@ -19,8 +19,7 @@ export default function TodayPage() {
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xs border-b border-white/60">
         <div className="mx-auto max-w-md px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-brand-primary grid place-items-center text-white font-bold shadow-soft">M</div>
-            <span className="font-semibold tracking-tight">Materna360</span>
+            <img src="/logo-header.png" alt="Materna360" className="h-7 w-auto" />
           </div>
           <button className="text-sm rounded-full px-3 py-1 bg-white border border-brand-secondary/60 text-brand-slate hover:bg-brand-secondary/40 transition">
             Perfil
@@ -94,49 +93,4 @@ export default function TodayPage() {
           </GlassCard>
 
           <GlassCard className="p-4 bg-brand-secondary/50 border-brand-secondary/70">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🙂</span>
-              <div>
-                <h3 className="font-medium">Como você está hoje?</h3>
-                <p className="text-sm text-brand-slate mt-1">Faça um check-in rápido do seu humor</p>
-                <div className="mt-3 flex gap-2 text-2xl">
-                  {"😞😐🙂😊🤩".split("")?.map((m, i) => (
-                    <motion.button
-                      key={i}
-                      className="hover:scale-110 active:scale-95 transition-transform"
-                      whileTap={{ scale: 0.9 }}
-                      aria-label={`mood-${i}`}
-                    >
-                      {m}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </GlassCard>
-        </section>
-
-        {/* Bottom nav */}
-        <nav className="sticky bottom-4 mx-auto max-w-md">
-          <div className="mx-4 rounded-2xl bg-white/90 backdrop-blur-xs border border-white/60 shadow-soft">
-            <ul className="grid grid-cols-4 text-center text-sm">
-              {[
-                { label: "Hoje", icon: "🏡" },
-                { label: "Atividades", icon: "🎯" },
-                { label: "Bem-Estar", icon: "🧘" },
-                { label: "Perfil", icon: "👤" },
-              ].map((t, i) => (
-                <li key={i} className="py-3 flex flex-col items-center gap-1">
-                  <span className="text-lg">{t.icon}</span>
-                  <span className={`text-[11px] ${i === 0 ? "font-medium" : "text-brand-slate"}`}>{t.label}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </nav>
-
-        <div className="h-2" />
-      </div>
-    </div>
-  );
-}
+            <div className="flex items-start gap-3
