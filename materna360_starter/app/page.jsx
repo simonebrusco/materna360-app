@@ -4,7 +4,6 @@ export const revalidate = 0; // número (0, 60, ...) — nunca objeto
 
 import Link from 'next/link';
 import { useState } from 'react';
-
 import DailyMessage from '@/components/DailyMessage';
 import GlassCard from '@/components/GlassCard';
 import CheckinCard from '@/components/CheckinCard';
@@ -16,7 +15,6 @@ export default function TodayPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-secondary/40 via-white to-white text-brand-ink">
       <div className="mx-auto max-w-md px-4 py-5">
-        {/* Cabeçalho */}
         <header className="mb-4">
           <p className="text-sm text-brand-ink/70">Hoje</p>
           <h1 className="text-3xl font-semibold">
@@ -24,15 +22,12 @@ export default function TodayPage() {
           </h1>
         </header>
 
-        {/* Mensagem do Dia */}
         <GlassCard className="mb-5">
           <DailyMessage />
         </GlassCard>
 
-        {/* Check-in empático */}
         <CheckinCard />
 
-        {/* Atalhos do dia (fixos) */}
         {showShortcuts && (
           <>
             <h2 className="mt-6 mb-2 text-lg font-semibold">Atalhos do dia</h2>
