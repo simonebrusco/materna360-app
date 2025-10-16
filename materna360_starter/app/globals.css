@@ -2,57 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===============================
-   🌸 ESTILO GLOBAL MATERNA360
-   =============================== */
-
-/* Fonte e suavização geral */
-html, body {
-  min-height: 100%;
-  font-family: 'Inter', sans-serif;
-  color: #1A2240;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Tokens rápidos */
+:root{
+  --bg:#F5F5F5;
+  --text:#1E1E1E;
+  --brand:#F15A2E;
+  --brand-2:#6C4AB6;
 }
 
-/* === Fundo rosa padrão unificado === */
-:root {
-  --m360-bg: linear-gradient(180deg, #FFE1E6 0%, #FDE3E6 100%);
+/* Resets úteis */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
 }
 
-body {
-  background: var(--m360-bg);
-  margin: 0;
-  padding: 0;
-}
-
-/* Evita que páginas internas sobreponham o fundo */
-.m360-no-page-bg {
-  background: transparent !important;
-}
-
-/* ===== Scroll suave ===== */
-html {
-  scroll-behavior: smooth;
-}
-
-/* ===== Ajustes padrão de links e botões ===== */
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-button {
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-/* ===== Suavização e centralização de containers ===== */
-.container-center {
-  @apply mx-auto max-w-5xl px-5;
-}
-
-/* ===== Sombras suaves usadas nos cards ===== */
-.card-shadow {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+/* Helpers de UI */
+@layer components{
+  .container-px{ @apply max-w-3xl mx-auto px-4; }
+  .card{ @apply bg-white rounded-2xl shadow-card p-4; }
+  .title{ @apply text-2xl font-semibold; }
+  .subtitle{ @apply text-sm text-slate-500; }
+  .btn{ @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-medium; }
+  .btn-primary{ @apply btn bg-brand text-white hover:opacity-90; }
+  .link{ @apply text-brand hover:underline; }
 }
