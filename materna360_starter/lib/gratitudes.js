@@ -1,31 +1,28 @@
 // materna360_starter/lib/gratitudes.js
+// CRUD simples de gratidões com storage seguro
+
 import { getJSON, setJSON } from "./storage";
 
 const KEY = "m360:gratitudes";
 
+function coerceList(x) {
+  return Array.isArray(x) ? x : [];
+}
+
 export function listGratitudes() {
   const arr = getJSON(KEY, []);
-  // mais recentes primeiro
-  return Array.isArray(arr) ? [...arr].sort((a, b) => (b.ts || 0) - (a.ts || 0)) : [];
+  return coerceList(arr);
 }
 
 export function addGratitude(text) {
-  const trimmed = (text || "").trim();
-  if (!trimmed) return listGratitudes();
+  const t = (text || "").trim();
+  if (!t) return listGratitudes(); // nada a fazer
 
   const now = Date.now();
-  const next = [{ id: now, text: trimmed, ts: now }, ...listGratitudes()].slice(0, 50);
+  const item = { id: `${now}-${Math.random().toString(36).slice(2, 8)}`, text: t, ts: now };
+
+  const prev = listGratitudes();
+  const next = [item, ...prev].slice(0, 100); // limita tamanho
   setJSON(KEY, next);
-
-  // badge: Cuidar de Mim
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(
-      new CustomEvent("m360:win", { detail: { type: "badge", name: "CuidarDeMim" } })
-    );
-  }
   return next;
-}
-
-export function clearGratitudes() {
-  setJSON(KEY, []);
 }
