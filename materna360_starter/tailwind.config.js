@@ -1,17 +1,16 @@
-// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./materna360_starter/app/**/*.{js,jsx,ts,tsx,mdx}",
-    "./materna360_starter/components/**/*.{js,jsx,ts,tsx,mdx}",
-    "./materna360_starter/lib/**/*.{js,jsx,ts,tsx,mdx}",
+    "./app/**/*.{js,jsx,ts,tsx,mdx}",
+    "./components/**/*.{js,jsx,ts,tsx,mdx}",
+    "./lib/**/*.{js,jsx,ts,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#ff005e",
-          light: "#ffd8e6",
+          DEFAULT: "#ff005e",   // principal
+          light: "#ffd8e6",     // complemento
           navy: "#2f3a56",
           gray: "#545454",
           white: "#ffffff",
