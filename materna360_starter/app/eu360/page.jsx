@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { get, set, keys } from "../../lib/storage.js";
+import { getJSON  } from "../../lib/storage.js";
 import { CATALOG, getBadgeEvents, getUserBadges } from "../../lib/gamification.js";
 
 const GRATS_KEY = "m360:gratitudes"; // [{id, text, ts}]
