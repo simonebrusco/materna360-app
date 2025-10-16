@@ -1,3 +1,6 @@
+// app/layout.jsx
+import "./globals.css"; // ⬅️ IMPORTANTE: garante que o CSS carregue
+
 export const metadata = {
   title: "Materna360",
   description: "Um app feito para mães reais: que organiza, inspira e acolhe.",
