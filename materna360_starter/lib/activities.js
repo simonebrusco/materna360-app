@@ -1,64 +1,91 @@
-import { supabase } from "@/lib/supabaseClient";
+// lib/activities.js
+// Catálogo local (v1). Em breve podemos trocar por Supabase sem quebrar a API.
 
-const DEFAULT_COLUMNS =
-  "id, title, emoji, short_desc, tags, duration_min, zero_material, indoor, age_min, age_max";
+export const activities = [
+  {
+    id: "color-hunt",
+    title: "Caça ao Tesouro de Cores",
+    subtitle: "Procure objetos pela casa",
+    ages: ["2-3", "4-5"],
+    places: ["casa", "escola"],
+    tags: ["socioemocional", "linguagem", "coordenação"],
+    duration: 10,
+    emoji: "🎨",
+  },
+  {
+    id: "bubble-paint",
+    title: "Pintura com Bolhas de Sabão",
+    subtitle: "Experiência sensorial divertida",
+    ages: ["4-5", "6-7"],
+    places: ["ao-ar-livre", "parque", "casa"],
+    tags: ["coordenação", "criatividade"],
+    duration: 15,
+    emoji: "🫧",
+  },
+  {
+    id: "shadow-theatre",
+    title: "Teatro de Sombras",
+    subtitle: "Crie histórias com lanternas",
+    ages: ["6-7", "8+"],
+    places: ["casa", "escola"],
+    tags: ["linguagem", "imaginação"],
+    duration: 12,
+    emoji: "🎭",
+  },
+  {
+    id: "sock-puppets",
+    title: "Fantoches de Meia",
+    subtitle: "Conte uma história curtinha",
+    ages: ["2-3", "4-5"],
+    places: ["casa", "escola"],
+    tags: ["linguagem", "criatividade"],
+    duration: 8,
+    emoji: "🧦",
+  },
+  {
+    id: "leaf-rubbing",
+    title: "Textura de Folhas",
+    subtitle: "Descubra as nervuras das folhas",
+    ages: ["4-5", "6-7"],
+    places: ["parque", "ao-ar-livre"],
+    tags: ["coordenação", "natureza"],
+    duration: 10,
+    emoji: "🍃",
+  },
+  {
+    id: "shape-hunt",
+    title: "Caça às Formas",
+    subtitle: "Ache círculos, quadrados e triângulos",
+    ages: ["0-1", "2-3"],
+    places: ["casa", "escola"],
+    tags: ["cognição", "coordenação"],
+    duration: 7,
+    emoji: "🔶",
+  },
+];
 
-function getClient(customClient) {
-  return customClient ?? supabase;
+// API estável que a página /brincar usa
+export function listActivities({ age, place } = {}) {
+  let list = activities;
+  if (age)   list = list.filter(a => !a.ages   || a.ages.includes(age));
+  if (place) list = list.filter(a => !a.places || a.places.includes(place));
+  return list;
 }
 
-export async function getSuggestedActivity({ supabase: customClient } = {}) {
-  const client = getClient(customClient);
+// export default compatível com fallback usado em /brincar/page.jsx
+export default activities;
 
-  const prioritized = await client
+/* 
+// Quando quiser ligar o Supabase, troque por algo assim:
+import supabase from "./supabaseClient";
+export async function listActivities({ age, place } = {}) {
+  const { data, error } = await supabase
     .from("activities")
-    .select(DEFAULT_COLUMNS)
-    .eq("zero_material", true)
-    .lte("duration_min", 10)
-    .order("random")
-    .limit(1)
-    .maybeSingle();
-
-  if (!prioritized.error && prioritized.data) {
-    return { data: prioritized.data, error: null };
-  }
-
-  const fallback = await client
-    .from("activities")
-    .select(DEFAULT_COLUMNS)
-    .order("random")
-    .limit(1)
-    .maybeSingle();
-
-  if (fallback.error) {
-    return { data: null, error: fallback.error };
-  }
-
-  return { data: fallback.data, error: null };
+    .select("*")
+    .contains("ages", [age])
+    .contains("places", [place])
+    .limit(20);
+  if (error) return [];
+  return data;
 }
-
-export async function listActivities({
-  zeroMaterial = false,
-  quick = false,
-  indoor = false,
-  supabase: customClient,
-} = {}) {
-  const client = getClient(customClient);
-
-  let query = client.from("activities").select(DEFAULT_COLUMNS).order("title", { ascending: true });
-
-  if (zeroMaterial) {
-    query = query.eq("zero_material", true);
-  }
-
-  if (quick) {
-    query = query.lte("duration_min", 10);
-  }
-
-  if (indoor) {
-    query = query.eq("indoor", true);
-  }
-
-  const { data, error } = await query;
-  return { data: data ?? [], error };
-}
+*/
