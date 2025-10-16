@@ -1,157 +1,211 @@
 // app/meu-dia/planner/page.jsx
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import ProgressBar from "../../../components/ProgressBar";
-import { get, set, keys } from "../../../lib/storage";
-import { grantBadge } from "../../../lib/gamification";
+import Link from "next/link";
+import { get, set, keys } from "../../../lib/storage.js";
 
 const TABS = [
   { id: "casa", label: "Casa", emoji: "🏠" },
-  { id: "filhos", label: "Filhos", emoji: "👨‍👩‍👧" },
-  { id: "eu", label: "Eu", emoji: "💛" },
+  { id: "filhos", label: "Filhos", emoji: "💕" },
+  { id: "eu", label: "Eu", emoji: "🌿" },
 ];
 
-const DEFAULT_DATA = {
-  casa: [
-    { id: "1", text: "Organizar a cozinha", done: false },
-    { id: "2", text: "Lista de compras", done: false },
-  ],
-  filhos: [
-    { id: "3", text: "Ler 10 min com o(a) filho(a)", done: false },
-    { id: "4", text: "Separar lancheira", done: false },
-  ],
-  eu: [
-    { id: "5", text: "Respiração 3 min", done: false },
-    { id: "6", text: "Beber água", done: false },
-  ],
-};
+function pct(list = []) {
+  if (!list.length) return 0;
+  const done = list.filter((i) => i.done).length;
+  return Math.round((done / list.length) * 100);
+}
 
 export default function PlannerPage() {
   const [tab, setTab] = useState("casa");
-  const [items, setItems] = useState(DEFAULT_DATA);
-  const [newText, setNewText] = useState("");
+  const [text, setText] = useState("");
+  const [items, setItems] = useState({ casa: [], filhos: [], eu: [] });
 
-  // carregar
+  // carregar do storage
   useEffect(() => {
-    const saved = get(keys.planner, null);
-    if (saved) setItems(saved);
+    const initial = get(keys.planner, { casa: [], filhos: [], eu: [] });
+    setItems(initial);
   }, []);
 
-  // salvar
-  useEffect(() => { set(keys.planner, items); }, [items]);
-
-  const currentList = items[tab] || [];
-
-  const progress = useMemo(() => {
-    const total = currentList.length || 1;
-    const done = currentList.filter((i) => i.done).length;
-    return Math.round((done / total) * 100);
-  }, [currentList]);
-
-  // selo: 5 tarefas concluídas no total
-  useEffect(() => {
-    const totalDone =
-      (items.casa || []).filter(i=>i.done).length +
-      (items.filhos || []).filter(i=>i.done).length +
-      (items.eu || []).filter(i=>i.done).length;
-    if (totalDone >= 5) grantBadge("Organizada", "Concluiu 5 tarefas");
+  // progresso geral e por aba
+  const prog = useMemo(() => {
+    const casa = pct(items.casa);
+    const filhos = pct(items.filhos);
+    const eu = pct(items.eu);
+    const all = pct([...(items.casa || []), ...(items.filhos || []), ...(items.eu || [])]);
+    return { casa, filhos, eu, all };
   }, [items]);
 
-  function toggle(id) {
-    setItems((prev) => ({
-      ...prev,
-      [tab]: prev[tab].map((i) => (i.id === id ? { ...i, done: !i.done } : i)),
-    }));
+  // checar selo "Organizada" (5 concluídas no total)
+  useEffect(() => {
+    const totalDone =
+      (items.casa || []).filter((i) => i.done).length +
+      (items.filhos || []).filter((i) => i.done).length +
+      (items.eu || []).filter((i) => i.done).length;
+
+    if (typeof window !== "undefined" && totalDone >= 5) {
+      window.dispatchEvent(
+        new CustomEvent("m360:win", {
+          detail: { type: "badge", name: "Organizada" },
+        })
+      );
+    }
+  }, [items]);
+
+  function persist(next) {
+    setItems(next);
+    set(keys.planner, next);
   }
 
-  function addItem() {
-    const text = newText.trim();
-    if (!text) return;
+  function add() {
+    const v = text.trim();
+    if (!v) return;
     const id = Date.now().toString(36);
-    setItems((prev) => ({
-      ...prev,
-      [tab]: [{ id, text, done: false }, ...(prev[tab] || [])],
-    }));
-    setNewText("");
+    const next = {
+      ...items,
+      [tab]: [{ id, text: v, done: false }, ...(items[tab] || [])],
+    };
+    setText("");
+    persist(next);
   }
 
-  function removeItem(id) {
-    setItems((prev) => ({
-      ...prev,
-      [tab]: (prev[tab] || []).filter((i) => i.id !== id),
-    }));
+  function toggle(id) {
+    const next = {
+      ...items,
+      [tab]: (items[tab] || []).map((it) => (it.id === id ? { ...it, done: !it.done } : it)),
+    };
+    persist(next);
   }
 
-  function clearDone() {
-    setItems((prev) => ({
-      ...prev,
-      [tab]: (prev[tab] || []).filter((i) => !i.done),
-    }));
+  function del(id) {
+    const next = {
+      ...items,
+      [tab]: (items[tab] || []).filter((it) => it.id !== id),
+    };
+    persist(next);
+  }
+
+  function edit(id, newText) {
+    const t = newText.trim();
+    if (!t) return;
+    const next = {
+      ...items,
+      [tab]: (items[tab] || []).map((it) => (it.id === id ? { ...it, text: t } : it)),
+    };
+    persist(next);
   }
 
   return (
-    <main className="pb-28">
-      <header className="mb-4">
-        <h1 className="title">Planner da Família</h1>
-        <p className="subtitle">Abas: Casa · Filhos · Eu</p>
-      </header>
+    <main className="container-px py-5">
+      {/* topo */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-xl font-semibold">Planner da Família</h1>
+          <p className="text-sm text-slate-500">Organize seu dia por áreas</p>
+        </div>
+        <Link href="/meu-dia" className="btn bg-white border border-slate-200">
+          ← Voltar
+        </Link>
+      </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4">
+      {/* progresso geral */}
+      <div className="card mb-5">
+        <div className="flex justify-between text-sm mb-1">
+          <span>Progresso de hoje</span>
+          <span className="text-slate-500">{prog.all}%</span>
+        </div>
+        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-brand rounded-full" style={{ width: `${prog.all}%` }} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+          {[
+            { label: "Casa", v: prog.casa },
+            { label: "Filhos", v: prog.filhos },
+            { label: "Eu", v: prog.eu },
+          ].map((x) => (
+            <div key={x.label} className="rounded-xl border border-slate-200 p-3">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="font-medium">{x.label}</span>
+                <span className="text-slate-500">{x.v}%</span>
+              </div>
+              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-slate-400 rounded-full" style={{ width: `${x.v}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* tabs */}
+      <div className="flex gap-2 mb-3">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-xl border text-sm ${
+            className={`px-3 py-2 rounded-xl border text-sm flex items-center gap-2 ${
               tab === t.id ? "bg-brand text-white border-brand" : "bg-white border-slate-200"
             }`}
           >
-            <span className="mr-1">{t.emoji}</span>{t.label}
+            <span className="text-base">{t.emoji}</span>
+            {t.label}
           </button>
         ))}
       </div>
 
-      {/* Progresso */}
-      <div className="card mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-medium">Progresso — {progress}% concluído</div>
-          <button onClick={clearDone} className="text-xs text-slate-500 hover:underline">
-            Limpar concluídos
-          </button>
-        </div>
-        <ProgressBar value={progress} />
-      </div>
-
-      {/* Novo item */}
+      {/* input */}
       <div className="card mb-4">
         <div className="flex gap-2">
           <input
-            value={newText}
-            onChange={(e) => setNewText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addItem()}
-            placeholder="Adicionar tarefa..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && add()}
+            placeholder={
+              tab === "casa"
+                ? "Ex.: Comprar frutas, organizar roupas…"
+                : tab === "filhos"
+                ? "Ex.: Ler 10 min, brincar de memória…"
+                : "Ex.: Pausa 5 min, beber água…"
+            }
             className="flex-1 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-brand/30"
           />
-          <button onClick={addItem} className="btn btn-primary">Adicionar</button>
+          <button onClick={add} className="btn btn-primary">
+            Adicionar
+          </button>
         </div>
       </div>
 
-      {/* Lista */}
+      {/* lista */}
       <ul className="space-y-2">
-        {currentList.map((i) => (
-          <li key={i.id} className="card flex items-center gap-3">
+        {(items[tab] || []).map((it) => (
+          <li
+            key={it.id}
+            className="rounded-xl border border-slate-200 bg-white p-3 flex items-center gap-3"
+          >
             <input
               type="checkbox"
-              checked={i.done}
-              onChange={() => toggle(i.id)}
-              className="w-5 h-5 accent-[var(--brand)]"
+              checked={it.done}
+              onChange={() => toggle(it.id)}
+              className="h-5 w-5 accent-brand"
             />
-            <div className={`flex-1 ${i.done ? "line-through text-slate-400" : ""}`}>{i.text}</div>
-            <button onClick={() => removeItem(i.id)} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+            <input
+              defaultValue={it.text}
+              onBlur={(e) => edit(it.id, e.target.value)}
+              className={`flex-1 bg-transparent outline-none ${
+                it.done ? "line-through text-slate-400" : ""
+              }`}
+            />
+            <button
+              onClick={() => del(it.id)}
+              className="text-slate-400 hover:text-rose-500 text-lg"
+              title="Apagar"
+            >
+              ⌫
+            </button>
           </li>
         ))}
-        {currentList.length === 0 && (
-          <li className="card text-slate-500">Sem itens ainda. Adicione o primeiro ✨</li>
+        {!(items[tab] || []).length && (
+          <li className="text-slate-500 text-sm">Sem itens ainda nessa aba.</li>
         )}
       </ul>
     </main>
