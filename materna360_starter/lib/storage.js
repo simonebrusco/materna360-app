@@ -1,7 +1,5 @@
 // lib/storage.js
-export const keys = {
-  planner: "m360:planner",
-};
+export const keys = { planner: "m360:planner" };
 
 export function get(key, fallback) {
   if (typeof window === "undefined") return fallback;
