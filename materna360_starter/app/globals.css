@@ -2,8 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === Fundo rosa padrão do Materna360 === */
-.m360-bg {
-  /* Gradiente suave e estável (o da UI antiga) */
-  background: linear-gradient(180deg, #FFE0EA 0%, #FFF6FA 100%);
+/* ===============================
+   🌸 ESTILO GLOBAL MATERNA360
+   =============================== */
+
+/* Fonte e suavização geral */
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  color: #1A2240;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Fundo rosa padrão unificado === */
+:root {
+  --m360-bg: linear-gradient(180deg, #FFE1E6 0%, #FDE3E6 100%);
+}
+
+body {
+  background: var(--m360-bg);
+  margin: 0;
+  padding: 0;
+}
+
+/* Evita que páginas internas sobreponham o fundo */
+.m360-no-page-bg {
+  background: transparent !important;
+}
+
+/* ===== Scroll suave ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ===== Ajustes padrão de links e botões ===== */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* ===== Suavização e centralização de containers ===== */
+.container-center {
+  @apply mx-auto max-w-5xl px-5;
+}
+
+/* ===== Sombras suaves usadas nos cards ===== */
+.card-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
