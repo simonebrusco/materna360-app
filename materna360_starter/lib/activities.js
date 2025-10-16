@@ -1,91 +1,97 @@
-// lib/activities.js
-// Catálogo local (v1). Em breve podemos trocar por Supabase sem quebrar a API.
+// materna360_starter/lib/activities.js
+// Catálogo base e helpers para a aba /brincar
 
-export const activities = [
-  {
-    id: "color-hunt",
-    title: "Caça ao Tesouro de Cores",
-    subtitle: "Procure objetos pela casa",
-    ages: ["2-3", "4-5"],
-    places: ["casa", "escola"],
-    tags: ["socioemocional", "linguagem", "coordenação"],
-    duration: 10,
-    emoji: "🎨",
-  },
-  {
-    id: "bubble-paint",
-    title: "Pintura com Bolhas de Sabão",
-    subtitle: "Experiência sensorial divertida",
-    ages: ["4-5", "6-7"],
-    places: ["ao-ar-livre", "parque", "casa"],
-    tags: ["coordenação", "criatividade"],
-    duration: 15,
-    emoji: "🫧",
-  },
-  {
-    id: "shadow-theatre",
-    title: "Teatro de Sombras",
-    subtitle: "Crie histórias com lanternas",
-    ages: ["6-7", "8+"],
-    places: ["casa", "escola"],
-    tags: ["linguagem", "imaginação"],
-    duration: 12,
-    emoji: "🎭",
-  },
-  {
-    id: "sock-puppets",
-    title: "Fantoches de Meia",
-    subtitle: "Conte uma história curtinha",
-    ages: ["2-3", "4-5"],
-    places: ["casa", "escola"],
-    tags: ["linguagem", "criatividade"],
-    duration: 8,
-    emoji: "🧦",
-  },
-  {
-    id: "leaf-rubbing",
-    title: "Textura de Folhas",
-    subtitle: "Descubra as nervuras das folhas",
-    ages: ["4-5", "6-7"],
-    places: ["parque", "ao-ar-livre"],
-    tags: ["coordenação", "natureza"],
-    duration: 10,
-    emoji: "🍃",
-  },
-  {
-    id: "shape-hunt",
-    title: "Caça às Formas",
-    subtitle: "Ache círculos, quadrados e triângulos",
-    ages: ["0-1", "2-3"],
-    places: ["casa", "escola"],
-    tags: ["cognição", "coordenação"],
-    duration: 7,
-    emoji: "🔶",
-  },
+export const AGE_BUCKETS = [
+  { value: "0-1", label: "0–1" },
+  { value: "2-3", label: "2–3" },
+  { value: "4-5", label: "4–5" },
+  { value: "6-7", label: "6–7" },
+  { value: "8+", label: "8+" },
 ];
 
-// API estável que a página /brincar usa
-export function listActivities({ age, place } = {}) {
-  let list = activities;
-  if (age)   list = list.filter(a => !a.ages   || a.ages.includes(age));
-  if (place) list = list.filter(a => !a.places || a.places.includes(place));
-  return list;
+export const PLACES = [
+  { value: "casa", label: "Casa" },
+  { value: "parque", label: "Parque" },
+  { value: "escola", label: "Escola" },
+  { value: "arLivre", label: "Ao ar livre" },
+];
+
+const ageLabel = (v) => AGE_BUCKETS.find((b) => b.value === v)?.label ?? v;
+const placeLabel = (v) => PLACES.find((p) => p.value === v)?.label ?? v;
+
+export const ACTIVITIES = [
+  {
+    id: "cores-tesouro",
+    emoji: "🎨",
+    title: "Caça ao Tesouro de Cores",
+    desc: "Procurem objetos pela casa de uma cor escolhida.",
+    ages: ["2-3", "4-5"],
+    places: ["casa", "escola"],
+    tags: ["socioemocional", "linguagem", "atenção"],
+  },
+  {
+    id: "bolhas-pintura",
+    emoji: "🫧",
+    title: "Pintura com Bolhas",
+    desc: "Misture água com sabão + corante e estoure bolhas sobre o papel.",
+    ages: ["4-5", "6-7"],
+    places: ["casa", "escola"],
+    tags: ["coordenação", "criatividade"],
+  },
+  {
+    id: "historia-objetos",
+    emoji: "📚",
+    title: "História com Objetos",
+    desc: "Escolham 3 objetos aleatórios e inventem uma história.",
+    ages: ["2-3", "4-5", "6-7", "8+"],
+    places: ["casa", "escola"],
+    tags: ["linguagem", "imaginação"],
+  },
+  {
+    id: "corrida-colher",
+    emoji: "🥄",
+    title: "Corrida da Colher",
+    desc: "Equilibre uma bolinha numa colher e façam mini corridas.",
+    ages: ["4-5", "6-7", "8+"],
+    places: ["parque", "arLivre", "escola"],
+    tags: ["coordenação", "equilíbrio"],
+  },
+  {
+    id: "natureza-texturas",
+    emoji: "🍃",
+    title: "Texturas da Natureza",
+    desc: "Folhas, pedras, gravetos — observar e comparar as texturas.",
+    ages: ["2-3", "4-5", "6-7"],
+    places: ["parque", "arLivre"],
+    tags: ["atenção", "curiosidade", "sensorial"],
+  },
+  {
+    id: "cabana-lencol",
+    emoji: "⛺️",
+    title: "Cabana de Lençol",
+    desc: "Montem uma cabaninha com lençóis e cadeiras e contem histórias.",
+    ages: ["2-3", "4-5", "6-7"],
+    places: ["casa"],
+    tags: ["vínculo", "imaginação"],
+  },
+].map((a) => ({
+  ...a,
+  ageLabel: a.ages.map(ageLabel).join(" / "),
+  placeLabel: a.places.map(placeLabel).join(" / "),
+}));
+
+export function filterActivities(list, { age, place }, limit = 6) {
+  const filtered = list.filter(
+    (a) => a.ages.includes(age) && a.places.includes(place)
+  );
+  return shuffle(filtered).slice(0, limit);
 }
 
-// export default compatível com fallback usado em /brincar/page.jsx
-export default activities;
-
-/* 
-// Quando quiser ligar o Supabase, troque por algo assim:
-import supabase from "./supabaseClient";
-export async function listActivities({ age, place } = {}) {
-  const { data, error } = await supabase
-    .from("activities")
-    .select("*")
-    .contains("ages", [age])
-    .contains("places", [place])
-    .limit(20);
-  if (error) return [];
-  return data;
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
-*/
