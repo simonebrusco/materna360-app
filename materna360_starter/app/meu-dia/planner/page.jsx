@@ -31,26 +31,29 @@ export default function PlannerPage() {
   const [items, setItems] = useState(DEFAULT_DATA);
   const [newText, setNewText] = useState("");
 
+  // carregar
   useEffect(() => {
     const saved = get(keys.planner, null);
     if (saved) setItems(saved);
   }, []);
 
+  // salvar
   useEffect(() => { set(keys.planner, items); }, [items]);
 
   const currentList = items[tab] || [];
+
   const progress = useMemo(() => {
     const total = currentList.length || 1;
     const done = currentList.filter((i) => i.done).length;
     return Math.round((done / total) * 100);
   }, [currentList]);
 
-  // gatilho de selo: 5 tarefas concluídas em qualquer aba
+  // selo: 5 tarefas concluídas no total
   useEffect(() => {
     const totalDone =
-      items.casa.filter(i=>i.done).length +
-      items.filhos.filter(i=>i.done).length +
-      items.eu.filter(i=>i.done).length;
+      (items.casa || []).filter(i=>i.done).length +
+      (items.filhos || []).filter(i=>i.done).length +
+      (items.eu || []).filter(i=>i.done).length;
     if (totalDone >= 5) grantBadge("Organizada", "Concluiu 5 tarefas");
   }, [items]);
 
@@ -60,18 +63,30 @@ export default function PlannerPage() {
       [tab]: prev[tab].map((i) => (i.id === id ? { ...i, done: !i.done } : i)),
     }));
   }
+
   function addItem() {
     const text = newText.trim();
     if (!text) return;
     const id = Date.now().toString(36);
-    setItems((prev) => ({ ...prev, [tab]: [{ id, text, done: false }, ...prev[tab]] }));
+    setItems((prev) => ({
+      ...prev,
+      [tab]: [{ id, text, done: false }, ...(prev[tab] || [])],
+    }));
     setNewText("");
   }
+
   function removeItem(id) {
-    setItems((prev) => ({ ...prev, [tab]: prev[tab].filter((i) => i.id !== id) }));
+    setItems((prev) => ({
+      ...prev,
+      [tab]: (prev[tab] || []).filter((i) => i.id !== id),
+    }));
   }
+
   function clearDone() {
-    setItems((prev) => ({ ...prev, [tab]: prev[tab].filter((i) => !i.done) }));
+    setItems((prev) => ({
+      ...prev,
+      [tab]: (prev[tab] || []).filter((i) => !i.done),
+    }));
   }
 
   return (
@@ -81,6 +96,7 @@ export default function PlannerPage() {
         <p className="subtitle">Abas: Casa · Filhos · Eu</p>
       </header>
 
+      {/* Tabs */}
       <div className="flex gap-2 mb-4">
         {TABS.map((t) => (
           <button
@@ -95,6 +111,7 @@ export default function PlannerPage() {
         ))}
       </div>
 
+      {/* Progresso */}
       <div className="card mb-4">
         <div className="flex items-center justify-between mb-2">
           <div className="font-medium">Progresso — {progress}% concluído</div>
@@ -105,6 +122,7 @@ export default function PlannerPage() {
         <ProgressBar value={progress} />
       </div>
 
+      {/* Novo item */}
       <div className="card mb-4">
         <div className="flex gap-2">
           <input
@@ -118,6 +136,7 @@ export default function PlannerPage() {
         </div>
       </div>
 
+      {/* Lista */}
       <ul className="space-y-2">
         {currentList.map((i) => (
           <li key={i.id} className="card flex items-center gap-3">
