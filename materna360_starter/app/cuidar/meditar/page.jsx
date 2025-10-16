@@ -1,79 +1,64 @@
+// materna360_starter/app/cuidar/meditar/page.jsx
 "use client";
 
-import { useState } from "react";
+import { addMinutes } from "../../../lib/wellbeing";
+import { toast } from "../../../lib/toast";
 import Link from "next/link";
+import { useState } from "react";
 
 const TRACKS = [
-  { id: "resp-3", title: "Meditação 3 min – acalmar", minutes: 3 },
-  { id: "resp-5", title: "Meditação 5 min – presença", minutes: 5 },
-  { id: "resp-8", title: "Meditação 8 min – gratidão", minutes: 8 },
+  { id: "resp-curta",  title: "Respiração Curta",  minutes: 3, emoji: "🌬️" },
+  { id: "foco-leve",   title: "Foco Leve",        minutes: 5, emoji: "🎯" },
+  { id: "acalmar",     title: "Acalmar a mente",  minutes: 10, emoji: "🧘‍♀️" },
 ];
 
-// chave única para o resumo semanal
-const TIME_KEY = "m360:time";
-
-function weekKey(d = new Date()) {
-  // YYYY-WW simples
-  const firstJan = new Date(d.getFullYear(), 0, 1);
-  const days = Math.floor((d - firstJan) / 86400000);
-  const week = Math.ceil((d.getDay() + 1 + days) / 7);
-  return `${d.getFullYear()}-${String(week).padStart(2, "0")}`;
-}
-
-function addMeditationMinutes(min) {
-  try {
-    const wk = weekKey();
-    const raw = localStorage.getItem(TIME_KEY);
-    const obj = raw ? JSON.parse(raw) : {};
-    const cur = obj[wk] || { meditation: 0, breathing: 0 };
-    const next = { ...obj, [wk]: { ...cur, meditation: (cur.meditation || 0) + min } };
-    localStorage.setItem(TIME_KEY, JSON.stringify(next));
-    // badge
-    window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } }));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export default function MeditarPage() {
-  const [toast, setToast] = useState("");
+  const [playingId, setPlayingId] = useState(null);
 
-  function onPlay(t) {
-    const ok = addMeditationMinutes(t.minutes);
-    if (ok) {
-      setToast(`Registrado: ${t.minutes} min de meditação 💛`);
-      setTimeout(() => setToast(""), 2500);
+  function play(t) {
+    setPlayingId(t.id);
+    // telemetria + badge
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } }));
+      window.dispatchEvent(new CustomEvent("m360:event", { detail: { type: "audio_play", track: t.id } }));
     }
+    // soma minutos no painel do Eu360
+    addMinutes("meditate", t.minutes);
+    toast(`Tocando: ${t.title} • +${t.minutes} min`);
+    // simulação de “tocando” (visualmente)
+    setTimeout(() => setPlayingId(null), 1200);
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-5 py-6">
-      <header className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-2xl font-semibold">Meditar</h1>
-          <p className="text-sm text-slate-500">Áudios curtos para acalmar</p>
-        </div>
-        <Link href="/cuidar" className="rounded-xl bg-white ring-1 ring-black/5 px-3 py-1.5">← Cuidar</Link>
+    <main className="min-h-screen bg-gradient-to-b from-brand-soft to-white">
+      <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
+        <h1 className="text-[28px] md:text-[32px] font-semibold text-brand-navy">Meditar</h1>
+        <Link href="/cuidar" className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm">
+          ← Voltar
+        </Link>
       </header>
 
-      <section className="grid grid-cols-1 gap-3">
-        {TRACKS.map(t => (
-          <article key={t.id} className="rounded-2xl bg-white ring-1 ring-black/5 p-4 flex items-center justify-between">
+      <section className="mx-auto max-w-5xl px-5 pt-6 pb-28 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+        {TRACKS.map((t) => (
+          <article key={t.id} className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-5 flex items-center justify-between gap-3">
             <div>
-              <div className="font-medium">{t.title}</div>
-              <div className="text-xs text-slate-500 mt-1">{t.minutes} min</div>
+              <div className="text-sm text-brand-navy/50">Meditação</div>
+              <div className="text-lg font-medium text-brand-navy flex items-center gap-2">
+                <span className="text-2xl">{t.emoji}</span>{t.title}
+              </div>
+              <div className="text-xs text-brand-navy/50 mt-1">{t.minutes} min</div>
             </div>
-            <button onClick={() => onPlay(t)} className="rounded-xl bg-[#ff005e] text-white px-3 py-1.5">Tocar</button>
+            <button
+              onClick={() => play(t)}
+              className="rounded-xl px-4 py-2 text-sm text-white"
+              style={{ backgroundColor: "#ff005e" }}
+              disabled={playingId === t.id}
+            >
+              {playingId === t.id ? "Tocando…" : "Tocar"}
+            </button>
           </article>
         ))}
       </section>
-
-      {toast && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 rounded-xl bg-black/80 text-white px-4 py-2 text-sm">
-          {toast}
-        </div>
-      )}
     </main>
   );
 }
