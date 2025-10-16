@@ -2,79 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* =========================
-   Materna360 — Soft Luxury
-   ========================= */
-:root {
-  --m360-primary: #ff005e;       /* primária */
-  --m360-primary-600: #e60055;
-  --m360-primary-700: #cc004c;
+/* ===============================
+   🌸 ESTILO GLOBAL MATERNA360
+   =============================== */
 
-  --m360-bg-soft: #ffd8e6;       /* fundo suave */
-  --m360-bg-soft-2: #ffe7f0;     /* variação p/ gradiente */
-
-  --m360-heading: #2f3a56;       /* títulos */
-  --m360-body: #59636f;          /* textos */
-  --m360-white: #ffffff;
-
-  --m360-card-ring: 0 0 0 1px rgba(15, 23, 42, 0.05);
-  --m360-card-bg: rgba(255, 255, 255, 0.72);
-}
-
-html, body { height: 100%; }
-body {
-  color: var(--m360-body);
+/* Fonte e suavização geral */
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  color: #1A2240;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Utilities de tema */
-@layer utilities {
-  .bg-m360 {
-    background-image: radial-gradient(
-      120% 120% at 50% 0%,
-      var(--m360-bg-soft-2) 0%,
-      var(--m360-bg-soft) 100%
-    );
-  }
-
-  .m360-container {
-    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
-  }
-
-  .text-heading { color: var(--m360-heading); }
-  .text-body    { color: var(--m360-body); }
-
-  .link-primary { color: var(--m360-primary); }
-  .link-primary:hover { color: var(--m360-primary-600); }
+/* === Fundo rosa padrão unificado === */
+:root {
+  --m360-bg: linear-gradient(180deg, #FFE1E6 0%, #FDE3E6 100%);
 }
 
-/* Componentes base */
-.m360-card {
-  background: var(--m360-card-bg);
-  box-shadow: var(--m360-card-ring);
-  @apply rounded-2xl shadow-sm backdrop-blur;
+body {
+  background: var(--m360-bg);
+  margin: 0;
+  padding: 0;
 }
 
-.m360-btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition;
+/* Evita que páginas internas sobreponham o fundo */
+.m360-no-page-bg {
+  background: transparent !important;
 }
 
-.m360-btn-primary {
-  background: var(--m360-primary);
-  color: var(--m360-white);
-}
-.m360-btn-primary:hover { background: var(--m360-primary-600); }
-.m360-btn-primary:active { background: var(--m360-primary-700); }
-
-.m360-badge {
-  @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
-  background: color-mix(in oklab, var(--m360-primary) 12%, white);
-  color: var(--m360-primary);
+/* ===== Scroll suave ===== */
+html {
+  scroll-behavior: smooth;
 }
 
-.m360-chip {
-  @apply inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm;
-  background: color-mix(in oklab, var(--m360-primary) 8%, white);
-  color: var(--m360-heading);
+/* ===== Ajustes padrão de links e botões ===== */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* ===== Suavização e centralização de containers ===== */
+.container-center {
+  @apply mx-auto max-w-5xl px-5;
+}
+
+/* ===== Sombras suaves usadas nos cards ===== */
+.card-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
