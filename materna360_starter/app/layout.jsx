@@ -2,9 +2,12 @@
 import "./globals.css";
 import dynamic from "next/dynamic";
 
-// Importa componentes de cliente sem SSR para evitar erros de hidratação
+// Componentes client-only (evita SSR/hidratação indevida)
 const ClientInit = dynamic(() => import("../components/ClientInit.jsx"), { ssr: false });
 const BottomNav  = dynamic(() => import("../components/BottomNav.jsx"),  { ssr: false });
+
+// 🔔 Host de toasts (escuta 'm360:toast' e renderiza os toasts na tela)
+const ToastHost  = dynamic(() => import("../components/ToastHost.jsx"),  { ssr: false });
 
 export const metadata = {
   title: "Materna360",
@@ -24,6 +27,9 @@ export default function RootLayout({ children }) {
         <div className="min-h-[100dvh] pb-24">
           {children}
         </div>
+
+        {/* Host de toasts globais — fica fixo e escuta eventos 'm360:toast' */}
+        <ToastHost />
 
         {/* Bottom navigation fixo, único para o app inteiro (client-only) */}
         <BottomNav />
