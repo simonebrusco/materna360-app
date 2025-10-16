@@ -1,10 +1,8 @@
 // app/layout.jsx
 import "./globals.css";
+import Toaster from "../components/Toaster";
 
-export const metadata = {
-  title: "Materna360",
-  description: "App",
-};
+export const metadata = { title: "Materna360", description: "App" };
 
 export default function RootLayout({ children }) {
   return (
@@ -12,7 +10,7 @@ export default function RootLayout({ children }) {
       <body className="antialiased bg-[var(--bg)] text-[var(--text)]">
         <div className="container-px py-6">{children}</div>
 
-        {/* Tab bar básica */}
+        {/* Tab bar */}
         <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-card">
           <div className="container-px py-3 grid grid-cols-4 text-center text-sm">
             <a href="/meu-dia" className="text-brand">Meu Dia</a>
@@ -21,6 +19,8 @@ export default function RootLayout({ children }) {
             <a href="/eu360">Eu360</a>
           </div>
         </nav>
+
+        <Toaster />
       </body>
     </html>
   );
