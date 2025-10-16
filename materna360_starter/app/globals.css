@@ -6,24 +6,21 @@
    Materna360 — Soft Luxury
    ========================= */
 :root {
-  /* Cores oficiais */
   --m360-primary: #ff005e;       /* primária */
-  --m360-primary-600: #e60055;   /* hover/active */
-  --m360-primary-700: #cc004c;   /* pressed */
+  --m360-primary-600: #e60055;
+  --m360-primary-700: #cc004c;
 
-  --m360-bg-soft: #ffd8e6;       /* secundária (fundo suave) */
-  --m360-bg-soft-2: #ffe7f0;     /* variação mais clara para gradiente */
+  --m360-bg-soft: #ffd8e6;       /* fundo suave */
+  --m360-bg-soft-2: #ffe7f0;     /* variação p/ gradiente */
 
   --m360-heading: #2f3a56;       /* títulos */
-  --m360-body: #59636f;          /* textos neutros */
+  --m360-body: #59636f;          /* textos */
   --m360-white: #ffffff;
 
-  /* Borda/sombra “vidro” */
   --m360-card-ring: 0 0 0 1px rgba(15, 23, 42, 0.05);
   --m360-card-bg: rgba(255, 255, 255, 0.72);
 }
 
-/* Resets básicos */
 html, body { height: 100%; }
 body {
   color: var(--m360-body);
@@ -31,11 +28,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* =========================
-   Utilitários de tema
-   ========================= */
+/* Utilities de tema */
 @layer utilities {
-  /* Fundo padrão do app (igual em TODAS as páginas) */
   .bg-m360 {
     background-image: radial-gradient(
       120% 120% at 50% 0%,
@@ -44,27 +38,18 @@ body {
     );
   }
 
-  /* Container de layout */
   .m360-container {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }
 
-  /* Tipografia de marca */
   .text-heading { color: var(--m360-heading); }
   .text-body    { color: var(--m360-body); }
 
-  /* Links no tom da primária */
-  .link-primary {
-    color: var(--m360-primary);
-  }
-  .link-primary:hover {
-    color: var(--m360-primary-600);
-  }
+  .link-primary { color: var(--m360-primary); }
+  .link-primary:hover { color: var(--m360-primary-600); }
 }
 
-/* =========================
-   Componentes base
-   ========================= */
+/* Componentes base */
 .m360-card {
   background: var(--m360-card-bg);
   box-shadow: var(--m360-card-ring);
