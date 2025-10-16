@@ -1,73 +1,59 @@
-// materna360_starter/app/page.jsx
-'use client';
-export const revalidate = 0; // número (0, 60, ...) — nunca objeto
+"use client"; // precisa ser a primeira linha
 
-import Link from 'next/link';
-import { useState } from 'react';
-import DailyMessage from '@/components/DailyMessage';
-import GlassCard from '@/components/GlassCard';
-import CheckinCard from '@/components/CheckinCard';
+// ✅ força renderização dinâmica
+export const dynamic = "force-dynamic";
 
-export default function TodayPage() {
-  const name = 'Simone';
-  const [showShortcuts] = useState(true);
+import { useEffect, useState } from "react";
+
+function Card({ title, emoji, subtitle, href = "#" }) {
+  return (
+    <a
+      href={href}
+      className="block rounded-2xl p-4 bg-white shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow min-h-[120px]"
+    >
+      <div className="flex items-start justify-between">
+        <span className="text-2xl">{emoji}</span>
+      </div>
+      <h3 className="mt-3 font-semibold text-[#1A2240]">{title}</h3>
+      {subtitle && (
+        <p className="mt-1 text-sm text-[#1A2240]/60">{subtitle}</p>
+      )}
+    </a>
+  );
+}
+
+export default function Home() {
+  const [greet, setGreet] = useState("Olá");
+  const [name, setName] = useState("Mamãe");
+
+  useEffect(() => {
+    const h = new Date().getHours();
+    setGreet(h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite");
+
+    const stored =
+      typeof window !== "undefined"
+        ? localStorage.getItem("m360:userName")
+        : null;
+    if (stored) setName(stored);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-secondary/40 via-white to-white text-brand-ink">
-      <div className="mx-auto max-w-md px-4 py-5">
-        <header className="mb-4">
-          <p className="text-sm text-brand-ink/70">Hoje</p>
-          <h1 className="text-3xl font-semibold">
-            Olá, {name} <span className="inline-block">👋</span>
-          </h1>
-        </header>
+    <div className="mx-auto max-w-5xl px-4 py-6 space-y-6">
+      <section className="mt-2">
+        <h1 className="text-xl font-medium text-[#1A2240]">
+          {greet}, {name}!{" "}
+          <span className="text-[#1A2240]/60 text-base">
+            Como posso te ajudar hoje?
+          </span>
+        </h1>
+      </section>
 
-        <GlassCard className="mb-5">
-          <DailyMessage />
-        </GlassCard>
-
-        <CheckinCard />
-
-        {showShortcuts && (
-          <>
-            <h2 className="mt-6 mb-2 text-lg font-semibold">Atalhos do dia</h2>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Link href="/brincar" className="no-underline">
-                <GlassCard className="p-4 hover:shadow-brand transition-shadow">
-                  <div className="text-2xl">🏠</div>
-                  <div className="mt-2 font-semibold">Rotina da Casa</div>
-                  <div className="text-sm text-brand-ink/70">Organizar tarefas</div>
-                </GlassCard>
-              </Link>
-
-              <Link href="/brincar/moments" className="no-underline">
-                <GlassCard className="p-4 hover:shadow-brand transition-shadow">
-                  <div className="text-2xl">💕</div>
-                  <div className="mt-2 font-semibold">Tempo com Meu Filho</div>
-                  <div className="text-sm text-brand-ink/70">Registrar momentos</div>
-                </GlassCard>
-              </Link>
-
-              <Link href="/brincar" className="no-underline">
-                <GlassCard className="p-4 hover:shadow-brand transition-shadow">
-                  <div className="text-2xl">🎨</div>
-                  <div className="mt-2 font-semibold">Atividade do Dia</div>
-                  <div className="text-sm text-brand-ink/70">Brincadeira educativa</div>
-                </GlassCard>
-              </Link>
-
-              <Link href="/cuidar" className="no-underline">
-                <GlassCard className="p-4 hover:shadow-brand transition-shadow">
-                  <div className="text-2xl">🌿</div>
-                  <div className="mt-2 font-semibold">Momento para Mim</div>
-                  <div className="text-sm text-brand-ink/70">Pausa e autocuidado</div>
-                </GlassCard>
-              </Link>
-            </div>
-          </>
-        )}
-      </div>
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card emoji="🏠" title="Rotina da Casa" subtitle="Organize tarefas do lar" href="/atividades?tab=rotina" />
+        <Card emoji="💕" title="Tempo com Meu Filho" subtitle="Registre momentos especiais" href="/atividades?tab=momentos" />
+        <Card emoji="🎨" title="Atividade do Dia" subtitle="Sugestões educativas" href="/atividades?tab=atividade" />
+        <Card emoji="🌿" title="Momento para Mim" subtitle="Pausas e autocuidado" href="/bem-estar" />
+      </section>
     </div>
   );
 }
