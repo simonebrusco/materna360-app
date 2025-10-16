@@ -1,4 +1,4 @@
-// components/QuickNote.jsx
+// materna360_starter/components/QuickNote.jsx
 "use client";
 import { useState } from "react";
 import { get, set, keys } from "../lib/storage";
