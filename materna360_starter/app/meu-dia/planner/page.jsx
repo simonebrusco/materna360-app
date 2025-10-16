@@ -1,8 +1,13 @@
 // app/meu-dia/planner/page.jsx
 "use client";
 import { useEffect, useMemo, useState } from "react";
+simonebrusco-patch-16
 import ProgressBar from "@/components/ProgressBar";
 import { get, set, keys } from "@/lib/storage";
+
+import ProgressBar from "../../../components/ProgressBar";
+import { get, set, keys } from "../../../lib/storage";
+main
 
 const TABS = [
   { id: "casa", label: "Casa", emoji: "🏠" },
@@ -30,13 +35,21 @@ export default function PlannerPage() {
   const [items, setItems] = useState(DEFAULT_DATA);
   const [newText, setNewText] = useState("");
 
+simonebrusco-patch-16
   // carregar do storage
+
+  // carregar do localStorage
+main
   useEffect(() => {
     const saved = get(keys.planner, null);
     if (saved) setItems(saved);
   }, []);
 
+simonebrusco-patch-16
   // salvar
+
+  // salvar no localStorage
+main
   useEffect(() => {
     set(keys.planner, items);
   }, [items]);
@@ -67,7 +80,11 @@ export default function PlannerPage() {
     setNewText("");
   }
 
+simonebrusco-patch-16
   function remove(id) {
+
+  function removeItem(id) {
+main
     setItems((prev) => ({
       ...prev,
       [tab]: prev[tab].filter((i) => i.id !== id),
@@ -106,6 +123,7 @@ export default function PlannerPage() {
         ))}
       </div>
 
+simonebrusco-patch-16
       {/* Card de progresso */}
       <div className="card mb-4">
         <div className="flex items-center justify-between mb-2">
@@ -116,13 +134,24 @@ export default function PlannerPage() {
             onClick={clearDone}
             className="text-xs text-slate-500 hover:underline"
           >
+
+      {/* Progresso */}
+      <div className="card mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-medium">Progresso — {progress}% concluído</div>
+          <button onClick={clearDone} className="text-xs text-slate-500 hover:underline">
+main
             Limpar concluídos
           </button>
         </div>
         <ProgressBar value={progress} />
       </div>
 
+simonebrusco-patch-16
       {/* Add nova tarefa */}
+
+      {/* Adicionar item */}
+main
       <div className="card mb-4">
         <div className="flex gap-2">
           <input
@@ -132,9 +161,13 @@ export default function PlannerPage() {
             placeholder="Adicionar tarefa..."
             className="flex-1 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-brand/30"
           />
+simonebrusco-patch-16
           <button onClick={addItem} className="btn btn-primary">
             Adicionar
           </button>
+
+          <button onClick={addItem} className="btn btn-primary">Adicionar</button>
+main
         </div>
       </div>
 
@@ -152,7 +185,11 @@ export default function PlannerPage() {
               {i.text}
             </div>
             <button
+simonebrusco-patch-16
               onClick={() => remove(i.id)}
+
+              onClick={() => removeItem(i.id)}
+main
               className="text-slate-400 hover:text-slate-600 text-sm"
               aria-label="remover"
             >
