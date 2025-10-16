@@ -1,76 +1,66 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getJSON, setJSON } from "../lib/storage";
-import { toast } from "../lib/toast";
 
-// Mensagens acolhedoras (pode ajustar à vontade)
 const MESSAGES = [
-  "Hoje pode ser mais leve. Um passo de cada vez 💛",
   "Respire fundo. Você está fazendo o melhor que pode.",
-  "Amor também é descanso. Cuide de você um pouquinho.",
-  "Rotina é treino, não corrida. Siga no seu ritmo.",
-  "Pequenas alegrias contam muito. Observe uma agora.",
-  "Se abrace com carinho. Você importa.",
-  "Organize o essencial, o resto pode esperar."
+  "Pequenos passos também são progresso. 💛",
+  "Seu cuidado importa — com você e com quem você ama.",
+  "Hoje vale celebrar até as pequenas vitórias.",
+  "Você não está sozinha. Um passo de cada vez.",
 ];
 
-// chave no storage
-const KEY = "m360:messageOfDay";
+const STORAGE_KEY = "m360:messageOfDay";
 
-function now() { return Date.now(); }
-function hoursDiff(a, b) { return Math.abs(a - b) / 36e5; }
+function startOfDayISO(d = new Date()) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x.toISOString();
+}
 
 export default function MessageOfDay() {
-  const [msg, setMsg] = useState(MESSAGES[0]);
+  const [msg, setMsg] = useState("");
 
-  const greeting = useMemo(() => {
-    const h = new Date().getHours();
-    if (h < 12) return "Bom dia, Mãe 💛";
-    if (h < 18) return "Boa tarde, Mãe 💛";
-    return "Boa noite, Mãe 💛";
-  }, []);
-
+  // define a mensagem 1x por dia; sem opção de trocar manualmente
   useEffect(() => {
-    // lê estado anterior
-    const saved = getJSON(KEY) || {};
-    const { index = 0, updatedAt = 0 } = saved;
-    const shouldRotate = hoursDiff(now(), updatedAt) >= 24;
+    try {
+      const today = startOfDayISO();
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const saved = raw ? JSON.parse(raw) : null;
 
-    if (shouldRotate) {
-      // rota para próxima mensagem
-      const nextIndex = (index + 1) % MESSAGES.length;
-      const next = { index: nextIndex, updatedAt: now() };
-      setJSON(KEY, next);
-      setMsg(MESSAGES[nextIndex]);
-
-      // badge + toast só quando rotaciona
-      try {
-        window.dispatchEvent(
-          new CustomEvent("m360:win", {
-            detail: { type: "badge", name: "Organizada" }
-          })
-        );
-      } catch {}
-      toast("Mensagem do dia atualizada ✨", { icon: "📝" });
-    } else {
-      // mantém mensagem atual
-      setMsg(MESSAGES[index]);
-      // se nunca salvou antes, garante persistência sem disparar eventos
-      if (!updatedAt) {
-        setJSON(KEY, { index, updatedAt: now() });
+      if (saved?.date === today && typeof saved?.message === "string") {
+        setMsg(saved.message);
+        return;
       }
+
+      // escolhe pseudo-aleatória com base no dia
+      const seed = new Date().getDate() + new Date().getMonth() * 31;
+      const idx = seed % MESSAGES.length;
+      const message = MESSAGES[idx];
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, message }));
+      setMsg(message);
+
+      // badge “Organizada” (dispara só quando a mensagem é definida no dia)
+      window.dispatchEvent(
+        new CustomEvent("m360:win", {
+          detail: { type: "badge", name: "Organizada" },
+        })
+      );
+    } catch {
+      // fallback silencioso
+      setMsg(MESSAGES[0]);
     }
   }, []);
 
+  const subtitle = useMemo(() => "Boa noite, Mãe 💛", []); // saudação simples
+
   return (
-    <section className="container-px mt-5">
-      <div className="glass p-4">
-        <div className="text-sm text-navy/70">{greeting}</div>
-        <p className="mt-1 text-[17px] md:text-lg text-navy">
-          {msg}
-        </p>
-      </div>
+    <section className="rounded-2xl bg-white ring-1 ring-black/5 p-5 mb-6">
+      <div className="text-sm text-slate-500">{subtitle}</div>
+      <p className="mt-1 text-[15px] leading-relaxed">
+        {msg || "Respire fundo. Você está fazendo o melhor que pode."}
+      </p>
     </section>
   );
 }
