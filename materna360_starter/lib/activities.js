@@ -1,97 +1,61 @@
 // materna360_starter/lib/activities.js
-// Catálogo base e helpers para a aba /brincar
 
+// buckets de idade e locais (mock)
 export const AGE_BUCKETS = [
-  { value: "0-1", label: "0–1" },
-  { value: "2-3", label: "2–3" },
-  { value: "4-5", label: "4–5" },
-  { value: "6-7", label: "6–7" },
-  { value: "8+", label: "8+" },
+  { id: "0-1", label: "0–1" },
+  { id: "2-3", label: "2–3" },
+  { id: "4-5", label: "4–5" },
+  { id: "6-7", label: "6–7" },
+  { id: "8+",  label: "8+"  },
 ];
 
 export const PLACES = [
-  { value: "casa", label: "Casa" },
-  { value: "parque", label: "Parque" },
-  { value: "escola", label: "Escola" },
-  { value: "arLivre", label: "Ao ar livre" },
+  { id: "casa",      label: "Casa" },
+  { id: "parque",    label: "Parque" },
+  { id: "escola",    label: "Escola" },
+  { id: "ao-ar-livre", label: "Ao ar livre" },
 ];
 
-const ageLabel = (v) => AGE_BUCKETS.find((b) => b.value === v)?.label ?? v;
-const placeLabel = (v) => PLACES.find((p) => p.value === v)?.label ?? v;
-
+// mock de atividades (mínimo para funcionar)
 export const ACTIVITIES = [
   {
-    id: "cores-tesouro",
-    emoji: "🎨",
+    slug: "caca-cores",
     title: "Caça ao Tesouro de Cores",
-    desc: "Procurem objetos pela casa de uma cor escolhida.",
+    subtitle: "Brincadeira de observar e nomear cores pela casa",
     ages: ["2-3", "4-5"],
     places: ["casa", "escola"],
-    tags: ["socioemocional", "linguagem", "atenção"],
   },
   {
-    id: "bolhas-pintura",
-    emoji: "🫧",
-    title: "Pintura com Bolhas",
-    desc: "Misture água com sabão + corante e estoure bolhas sobre o papel.",
+    slug: "bolhas-sabao",
+    title: "Pintura com Bolhas de Sabão",
+    subtitle: "Mistura arte e ciência, com cuidado e diversão",
     ages: ["4-5", "6-7"],
+    places: ["ao-ar-livre", "parque"],
+  },
+  {
+    slug: "musicas-toque",
+    title: "Músicas de Toque e Resposta",
+    subtitle: "Batucar em objetos e repetir padrões simples",
+    ages: ["0-1", "2-3"],
     places: ["casa", "escola"],
-    tags: ["coordenação", "criatividade"],
   },
-  {
-    id: "historia-objetos",
-    emoji: "📚",
-    title: "História com Objetos",
-    desc: "Escolham 3 objetos aleatórios e inventem uma história.",
-    ages: ["2-3", "4-5", "6-7", "8+"],
-    places: ["casa", "escola"],
-    tags: ["linguagem", "imaginação"],
-  },
-  {
-    id: "corrida-colher",
-    emoji: "🥄",
-    title: "Corrida da Colher",
-    desc: "Equilibre uma bolinha numa colher e façam mini corridas.",
-    ages: ["4-5", "6-7", "8+"],
-    places: ["parque", "arLivre", "escola"],
-    tags: ["coordenação", "equilíbrio"],
-  },
-  {
-    id: "natureza-texturas",
-    emoji: "🍃",
-    title: "Texturas da Natureza",
-    desc: "Folhas, pedras, gravetos — observar e comparar as texturas.",
-    ages: ["2-3", "4-5", "6-7"],
-    places: ["parque", "arLivre"],
-    tags: ["atenção", "curiosidade", "sensorial"],
-  },
-  {
-    id: "cabana-lencol",
-    emoji: "⛺️",
-    title: "Cabana de Lençol",
-    desc: "Montem uma cabaninha com lençóis e cadeiras e contem histórias.",
-    ages: ["2-3", "4-5", "6-7"],
-    places: ["casa"],
-    tags: ["vínculo", "imaginação"],
-  },
-].map((a) => ({
-  ...a,
-  ageLabel: a.ages.map(ageLabel).join(" / "),
-  placeLabel: a.places.map(placeLabel).join(" / "),
-}));
+];
 
-export function filterActivities(list, { age, place }, limit = 6) {
-  const filtered = list.filter(
-    (a) => a.ages.includes(age) && a.places.includes(place)
-  );
-  return shuffle(filtered).slice(0, limit);
+// helper para saber se uma activity é compatível
+function matchAge(act, age) {
+  if (!age) return true;
+  return Array.isArray(act.ages) ? act.ages.includes(age) : true;
+}
+function matchPlace(act, place) {
+  if (!place) return true;
+  return Array.isArray(act.places) ? act.places.includes(place) : true;
 }
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+// ⚠️ DEFAULT PARAMS! Evita "Cannot destructure property 'age' of undefined"
+export function filterActivities({ age, place } = {}) {
+  // se vier vazio, usa primeiros valores como padrão
+  const safeAge = age ?? AGE_BUCKETS[0]?.id ?? null;
+  const safePlace = place ?? PLACES[0]?.id ?? null;
+
+  return ACTIVITIES.filter((a) => matchAge(a, safeAge) && matchPlace(a, safePlace));
 }

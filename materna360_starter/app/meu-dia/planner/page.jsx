@@ -1,213 +1,120 @@
-// app/meu-dia/planner/page.jsx
 "use client";
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { get, set, keys } from "../../../lib/storage.js";
+import { getJSON, setJSON } from "../../../lib/storage";
+import { toast } from "../../../lib/toast";
 
-const TABS = [
-  { id: "casa", label: "Casa", emoji: "🏠" },
-  { id: "filhos", label: "Filhos", emoji: "💕" },
-  { id: "eu", label: "Eu", emoji: "🌿" },
-];
+const TABS = ["casa", "filhos", "eu"];
 
-function pct(list = []) {
-  if (!list.length) return 0;
-  const done = list.filter((i) => i.done).length;
-  return Math.round((done / list.length) * 100);
+function calcProgress(items) {
+  const totals = { casa: 0, filhos: 0, eu: 0 };
+  const done = { casa: 0, filhos: 0, eu: 0 };
+  for (const it of items) {
+    totals[it.area] = (totals[it.area] ?? 0) + 1;
+    if (it.done) done[it.area] = (done[it.area] ?? 0) + 1;
+  }
+  const pct = (a) => (totals[a] ? Math.round((100 * done[a]) / totals[a]) : 0);
+  return { totals, done, pctCasa: pct("casa"), pctFilhos: pct("filhos"), pctEu: pct("eu") };
 }
 
 export default function PlannerPage() {
   const [tab, setTab] = useState("casa");
-  const [text, setText] = useState("");
-  const [items, setItems] = useState({ casa: [], filhos: [], eu: [] });
+  const [items, setItems] = useState(() => getJSON("m360:planner") ?? []);
+  const prog = useMemo(() => calcProgress(items), [items]);
 
-  // carregar do storage
-  useEffect(() => {
-    const initial = get(keys.planner, { casa: [], filhos: [], eu: [] });
-    setItems(initial);
-  }, []);
-
-  // progresso geral e por aba
-  const prog = useMemo(() => {
-    const casa = pct(items.casa);
-    const filhos = pct(items.filhos);
-    const eu = pct(items.eu);
-    const all = pct([...(items.casa || []), ...(items.filhos || []), ...(items.eu || [])]);
-    return { casa, filhos, eu, all };
-  }, [items]);
-
-  // checar selo "Organizada" (5 concluídas no total)
-  useEffect(() => {
-    const totalDone =
-      (items.casa || []).filter((i) => i.done).length +
-      (items.filhos || []).filter((i) => i.done).length +
-      (items.eu || []).filter((i) => i.done).length;
-
-    if (typeof window !== "undefined" && totalDone >= 5) {
-      window.dispatchEvent(
-        new CustomEvent("m360:win", {
-          detail: { type: "badge", name: "Organizada" },
-        })
-      );
-    }
-  }, [items]);
-
-  function persist(next) {
-    setItems(next);
-    set(keys.planner, next);
-  }
-
-  function add() {
-    const v = text.trim();
-    if (!v) return;
-    const id = Date.now().toString(36);
-    const next = {
+  function add(title) {
+    const next = [
       ...items,
-      [tab]: [{ id, text: v, done: false }, ...(items[tab] || [])],
-    };
-    setText("");
-    persist(next);
+      { id: crypto.randomUUID(), title, area: tab, done: false, date: new Date().toISOString().slice(0, 10) },
+    ];
+    setItems(next);
+    setJSON("m360:planner", next);
   }
 
   function toggle(id) {
-    const next = {
-      ...items,
-      [tab]: (items[tab] || []).map((it) => (it.id === id ? { ...it, done: !it.done } : it)),
-    };
-    persist(next);
+    const next = items.map((i) => (i.id === id ? { ...i, done: !i.done } : i));
+    setItems(next);
+    setJSON("m360:planner", next);
+    toast("Boa! Progresso atualizado ✅");
   }
 
-  function del(id) {
-    const next = {
-      ...items,
-      [tab]: (items[tab] || []).filter((it) => it.id !== id),
-    };
-    persist(next);
-  }
-
-  function edit(id, newText) {
-    const t = newText.trim();
-    if (!t) return;
-    const next = {
-      ...items,
-      [tab]: (items[tab] || []).map((it) => (it.id === id ? { ...it, text: t } : it)),
-    };
-    persist(next);
-  }
+  const filtered = items.filter((i) => i.area === tab);
 
   return (
-    <main className="container-px py-5">
-      {/* topo */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-semibold">Planner da Família</h1>
-          <p className="text-sm text-slate-500">Organize seu dia por áreas</p>
-        </div>
-        <Link href="/meu-dia" className="btn bg-white border border-slate-200">
-          ← Voltar
-        </Link>
-      </div>
+    <main className="max-w-3xl mx-auto px-5 py-6">
+      <header className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Planner da Família</h1>
+        <Link href="/meu-dia" className="btn bg-white border border-slate-200">← Voltar</Link>
+      </header>
 
-      {/* progresso geral */}
-      <div className="card mb-5">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Progresso de hoje</span>
-          <span className="text-slate-500">{prog.all}%</span>
+      <section className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-4 mb-4">
+        <div className="text-sm text-slate-500 mb-2">Progresso de hoje</div>
+        <div className="space-y-2">
+          <Bar label="Casa" value={prog.pctCasa} />
+          <Bar label="Filhos" value={prog.pctFilhos} />
+          <Bar label="Eu" value={prog.pctEu} />
         </div>
-        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-          <div className="h-2 bg-brand rounded-full" style={{ width: `${prog.all}%` }} />
-        </div>
+      </section>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-          {[
-            { label: "Casa", v: prog.casa },
-            { label: "Filhos", v: prog.filhos },
-            { label: "Eu", v: prog.eu },
-          ].map((x) => (
-            <div key={x.label} className="rounded-xl border border-slate-200 p-3">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium">{x.label}</span>
-                <span className="text-slate-500">{x.v}%</span>
-              </div>
-              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div className="h-2 bg-slate-400 rounded-full" style={{ width: `${x.v}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* tabs */}
       <div className="flex gap-2 mb-3">
         {TABS.map((t) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`px-3 py-2 rounded-xl border text-sm flex items-center gap-2 ${
-              tab === t.id ? "bg-brand text-white border-brand" : "bg-white border-slate-200"
-            }`}
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-3 py-1.5 rounded-full text-sm ${tab === t ? "bg-[#F15A2E] text-white" : "bg-white ring-1 ring-black/5"}`}
           >
-            <span className="text-base">{t.emoji}</span>
-            {t.label}
+            {t === "casa" ? "🏠 Casa" : t === "filhos" ? "💕 Filhos" : "🌿 Eu"}
           </button>
         ))}
       </div>
 
-      {/* input */}
-      <div className="card mb-4">
-        <div className="flex gap-2">
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-            placeholder={
-              tab === "casa"
-                ? "Ex.: Comprar frutas, organizar roupas…"
-                : tab === "filhos"
-                ? "Ex.: Ler 10 min, brincar de memória…"
-                : "Ex.: Pausa 5 min, beber água…"
-            }
-            className="flex-1 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-brand/30"
-          />
-          <button onClick={add} className="btn btn-primary">
-            Adicionar
-          </button>
-        </div>
-      </div>
+      <AddBox onAdd={add} />
 
-      {/* lista */}
-      <ul className="space-y-2">
-        {(items[tab] || []).map((it) => (
-          <li
-            key={it.id}
-            className="rounded-xl border border-slate-200 bg-white p-3 flex items-center gap-3"
-          >
-            <input
-              type="checkbox"
-              checked={it.done}
-              onChange={() => toggle(it.id)}
-              className="h-5 w-5 accent-brand"
-            />
-            <input
-              defaultValue={it.text}
-              onBlur={(e) => edit(it.id, e.target.value)}
-              className={`flex-1 bg-transparent outline-none ${
-                it.done ? "line-through text-slate-400" : ""
-              }`}
-            />
-            <button
-              onClick={() => del(it.id)}
-              className="text-slate-400 hover:text-rose-500 text-lg"
-              title="Apagar"
-            >
-              ⌫
-            </button>
+      <ul className="mt-3 space-y-2">
+        {filtered.length === 0 && <li className="text-slate-500 text-sm">Sem itens ainda nessa aba.</li>}
+        {filtered.map((i) => (
+          <li key={i.id} className="rounded-xl bg-white ring-1 ring-black/5 p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <input type="checkbox" checked={i.done} onChange={() => toggle(i.id)} />
+              <span className={i.done ? "line-through text-slate-500" : ""}>{i.title}</span>
+            </div>
           </li>
         ))}
-        {!(items[tab] || []).length && (
-          <li className="text-slate-500 text-sm">Sem itens ainda nessa aba.</li>
-        )}
       </ul>
     </main>
+  );
+}
+
+function Bar({ label, value }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm">
+        <span>{label}</span><span>{value}%</span>
+      </div>
+      <div className="h-2 bg-slate-100 rounded-full mt-1">
+        <div className="h-2 rounded-full bg-slate-300" style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function AddBox({ onAdd }) {
+  const [txt, setTxt] = useState("");
+  return (
+    <div className="flex gap-2">
+      <input
+        value={txt}
+        onChange={(e) => setTxt(e.target.value)}
+        className="flex-1 rounded-xl bg-white ring-1 ring-black/5 px-3 py-2"
+        placeholder="Ex.: Comprar frutas, organizar roupas…"
+      />
+      <button
+        onClick={() => { if (txt.trim()) { onAdd(txt.trim()); setTxt(""); } }}
+        className="rounded-xl bg-[#F15A2E] text-white px-4 py-2"
+      >
+        Adicionar
+      </button>
+    </div>
   );
 }

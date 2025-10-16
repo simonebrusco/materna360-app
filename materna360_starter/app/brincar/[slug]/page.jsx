@@ -1,9 +1,12 @@
-'use client';
+"use client";
+
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import GlassCard from "@/components/GlassCard";
-import AppBar from "@/components/AppBar";
-import BottomNav from "@/components/BottomNav";
+import Link from "next/link";
+import { supabase } from "../../../lib/supabaseClient";
+import GlassCard from "../../../components/GlassCard";
+import AppBar from "../../../components/AppBar";
+import { addPlannerItem } from "../../../lib/planner";
+import { toast } from "../../../lib/toast";
 
 export default function ActivityDetail({ params }) {
   const { slug } = params;
@@ -27,9 +30,14 @@ export default function ActivityDetail({ params }) {
         <div className="px-4 py-6">
           <div className="h-24 rounded-2xl bg-brand-secondary/60 animate-pulse" />
         </div>
-        <BottomNav />
       </main>
     );
+  }
+
+  function save() {
+    addPlannerItem("filhos", item.title);
+    toast("Atividade salva no Planner 💾");
+    window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Exploradora" } }));
   }
 
   return (
@@ -37,31 +45,19 @@ export default function ActivityDetail({ params }) {
       <AppBar title="Brincar" backHref="/brincar" />
 
       <div className="px-4 py-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="text-3xl">{item.icon || "🎨"}</div>
-          <h1 className="text-2xl font-semibold">{item.title}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl">{item.icon || "🎨"}</div>
+            <h1 className="text-2xl font-semibold">{item.title}</h1>
+          </div>
+          <button onClick={save} className="rounded-xl bg-[#F15A2E] text-white px-3 py-1.5">Salvar</button>
         </div>
+
         {item.subtitle && <p className="text-brand-slate">{item.subtitle}</p>}
 
         <GlassCard className="p-4">
           <h3 className="font-medium">Informações rápidas</h3>
-          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-            {item.zero_material && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">0 materiais</span>}
-            {item.duration_min && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">{item.duration_min} min</span>}
-            {(item.age_min || item.age_max) && (
-              <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">
-                {item.age_min ?? "?"}–{item.age_max ?? "?"} anos
-              </span>
-            )}
-            {item.indoor && <span className="px-2 py-0.5 rounded-full bg-brand-secondary/60">dentro de casa</span>}
-          </div>
-        </GlassCard>
-
-        <GlassCard className="p-4">
-          <h3 className="font-medium">Passo a passo</h3>
-          <p className="mt-2 text-brand-slate">
-            (Em breve) objetivo, materiais e passos da atividade.
-          </p>
+          <p className="mt-2 text-brand-slate">Duração: {item.duration_min ?? "?"} min</p>
         </GlassCard>
 
         {item.safety_note && (
@@ -71,8 +67,6 @@ export default function ActivityDetail({ params }) {
           </GlassCard>
         )}
       </div>
-
-      <BottomNav />
     </main>
   );
 }

@@ -1,31 +1,18 @@
-// app/layout.jsx
-import "./globals.css";
-
-// 🔸 inicializa o listener de gamificação no cliente
-import ClientInit from "../components/ClientInit.jsx";
-
-// 🔸 bottom nav global (um único menu em todas as páginas)
-import BottomNav from "../components/BottomNav.jsx";
-
-export const metadata = {
-  title: "Materna360",
-  description: "Bem-vinda ao seu cantinho de rotina leve, brincadeiras e autocuidado.",
-};
+// ... seus imports existentes
+import dynamic from "next/dynamic";
+const ClientInit = dynamic(() => import("../components/ClientInit.jsx"), { ssr: false });
+const BottomNav  = dynamic(() => import("../components/BottomNav.jsx"),  { ssr: false });
+const ToastHost  = dynamic(() => import("../components/ToastHost.jsx"),  { ssr: false });
 
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-[#F5F5F5] text-[#1E1E1E] antialiased">
-        {/* Inicialização global do listener de badges */}
+      <body className="bg-[#F5F5F5] text-[#1E1E1E] antialiased" suppressHydrationWarning>
         <ClientInit />
-
-        {/* Conteúdo das páginas (deixa espaço pro bottom nav) */}
-        <div className="min-h-[100dvh] pb-24">
-          {children}
-        </div>
-
-        {/* Bottom navigation fixo */}
+        <div className="min-h-[100dvh] pb-24">{children}</div>
         <BottomNav />
+        <ToastHost /> {/* ⬅️ host de toast */}
+        <noscript>Habilite o JavaScript para usar o Materna360.</noscript>
       </body>
     </html>
   );

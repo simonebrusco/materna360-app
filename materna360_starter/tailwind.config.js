@@ -1,20 +1,33 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    // app atual
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}",
+    "./lib/**/*.{js,jsx,ts,tsx}",
+
+    // estrutura dentro de materna360_starter
+    "./materna360_starter/app/**/*.{js,jsx,ts,tsx}",
+    "./materna360_starter/components/**/*.{js,jsx,ts,tsx}",
+    "./materna360_starter/lib/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        brand: "#F15A2E",   // habilita bg-brand / text-brand
-        brand2: "#6C4AB6",
-        accent: "#F17324",
-        bg: "#F5F5F5",
-        text: "#1E1E1E",
+        brand: {
+          pink: "#ff005e",
+          pinkSoft: "#ffd8e6",
+          navy: "#2f3a56",
+          slate: "#545454",
+          white: "#ffffff",
+        },
       },
-      borderRadius: { xl2: "1rem" },
-      boxShadow: { card: "0 6px 18px rgba(0,0,0,0.06)" },
+      boxShadow: {
+        card: "0 6px 22px rgba(47,58,86,0.08)", // sombra suave premium
+      },
+      borderRadius: {
+        xl2: "1.25rem",
+      },
     },
   },
   plugins: [],
