@@ -7,13 +7,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        m360: {
-          primary: "#ff005e",
-          heading: "#2f3a56",
-          body: "#59636f",
+        brand: {
+          primary: "#F15A2E",
+          secondary: "#6C4AB6",
+          accent: "#F17324",
+          bg: "#F5F5F5",
+          text: "#1E1E1E",
         },
       },
-      container: { center: true },
+      borderRadius: {
+        xl2: "1rem",
+      },
+      boxShadow: {
+        card: "0 6px 18px rgba(0,0,0,0.06)",
+      },
     },
   },
   plugins: [],
