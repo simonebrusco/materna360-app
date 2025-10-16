@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "materna360_starter",
     "paths": {
-      "@/*": ["materna360_starter/*"]
+      "@/*": ["*"]
     }
-  }
+  },
+  "exclude": ["node_modules", ".next"]
 }
