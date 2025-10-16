@@ -1,62 +1,76 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { get, set } from "../lib/storage";
+import { getJSON, setJSON } from "../lib/storage";
+import { toast } from "../lib/toast";
 
+// Mensagens acolhedoras (pode ajustar à vontade)
 const MESSAGES = [
   "Hoje pode ser mais leve. Um passo de cada vez 💛",
-  "Você está fazendo o melhor que pode — e isso já é muito.",
-  "Respire fundo. Seu cuidado também importa.",
-  "Pequenas vitórias constroem grandes dias 🌿",
-  "Organize o possível, abrace o que vier com carinho.",
+  "Respire fundo. Você está fazendo o melhor que pode.",
+  "Amor também é descanso. Cuide de você um pouquinho.",
+  "Rotina é treino, não corrida. Siga no seu ritmo.",
+  "Pequenas alegrias contam muito. Observe uma agora.",
+  "Se abrace com carinho. Você importa.",
+  "Organize o essencial, o resto pode esperar."
 ];
 
-function today() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
-}
+// chave no storage
+const KEY = "m360:messageOfDay";
+
+function now() { return Date.now(); }
+function hoursDiff(a, b) { return Math.abs(a - b) / 36e5; }
 
 export default function MessageOfDay() {
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState(MESSAGES[0]);
 
-  // decide a mensagem do dia 1x a cada 24h (sem opção de trocar)
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Bom dia, Mãe 💛";
+    if (h < 18) return "Boa tarde, Mãe 💛";
+    return "Boa noite, Mãe 💛";
+  }, []);
+
   useEffect(() => {
-    const lastDate = get("m360:msg:date");       // YYYY-MM-DD
-    const lastIdx = parseInt(get("m360:msg:index") ?? "-1", 10);
-    const t = today();
+    // lê estado anterior
+    const saved = getJSON(KEY) || {};
+    const { index = 0, updatedAt = 0 } = saved;
+    const shouldRotate = hoursDiff(now(), updatedAt) >= 24;
 
-    if (lastDate === t && lastIdx >= 0) {
-      setMsg(MESSAGES[lastIdx % MESSAGES.length]);
-      return;
-    }
+    if (shouldRotate) {
+      // rota para próxima mensagem
+      const nextIndex = (index + 1) % MESSAGES.length;
+      const next = { index: nextIndex, updatedAt: now() };
+      setJSON(KEY, next);
+      setMsg(MESSAGES[nextIndex]);
 
-    // gira para a próxima mensagem (ou aleatória caso não exista)
-    const nextIdx = lastIdx >= 0 ? (lastIdx + 1) % MESSAGES.length
-                                 : Math.floor(Math.random() * MESSAGES.length);
-
-    set("m360:msg:date", t);
-    set("m360:msg:index", String(nextIdx));
-    setMsg(MESSAGES[nextIdx]);
-
-    // badge “Organizada” quando a mensagem vira no dia seguinte
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("m360:win", {
-          detail: { type: "badge", name: "Organizada" },
-        })
-      );
+      // badge + toast só quando rotaciona
+      try {
+        window.dispatchEvent(
+          new CustomEvent("m360:win", {
+            detail: { type: "badge", name: "Organizada" }
+          })
+        );
+      } catch {}
+      toast("Mensagem do dia atualizada ✨", { icon: "📝" });
+    } else {
+      // mantém mensagem atual
+      setMsg(MESSAGES[index]);
+      // se nunca salvou antes, garante persistência sem disparar eventos
+      if (!updatedAt) {
+        setJSON(KEY, { index, updatedAt: now() });
+      }
     }
   }, []);
 
-  const UI = useMemo(
-    () => (
-      <div className="rounded-2xl bg-white/90 ring-1 ring-black/5 shadow-sm p-4 md:p-5">
-        <div className="text-sm text-[#F17324] mb-1">✦ Mensagem do dia</div>
-        <div className="text-base md:text-lg text-[#1A2240]">{msg}</div>
+  return (
+    <section className="container-px mt-5">
+      <div className="glass p-4">
+        <div className="text-sm text-navy/70">{greeting}</div>
+        <p className="mt-1 text-[17px] md:text-lg text-navy">
+          {msg}
+        </p>
       </div>
-    ),
-    [msg]
+    </section>
   );
-
-  return UI;
 }
