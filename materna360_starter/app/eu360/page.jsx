@@ -1,207 +1,136 @@
-// app/eu360/page.jsx
+// materna360_starter/app/eu360/page.jsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { get, set, keys } from "../../lib/storage.js";
-import { CATALOG, getBadgeEvents, getUserBadges } from "../../lib/gamification.js";
+import { listGratitudes, addGratitude } from "../../lib/gratitudes";
+import { getJSON } from "../../lib/storage";
 
-const GRATS_KEY = "m360:gratitudes"; // [{id, text, ts}]
-
-function fmtDate(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+function Section({ title, right, children }) {
+  return (
+    <section className="card mb-5">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {right}
+      </div>
+      {children}
+    </section>
+  );
 }
 
-function lastNDates(n = 7) {
-  const out = [];
-  const d = new Date();
-  for (let i = 0; i < n; i++) {
-    const dt = new Date(d);
-    dt.setDate(d.getDate() - i);
-    out.push(dt.toISOString().slice(0, 10)); // YYYY-MM-DD
-  }
-  return out.reverse();
+function Badge({ name }) {
+  const map = {
+    CuidarDeMim: "💛 Cuidar de Mim",
+    MaePresente: "👩‍👧 Mãe Presente",
+    Exploradora: "🧭 Exploradora",
+    Organizada: "📋 Organizada",
+    Conectada: "🤝 Conectada",
+  };
+  return (
+    <div className="rounded-xl bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-sm">
+      {map[name] || name}
+    </div>
+  );
 }
 
 export default function Eu360Page() {
-  // Gratidão
-  const [gratText, setGratText] = useState("");
-  const [grats, setGrats] = useState([]);
-
-  // Badges
-  const [events, setEvents] = useState([]);
-  const badges = useMemo(() => getUserBadges(), [events]);
-
-  // Humor (placeholder: se existir m360:moods, sumariza; senão, neutro)
-  const [moods, setMoods] = useState([]); // [{date:'YYYY-MM-DD', value:1..5}]
-  const dates = useMemo(() => lastNDates(7), []);
-  const moodSeries = useMemo(() => {
-    // estrutura esperada: localStorage["m360:moods"] = [{date, value}]
-    const raw = get("m360:moods", []);
-    const map = new Map(raw.map((m) => [m.date, m.value]));
-    return dates.map((d) => ({ date: d, value: map.get(d) ?? 3 })); // 3 = neutro
-  }, [dates]);
-
-  // Meu Tempo (conta pausas do checklist dos últimos 7 dias)
-  const tempoResumo = useMemo(() => {
-    const chk = get(keys.checklist, {}); // { [date]: { items:[{id, done}], awarded? } }
-    let pausas = 0;
-    dates.forEach((d) => {
-      const its = chk[d]?.items || [];
-      its.forEach((it) => {
-        if ((it.id === "pausa" || it.id === "respiro") && it.done) pausas++;
-      });
-    });
-    return { pausas7d: pausas };
-  }, [dates]);
-
-  // carregar dados locais
-  useEffect(() => {
-    setGrats(get(GRATS_KEY, []));
-    setEvents(getBadgeEvents());
+  // Saudação (seguro para SSR)
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Bom dia";
+    if (h < 18) return "Boa tarde";
+    return "Boa noite";
   }, []);
 
-  function addGratitude() {
-    const t = gratText.trim();
-    if (!t) return;
-    const id = `g_${Date.now().toString(36)}`;
-    const item = { id, text: t, ts: Date.now() };
-    const next = [item, ...grats].slice(0, 50);
+  // Estado local (hidrata no cliente via effects)
+  const [grats, setGrats] = useState([]);         // [{id, text, ts}]
+  const [text, setText] = useState("");
+  const [badges, setBadges] = useState([]);       // ["CuidarDeMim", "Organizada", ...]
+
+  // Hidratar conteúdos somente no cliente
+  useEffect(() => {
+    // Gratidões
+    setGrats(listGratitudes());
+
+    // Badges
+    setBadges(getJSON("m360:badges", []) || []);
+
+    // Ouvir alterações
+    const onStorage = () => setBadges(getJSON("m360:badges", []) || []);
+    const onWin = () => setBadges(getJSON("m360:badges", []) || []);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("m360:win", onWin);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("m360:win", onWin);
+    };
+  }, []);
+
+  function onAdd() {
+    const next = addGratitude(text);
     setGrats(next);
-    set(GRATS_KEY, next);
-    setGratText("");
-    // opcional: acionar selo de autocuidado
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("m360:win", {
-          detail: { type: "badge", name: "Cuidar de Mim" },
-        })
-      );
-    }
+    setText("");
   }
 
   return (
     <main className="max-w-5xl mx-auto px-5 py-6">
-      <header className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-2xl font-semibold">Eu360</h1>
-          <p className="text-sm text-slate-500">Você é importante 💛 — siga no seu ritmo.</p>
+      {/* Banner */}
+      <div className="rounded-2xl bg-gradient-to-b from-rose-100 to-rose-50 ring-1 ring-black/5 p-5 mb-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">
+              {greeting}, Simone 💛
+            </h1>
+            <p className="text-slate-600">Você é importante — siga no seu ritmo.</p>
+          </div>
+          <Link href="/meu-dia" className="btn bg-white border border-slate-200">
+            ← Meu Dia
+          </Link>
         </div>
-        <Link href="/meu-dia" className="btn bg-white border border-slate-200">← Meu Dia</Link>
-      </header>
-
-      {/* Humor da Semana */}
-      <section className="card mb-6">
-        <h2 className="text-lg font-semibold mb-3">Humor da Semana</h2>
-        <div className="grid grid-cols-7 gap-2">
-          {moodSeries.map((m) => (
-            <div key={m.date} className="flex flex-col items-center gap-1">
-              <div
-                className="w-8 rounded-md"
-                style={{
-                  height: `${m.value * 10 + 10}px`,
-                  background:
-                    m.value >= 4 ? "#86efac" : m.value <= 2 ? "#fecaca" : "#fde68a",
-                }}
-                title={`${m.date} → ${m.value}/5`}
-              />
-              <span className="text-[10px] text-slate-500">{m.date.slice(5).replace("-", "/")}</span>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-slate-500 mt-2">
-          Dica: registre seu humor diariamente para ver sua evolução.
-        </p>
-      </section>
+      </div>
 
       {/* Conquistas */}
-      <section className="card mb-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Conquistas</h2>
-          <span className="text-sm text-slate-500">{badges.length} selos</span>
-        </div>
-
-        {badges.length === 0 ? (
-          <p className="text-sm text-slate-500 mt-2">
-            Nenhum selo ainda. Use o Planner, Brincar ou Mentoria para desbloquear.
-          </p>
+      <Section title="Conquistas (selos)">
+        {badges?.length ? (
+          <div className="flex flex-wrap gap-2">
+            {badges.map((b, i) => (
+              <Badge key={`${typeof b === "string" ? b : b.name}-${i}`} name={b.name || b} />
+            ))}
+          </div>
         ) : (
-          <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {badges.map((name) => {
-              const meta = CATALOG[name] || {};
-              const last = events.find((e) => e.name === name)?.ts;
-              return (
-                <li key={name} className="rounded-xl border border-slate-200 p-3 bg-white">
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">{meta.emoji || "🏅"}</div>
-                    <div className="flex-1">
-                      <div className="font-semibold">{name}</div>
-                      <div className="text-sm text-slate-600">{meta.desc || "Conquista Materna360"}</div>
-                      {last ? (
-                        <div className="text-xs text-slate-500 mt-1">
-                          Última conquista: {fmtDate(last)}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <p className="text-sm text-slate-600">
+            Você ainda não conquistou selos. Que tal registrar uma gratidão ou fazer uma pausa hoje? ✨
+          </p>
         )}
-      </section>
+      </Section>
 
       {/* Gratidão */}
-      <section className="card mb-6">
-        <h2 className="text-lg font-semibold mb-3">Gratidão</h2>
-        <div className="flex gap-2">
+      <Section
+        title="Gratidão"
+        right={<div className="text-sm text-slate-500">{grats.length ? `${grats.length} recentes` : null}</div>}
+      >
+        <div className="flex gap-2 mb-3">
           <input
-            value={gratText}
-            onChange={(e) => setGratText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addGratitude()}
-            placeholder="Registrar uma gratidão..."
-            className="flex-1 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-brand/30"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Escreva algo pelo qual é grata hoje…"
+            className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2"
           />
-          <button onClick={addGratitude} className="btn btn-primary">Registrar</button>
+          <button onClick={onAdd} className="btn btn-primary">Adicionar</button>
         </div>
-        <ul className="mt-3 space-y-2">
-          {grats.slice(0, 5).map((g) => (
-            <li key={g.id} className="rounded-xl border border-slate-200 bg-white p-3">
-              <div className="text-sm">{g.text}</div>
-              <div className="text-xs text-slate-400 mt-1">{fmtDate(g.ts)}</div>
-            </li>
-          ))}
-          {grats.length === 0 && (
-            <li className="text-sm text-slate-500">Sem registros ainda. Que tal começar hoje? 💛</li>
-          )}
-        </ul>
-      </section>
 
-      {/* Meu Tempo */}
-      <section className="card">
-        <h2 className="text-lg font-semibold mb-1">Meu Tempo</h2>
-        <p className="text-sm text-slate-600 mb-3">
-          Resumo dos últimos 7 dias.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="rounded-xl border border-slate-200 p-3">
-            <div className="text-sm text-slate-500">Pausas/Respiros</div>
-            <div className="text-2xl font-semibold">{tempoResumo.pausas7d}</div>
-            <div className="text-xs text-slate-500 mt-1">Registros do Checklist</div>
-          </div>
-          <div className="rounded-xl border border-slate-200 p-3 opacity-60">
-            <div className="text-sm text-slate-500">Minutos de autocuidado</div>
-            <div className="text-2xl font-semibold">—</div>
-            <div className="text-xs text-slate-500 mt-1">(conectar meditações na próxima etapa)</div>
-          </div>
-          <div className="rounded-xl border border-slate-200 p-3 opacity-60">
-            <div className="text-sm text-slate-500">Atividades com o filho</div>
-            <div className="text-2xl font-semibold">—</div>
-            <div className="text-xs text-slate-500 mt-1">(integração Momentos v2)</div>
-          </div>
-        </div>
-      </section>
+        {grats.length ? (
+          <ul className="space-y-2">
+            {grats.slice(0, 8).map((g) => (
+              <li key={g.id} className="rounded-xl bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-sm text-slate-700">
+                {g.text}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-slate-600">Sem registros ainda. Comece com uma pequena gratidão 💫</p>
+        )}
+      </Section>
     </main>
   );
 }
