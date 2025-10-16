@@ -25,32 +25,27 @@ const CARDS = [
   {
     title: "Atividade do Dia",
     desc: "Brincadeira educativa",
-    href: "/meu-dia/atividade",
+    href: "/brincar",
     emoji: "🎨",
   },
   {
     title: "Momento para Mim",
     desc: "Pausa e autocuidado",
-    href: "/meu-dia/pausas",
+    href: "/cuidar",
     emoji: "🌿",
   },
 ];
 
 export default function MeuDiaPage() {
-  const nome = "Simone"; // depois vamos puxar do profile
-  const msgDoDia =
-    "Hoje pode ser mais leve. Um passo de cada vez 💛";
+  const nome = "Simone";
+  const msgDoDia = "Hoje pode ser mais leve. Um passo de cada vez 💛";
 
   return (
     <main className="pb-28">
-      {/* Hero suave */}
       <section className="rounded-2xl p-6 bg-gradient-to-b from-rose-100 to-rose-50 mb-5">
         <div className="flex items-center justify-between">
           <span className="text-sm text-rose-500 font-semibold">Materna360</span>
-          <Link
-            href="/eu360"
-            className="text-xs bg-white/70 backdrop-blur px-3 py-1 rounded-full"
-          >
+          <Link href="/eu360" className="text-xs bg-white/70 backdrop-blur px-3 py-1 rounded-full">
             Eu360
           </Link>
         </div>
@@ -64,7 +59,6 @@ export default function MeuDiaPage() {
         </p>
       </section>
 
-      {/* Atalhos (grid 2x2) */}
       <h3 className="subtitle mb-3">Atalhos do dia</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         {CARDS.map((c) => (
@@ -82,12 +76,9 @@ export default function MeuDiaPage() {
         ))}
       </div>
 
-      {/* Check-in rápido */}
       <section className="card">
         <h4 className="text-lg font-semibold mb-1">Como você está hoje?</h4>
-        <p className="text-sm text-slate-500 mb-3">
-          Registre seu humor de hoje
-        </p>
+        <p className="text-sm text-slate-500 mb-3">Registre seu humor de hoje</p>
         <div className="flex gap-2 text-2xl">
           <button className="hover:scale-110 transition">😕</button>
           <button className="hover:scale-110 transition">🙂</button>
