@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@m360/*": ["materna360_starter/*"]
+      "@/*": ["materna360_starter/*"]
     }
   }
 }
