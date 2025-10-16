@@ -1,6 +1,7 @@
-"use client"; // ✅ deve ser a primeira linha do arquivo
+"use client"; // precisa ser a primeira linha
 
-// Corrige erro "Invalid revalidate value '[object Object]'"
+// ✅ força comportamento dinâmico e remove cache do Next
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { useEffect, useState } from "react";
