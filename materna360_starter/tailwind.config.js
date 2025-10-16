@@ -1,20 +1,31 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        brand: "#F15A2E",   // habilita bg-brand / text-brand
-        brand2: "#6C4AB6",
-        accent: "#F17324",
-        bg: "#F5F5F5",
-        text: "#1E1E1E",
+        brand: {
+          DEFAULT: "#ff005e",  // principal
+          soft: "#ffd8e6",     // complemento
+          navy: "#2f3a56",     // apoio 1
+          ink: "#545454",      // apoio 2
+          white: "#ffffff",    // apoio 3
+        },
       },
-      borderRadius: { xl2: "1rem" },
-      boxShadow: { card: "0 6px 18px rgba(0,0,0,0.06)" },
+      boxShadow: {
+        soft: "0 6px 24px -8px rgba(47,58,86,0.18)", // navy sutil
+        glass:
+          "inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 30px -12px rgba(0,0,0,0.18)",
+      },
+      borderRadius: {
+        xl2: "1.25rem", // 20px approx
+      },
+      fontFamily: {
+        poppins: ["Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [],
