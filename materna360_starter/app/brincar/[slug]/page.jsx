@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import GlassCard from "@/components/GlassCard";
 import AppBar from "@/components/AppBar";
-import BottomNav from "@/components/BottomNav";
 
 export default function ActivityDetail({ params }) {
   const { slug } = params;
@@ -27,7 +26,6 @@ export default function ActivityDetail({ params }) {
         <div className="px-4 py-6">
           <div className="h-24 rounded-2xl bg-brand-secondary/60 animate-pulse" />
         </div>
-        <BottomNav />
       </main>
     );
   }
