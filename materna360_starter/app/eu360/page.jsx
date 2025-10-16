@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { listGratitudes, addGratitude } from "../../lib/gratitudes";
-import { getJSON } from "../../lib/storage";
+import { getJSON, hasWindow } from "../../lib/storage";
 
 function Section({ title, right, children }) {
   return (
@@ -34,7 +34,6 @@ function Badge({ name }) {
 }
 
 export default function Eu360Page() {
-  // Saudação (seguro para SSR)
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return "Bom dia";
@@ -42,24 +41,33 @@ export default function Eu360Page() {
     return "Boa noite";
   }, []);
 
-  // Estado local (hidrata no cliente via effects)
-  const [grats, setGrats] = useState([]);         // [{id, text, ts}]
-  const [text, setText] = useState("");
-  const [badges, setBadges] = useState([]);       // ["CuidarDeMim", "Organizada", ...]
+  const [grats, setGrats] = useState([]);     // lista de gratidões
+  const [text, setText] = useState("");       // input
+  const [badges, setBadges] = useState([]);   // selos
 
-  // Hidratar conteúdos somente no cliente
   useEffect(() => {
-    // Gratidões
+    // Hidratação segura no cliente
     setGrats(listGratitudes());
-
-    // Badges
     setBadges(getJSON("m360:badges", []) || []);
 
-    // Ouvir alterações
-    const onStorage = () => setBadges(getJSON("m360:badges", []) || []);
-    const onWin = () => setBadges(getJSON("m360:badges", []) || []);
+    if (!hasWindow()) return;
+
+    const onStorage = (e) => {
+      if (e?.key === "m360:badges") {
+        setBadges(getJSON("m360:badges", []) || []);
+      }
+      if (e?.key === "m360:gratitudes") {
+        setGrats(listGratitudes());
+      }
+    };
+
+    const onWin = () => {
+      setBadges(getJSON("m360:badges", []) || []);
+    };
+
     window.addEventListener("storage", onStorage);
     window.addEventListener("m360:win", onWin);
+
     return () => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("m360:win", onWin);
@@ -93,9 +101,10 @@ export default function Eu360Page() {
       <Section title="Conquistas (selos)">
         {badges?.length ? (
           <div className="flex flex-wrap gap-2">
-            {badges.map((b, i) => (
-              <Badge key={`${typeof b === "string" ? b : b.name}-${i}`} name={b.name || b} />
-            ))}
+            {badges.map((b, i) => {
+              const name = typeof b === "string" ? b : b?.name;
+              return <Badge key={`${name}-${i}`} name={name || "Selo"} />;
+            })}
           </div>
         ) : (
           <p className="text-sm text-slate-600">
@@ -116,7 +125,13 @@ export default function Eu360Page() {
             placeholder="Escreva algo pelo qual é grata hoje…"
             className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2"
           />
-          <button onClick={onAdd} className="btn btn-primary">Adicionar</button>
+          <button
+            onClick={onAdd}
+            disabled={!text.trim()}
+            className="btn btn-primary disabled:opacity-50"
+          >
+            Adicionar
+          </button>
         </div>
 
         {grats.length ? (
