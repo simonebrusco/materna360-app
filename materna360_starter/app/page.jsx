@@ -1,7 +1,8 @@
-// ✅ Corrige erro "Invalid revalidate value '[object Object]'"
+"use client"; // ✅ deve ser a primeira linha do arquivo
+
+// Corrige erro "Invalid revalidate value '[object Object]'"
 export const revalidate = 0;
 
-"use client";
 import { useEffect, useState } from "react";
 
 function Card({ title, emoji, subtitle, href = "#" }) {
