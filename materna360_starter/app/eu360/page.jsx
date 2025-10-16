@@ -1,87 +1,188 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { getJSON, setJSON, get } from "../../lib/storage";
+import { useEffect, useMemo, useState } from "react";
+import { get, set } from "../../lib/storage";
+import { toast } from "../../lib/toast";
 
-function weekMoods() {
-  const list = getJSON("m360:moods") ?? []; // [{date, score}]
-  const last7 = list.slice(0, 7);
-  return last7;
+const K_MOODS = "m360:moods"; // [{date: 'YYYY-MM-DD', score: 1..5}]
+const K_BADGES = "m360:badges"; // ['Organizada', ...] (listener já popula)
+const K_GRATS = "m360:gratitudes"; // [{text, date}]
+const K_MINUTES = "m360:minutes"; // { weekISO: '2025-W42', meditate: n, breathe: n }
+
+function weekKey(d = new Date()) {
+  // chave simples por ISO week aproximada
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = tmp.getUTCDay() || 7;
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+  return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
 export default function Eu360Page() {
-  const moods = useMemo(() => weekMoods(), []);
-  const badges = getJSON("m360:badges") ?? [];       // mantido pelo ClientInit/listener
-  const gratitudes = getJSON("m360:gratitudes") ?? [];
-  const minutes = useMemo(() => {
-    const m = JSON.parse(get("m360:minutes") ?? "{}");
-    return m.wellbeing ?? 0;
-  }, []);
+  // humor (últimos 7 dias)
+  const moods = useMemo(() => get(K_MOODS, []), []);
+  // badges recentes
+  const badges = useMemo(() => get(K_BADGES, []), []);
+  // gratidões
+  const [grats, setGrats] = useState(() => get(K_GRATS, []));
+  const [text, setText] = useState("");
+  // minutos semanais
+  const minutes = useMemo(() => get(K_MINUTES, {}), []);
+  const totalWeek =
+    (minutes?.[weekKey()]?.meditate || 0) + (minutes?.[weekKey()]?.breathe || 0);
 
-  const [g, setG] = useState("");
-
+  // persist zippy quando adicionar
   function addGratitude() {
-    if (!g.trim()) return;
-    const list = [{ id: crypto.randomUUID(), text: g.trim(), date: new Date().toISOString() }, ...gratitudes].slice(0, 50);
-    setJSON("m360:gratitudes", list);
-    setG("");
+    const t = text.trim();
+    if (!t) return;
+    const next = [{ text: t, date: new Date().toISOString() }, ...grats].slice(
+      0,
+      20
+    );
+    set(K_GRATS, next);
+    setGrats(next);
+    setText("");
+    toast("Gratidão registrada ✨");
   }
 
+  // simula uma leitura reativa de badges (caso listener preencha localStorage)
+  useEffect(() => {
+    function onBadge(e) {
+      try {
+        const name = e?.detail?.name;
+        if (!name) return;
+        const current = get(K_BADGES, []);
+        if (!current.includes(name)) {
+          const next = [name, ...current].slice(0, 20);
+          set(K_BADGES, next);
+        }
+      } catch {}
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("m360:win", onBadge);
+      return () => window.removeEventListener("m360:win", onBadge);
+    }
+  }, []);
+
   return (
-    <main className="max-w-4xl mx-auto px-5 py-6">
-      <h1 className="text-2xl font-semibold mb-4">Eu360</h1>
+    <main className="min-h-screen bg-gradient-to-b from-brand-soft to-white">
+      <header className="mx-auto max-w-5xl px-5 pt-6">
+        <h1 className="text-[28px] md:text-[32px] font-semibold text-brand-navy">
+          Eu360
+        </h1>
+        <p className="text-brand-navy/60 mt-1">
+          Você é importante 💛 — siga no seu ritmo.
+        </p>
+      </header>
 
-      {/* Humor da Semana */}
-      <section className="rounded-2xl bg-white ring-1 ring-black/5 p-4 mb-4">
-        <div className="font-medium mb-2">Humor da semana</div>
-        <div className="flex gap-2">
-          {moods.length === 0 && <div className="text-sm text-slate-500">Sem registros ainda.</div>}
-          {moods.map((m) => (
-            <div key={m.date} className="size-8 rounded-full bg-rose-100 grid place-items-center text-sm">
-              {m.score}
+      <section className="mx-auto max-w-5xl px-5 pt-6 pb-28 space-y-5 md:space-y-6">
+        {/* Humor da semana */}
+        <Card title="Humor da semana">
+          {moods?.length ? (
+            <div className="flex items-center gap-2">
+              {[...Array(7)].map((_, i) => {
+                const m = moods[moods.length - 1 - i];
+                const score = m?.score ?? 0;
+                return (
+                  <div
+                    key={i}
+                    className="h-3 w-7 rounded"
+                    style={{
+                      background:
+                        score >= 4
+                          ? "#00C853"
+                          : score === 3
+                          ? "#FFD54F"
+                          : score > 0
+                          ? "#FF7043"
+                          : "#E5E7EB",
+                    }}
+                    title={m?.date || ""}
+                  />
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </section>
+          ) : (
+            <Empty text="Sem registros ainda." />
+          )}
+        </Card>
 
-      {/* Conquistas */}
-      <section className="rounded-2xl bg-white ring-1 ring-black/5 p-4 mb-4">
-        <div className="font-medium mb-2">Conquistas</div>
-        {badges.length === 0 && <div className="text-sm text-slate-500">Sem selos por enquanto.</div>}
-        <div className="flex flex-wrap gap-2">
-          {badges.slice(-5).reverse().map((b, i) => (
-            <span key={i} className="px-3 py-1 rounded-full bg-rose-100 text-[#1A2240] text-sm">
-              {b}
-            </span>
-          ))}
-        </div>
-      </section>
+        {/* Conquistas */}
+        <Card title="Conquistas">
+          {badges?.length ? (
+            <ul className="flex flex-wrap gap-2">
+              {badges.slice(0, 5).map((b, i) => (
+                <li
+                  key={i}
+                  className="px-3 py-1.5 rounded-full text-sm text-white shadow"
+                  style={{ backgroundColor: "#2f3a56" }}
+                >
+                  {b}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Empty text="Sem selos por enquanto." />
+          )}
+        </Card>
 
-      {/* Gratidão */}
-      <section className="rounded-2xl bg-white ring-1 ring-black/5 p-4 mb-4">
-        <div className="font-medium mb-2">Gratidão</div>
-        <div className="flex gap-2 mb-3">
-          <input
-            value={g}
-            onChange={(e) => setG(e.target.value)}
-            className="flex-1 rounded-xl bg-white ring-1 ring-black/5 px-3 py-2"
-            placeholder="Escreva algo pelo qual é grata hoje…"
-          />
-          <button onClick={addGratitude} className="rounded-xl bg-[#F15A2E] text-white px-4 py-2">Salvar</button>
-        </div>
-        <ul className="space-y-1">
-          {gratitudes.slice(0, 5).map((x) => (
-            <li key={x.id} className="text-sm text-slate-700">• {x.text}</li>
-          ))}
-          {gratitudes.length === 0 && <li className="text-sm text-slate-500">Sem registros ainda.</li>}
-        </ul>
-      </section>
+        {/* Gratidão */}
+        <Card title="Gratidão">
+          <div className="flex gap-2">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Escreva algo pelo qual é grata hoje…"
+              className="flex-1 rounded-xl bg-white ring-1 ring-black/5 px-3 py-2 text-sm"
+            />
+            <button
+              onClick={addGratitude}
+              className="rounded-xl px-4 py-2 text-sm text-white"
+              style={{ backgroundColor: "#ff005e" }}
+            >
+              Salvar
+            </button>
+          </div>
+          {grats?.length ? (
+            <ul className="mt-3 space-y-2">
+              {grats.slice(0, 5).map((g, i) => (
+                <li
+                  key={i}
+                  className="text-sm text-brand-navy/70 bg-white/60 rounded-lg px-3 py-2 ring-1 ring-black/5"
+                >
+                  {g.text}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="mt-2">
+              <Empty text="Sem registros ainda." />
+            </div>
+          )}
+        </Card>
 
-      {/* Meu Tempo */}
-      <section className="rounded-2xl bg-white ring-1 ring-black/5 p-4">
-        <div className="font-medium mb-1">Meu Tempo</div>
-        <div className="text-sm text-slate-600">Minutos de meditação/respiração (semana): <strong>{minutes} min</strong></div>
+        {/* Meu Tempo */}
+        <Card title="Meu Tempo">
+          <div className="text-brand-navy/80">
+            Minutos de meditação/respiração (semana):{" "}
+            <strong>{totalWeek} min</strong>
+          </div>
+        </Card>
       </section>
     </main>
   );
+}
+
+function Card({ title, children }) {
+  return (
+    <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-5 md:p-6">
+      <div className="text-sm text-brand-navy/50 mb-2">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function Empty({ text }) {
+  return <div className="text-sm text-brand-navy/50">{text}</div>;
 }
