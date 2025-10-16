@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-// ✅ importa da RAIZ do projeto (funciona no build Linux)
+// ✅ imports pela RAIZ do projeto (case-sensitive no build)
 import QuickNote from "../../components/QuickNote.jsx";
 import { getMessage, nextMessage } from "../../lib/messages.js";
 import { get, keys } from "../../lib/storage.js";
@@ -16,10 +16,12 @@ function saudacao() {
 }
 
 const CARDS = [
-  { title: "Rotina da Casa", desc: "Organizar tarefas", href: "/meu-dia/rotina", emoji: "🏠" },
-  { title: "Tempo com Meu Filho", desc: "Registrar momentos", href: "/meu-dia/momentos", emoji: "💕" },
-  { title: "Atividade do Dia", desc: "Brincadeira educativa", href: "/meu-dia/atividade", emoji: "🎨" },
-  { title: "Momento para Mim", desc: "Pausa e autocuidado", href: "/cuidar", emoji: "🌿" },
+  { title: "Rotina da Casa",       desc: "Organizar tarefas",     href: "/meu-dia/rotina",   emoji: "🏠" },
+  { title: "Tempo com Meu Filho",  desc: "Registrar momentos",    href: "/meu-dia/momentos", emoji: "💕" },
+  { title: "Atividade do Dia",     desc: "Brincadeira educativa", href: "/meu-dia/atividade",emoji: "🎨" },
+  { title: "Momento para Mim",     desc: "Pausa e autocuidado",   href: "/cuidar",           emoji: "🌿" },
+  // ✅ novo atalho
+  { title: "Checklist do Dia",     desc: "Microtarefas rápidas",  href: "/meu-dia/checklist",emoji: "✅" },
 ];
 
 function calcPct(list = []) {
@@ -102,11 +104,17 @@ export default function MeuDiaPage() {
 
       {/* Planner na Home */}
       <section className="card mb-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 gap-2">
           <h4 className="text-lg font-semibold">Planner da Família</h4>
-          <Link href="/meu-dia/planner" className="btn bg-white border border-slate-200">
-            Abrir Planner
-          </Link>
+          <div className="flex gap-2">
+            {/* ✅ novo botão */}
+            <Link href="/meu-dia/checklist" className="btn bg-white border border-slate-200">
+              Checklist
+            </Link>
+            <Link href="/meu-dia/planner" className="btn bg-white border border-slate-200">
+              Abrir Planner
+            </Link>
+          </div>
         </div>
 
         {/* Barra geral */}
