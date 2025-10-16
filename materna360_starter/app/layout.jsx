@@ -1,20 +1,21 @@
 // materna360_starter/app/layout.jsx
-import '@/styles/globals.css'; // ✅ caminho correto e estável
+import "./globals.css";
+import BottomNav from "@/components/BottomNav";
 
 export const metadata = {
-  title: 'Materna360',
-  description: 'Seu dia mais leve, organizado e com carinho.',
-};
-
-export const viewport = {
-  themeColor: '#ffffff',
+  title: "Materna360",
+  description: "Seu dia, do seu jeito",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-dvh bg-gradient-to-b from-rose-100 to-white text-[#2F3A56]">
-        {children}
+      <body className="min-h-screen bg-gradient-to-b from-[#FFE0EA] to-[#FFF6FA] text-[#1A2240]">
+        {/* conteúdo das páginas */}
+        <div className="pb-28">{children}</div>
+
+        {/* nav fixa para TODAS as rotas */}
+        <BottomNav />
       </body>
     </html>
   );
