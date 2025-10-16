@@ -10,11 +10,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen bg-gradient-to-b from-[#FFE0EA] to-[#FFF6FA] text-[#1A2240]">
-        {/* conteúdo das páginas */}
+      {/* Fundo global e cor de texto */}
+      <body className="min-h-dvh m360-bg text-[#1A2240] antialiased">
+        {/* Conteúdo da página com espaço para a nav fixa */}
         <div className="pb-28">{children}</div>
-
-        {/* nav fixa para TODAS as rotas */}
         <BottomNav />
       </body>
     </html>

@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 
 const Tab = ({ href, icon, label }) => {
   const pathname = usePathname();
-  const active = pathname === href;
+  const active = pathname === href || pathname.startsWith(href + "/");
+
   return (
     <Link
       href={href}
