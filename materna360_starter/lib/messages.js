@@ -1,4 +1,4 @@
-// lib/messages.js
+// materna360_starter/lib/messages.js
 const MESSAGES = [
   "Hoje pode ser mais leve. Um passo de cada vez 💛",
   "Respire: você está fazendo o melhor que pode.",
