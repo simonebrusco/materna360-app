@@ -20,8 +20,8 @@ const DEFAULT_DATA = {
     { id: "4", text: "Separar lancheira", done: false },
   ],
   eu: [
-    { id: "5", text: "Respiração 3 min", done: false },
-    { id: "6", text: "Beber água", done: false },
+    { id: "5", text: "Respiracao 3 min", done: false },
+    { id: "6", text: "Beber agua", done: false },
   ],
 };
 
@@ -50,9 +50,9 @@ export default function PlannerPage() {
   }, [currentList]);
 
   function toggle(id) {
-    setItems((prev) => ({
+    setItems(prev => ({
       ...prev,
-      [tab]: prev[tab].map((i) => (i.id === id ? { ...i, done: !i.done } : i)),
+      [tab]: prev[tab].map(i => (i.id === id ? { ...i, done: !i.done } : i)),
     }));
   }
 
@@ -60,7 +60,7 @@ export default function PlannerPage() {
     const text = newText.trim();
     if (!text) return;
     const id = Date.now().toString(36);
-    setItems((prev) => ({
+    setItems(prev => ({
       ...prev,
       [tab]: [{ id, text, done: false }, ...prev[tab]],
     }));
@@ -68,29 +68,29 @@ export default function PlannerPage() {
   }
 
   function removeItem(id) {
-    setItems((prev) => ({
+    setItems(prev => ({
       ...prev,
-      [tab]: prev[tab].filter((i) => i.id !== id),
+      [tab]: prev[tab].filter(i => i.id !== id),
     }));
   }
 
   function clearDone() {
-    setItems((prev) => ({
+    setItems(prev => ({
       ...prev,
-      [tab]: prev[tab].filter((i) => !i.done),
+      [tab]: prev[tab].filter(i => !i.done),
     }));
   }
 
   return (
     <main className="pb-28">
       <header className="mb-4">
-        <h1 className="title">Planner da Família</h1>
-        <p className="subtitle">Abas: Casa · Filhos · Eu</p>
+        <h1 className="title">Planner da Familia</h1>
+        <p className="subtitle">Abas: Casa - Filhos - Eu</p>
       </header>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4">
-        {TABS.map((t) => (
+        {TABS.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -109,9 +109,9 @@ export default function PlannerPage() {
       {/* Progresso */}
       <div className="card mb-4">
         <div className="flex items-center justify-between mb-2">
-          <div className="font-medium">Progresso — {progress}% concluído</div>
+          <div className="font-medium">Progresso - {progress}% concluido</div>
           <button onClick={clearDone} className="text-xs text-slate-500 hover:underline">
-            Limpar concluídos
+            Limpar concluidos
           </button>
         </div>
         <ProgressBar value={progress} />
@@ -133,7 +133,7 @@ export default function PlannerPage() {
 
       {/* Lista */}
       <ul className="space-y-2">
-        {currentList.map((i) => (
+        {currentList.map(i => (
           <li key={i.id} className="card flex items-center gap-3">
             <input
               type="checkbox"
