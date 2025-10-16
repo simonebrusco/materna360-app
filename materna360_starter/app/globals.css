@@ -2,29 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tokens rápidos */
+/* ---------- Tokens ---------- */
 :root{
-  --bg:#F5F5F5;
-  --text:#1E1E1E;
-  --brand:#F15A2E;
-  --brand-2:#6C4AB6;
+  --brand:        #ff005e;
+  --brand-soft:   #ffd8e6;
+  --brand-navy:   #2f3a56;
+  --brand-ink:    #545454;
+  --brand-white:  #ffffff;
 }
 
-/* Resets úteis */
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  background:var(--bg);
-  color:var(--text);
+/* ---------- Base ---------- */
+html, body {
+  @apply bg-[var(--brand-white)] text-[var(--brand-ink)] antialiased;
+  font-family: theme(fontFamily.poppins);
 }
 
-/* Helpers de UI */
-@layer components{
+/* Superfície premium com leve gradiente “acolhedor” */
+.app-surface {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-soft) 62%, white) 0%,
+    #fff 40%,
+    color-mix(in srgb, var(--brand-soft) 35%, #fff) 100%
+  );
+}
+
+/* ---------- Components ---------- */
+@layer components {
   .container-px{ @apply max-w-3xl mx-auto px-4; }
-  .card{ @apply bg-white rounded-2xl shadow-card p-4; }
-  .title{ @apply text-2xl font-semibold; }
-  .subtitle{ @apply text-sm text-slate-500; }
-  .btn{ @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-medium; }
-  .btn-primary{ @apply btn bg-brand text-white hover:opacity-90; }
-  .link{ @apply text-brand hover:underline; }
+
+  /* usa shadow-soft configurada no tailwind.config.js */
+  .card{ @apply bg-white rounded-xl2 shadow-soft p-4; }
+
+  .glass {
+    backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.58));
+    @apply rounded-xl2 ring-1 ring-white/60 shadow-glass;
+  }
+
+  .btn{
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-150;
+  }
+  .btn-primary{
+    @apply btn bg-[var(--brand)] text-white hover:brightness-95 active:brightness-90;
+  }
+  .btn-ghost{
+    @apply btn bg-white ring-1 ring-black/5 text-[var(--brand-navy)] hover:bg-[var(--brand-soft)];
+  }
+  .btn-outline{
+    @apply btn border border-[var(--brand)] text-[var(--brand)] bg-white hover:bg-[var(--brand-soft)];
+  }
+
+  .chip{
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs bg-[var(--brand-soft)] text-[var(--brand-navy)];
+  }
+
+  .title{
+    @apply text-[22px] md:text-2xl font-semibold text-[var(--brand-navy)];
+  }
+
+  /* ✅ sem arbitrary dentro do @apply  */
+  .subtitle{
+    @apply text-sm;
+    color: rgba(47,58,86,0.72); /* navy 72% */
+  }
+
+  /* Aliases utilitários */
+  .text-brand{ @apply text-[var(--brand)]; }
+  .bg-brand{ background-color: var(--brand); }
+  .bg-brand-soft{ background-color: var(--brand-soft); }
+  .text-navy{ color: var(--brand-navy); }
 }
+
+/* ---------- Utilities (compat) ---------- */
+@layer utilities {
+  /* alias extra p/ evitar qualquer @apply shadow-card antigo */
+  .shadow-card { @apply shadow-soft; }
+}
+
+/* ---------- Helpers ---------- */
+.hr-soft{ @apply h-px bg-black/5 w-full; }
+.shadow-raise{ box-shadow: 0 14px 40px -16px rgba(47,58,86,.25); }
