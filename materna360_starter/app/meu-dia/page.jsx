@@ -1,10 +1,11 @@
 // materna360_starter/app/meu-dia/page.jsx
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useChecklistProgress from "../../lib/hooks/useChecklistProgress.js";
 import PlannerWeekly from "../../components/PlannerWeekly.jsx";
+import { get, keys } from "../../lib/storage.js";
 
 // Card simples reutilizável
 function Card({ emoji, title, subtitle, href = "#" }) {
@@ -64,6 +65,14 @@ export default function MeuDiaPage() {
   // Hook padronizado do checklist
   const { percent } = useChecklistProgress();
 
+  // Nome da mãe salvo no Eu360 → m360:profile
+  const [motherName, setMotherName] = useState("");
+  useEffect(() => {
+    const k = (keys && keys.profile) || "m360:profile";
+    const p = get(k, { motherName: "" });
+    setMotherName((p && p.motherName) || "");
+  }, []);
+
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return "Bom dia";
@@ -89,7 +98,11 @@ export default function MeuDiaPage() {
       {/* Saudação */}
       <section className="mx-auto max-w-5xl px-5 pt-8">
         <h1 className="text-[28px] md:text-[36px] font-bold text-[#1A2240]">
-          {greeting}, <span className="text-[#1A2240]">Mãe</span> <span>👋</span>
+          {greeting},{" "}
+          <span className="text-[#1A2240]">
+            {motherName?.trim() ? motherName.split(" ")[0] : "Mãe"}
+          </span>{" "}
+          <span>👋</span>
         </h1>
         <p className="mt-2 text-[#1A2240]/60 text-lg md:text-xl">
           Atalhos do dia
@@ -99,7 +112,7 @@ export default function MeuDiaPage() {
       {/* Mensagem do Dia (fixa por 24h, sem interação) */}
       <DailyMessage />
 
-      {/* === NOVO: Planner semanal + notas (sem quebrar o resto) === */}
+      {/* Planner semanal + notas */}
       <section className="mx-auto max-w-5xl px-5 pt-4">
         <PlannerWeekly />
       </section>
