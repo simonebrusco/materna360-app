@@ -5,9 +5,33 @@ import { useEffect, useMemo, useState } from "react";
 import AppBar from "../../components/AppBar";
 import GlassCard from "../../components/GlassCard";
 import MoodCheckin from "../../components/MoodCheckin";
-import BadgesStrip from "../../components/BadgesStrip";
+// ⬇️ componente de “últimos 5 selos”
+import BadgesLastFive from "../../components/BadgesLastFive.jsx";
 import { get, set, keys } from "../../lib/storage";
 
+/* =========================
+   Utilitários do perfil (localStorage)
+   ========================= */
+const PROFILE_KEY = (keys && keys.profile) || "m360:profile";
+function readProfile() {
+  const p = get(PROFILE_KEY, { motherName: "", kids: [] });
+  if (!p || typeof p !== "object") return { motherName: "", kids: [] };
+  if (!Array.isArray(p.kids)) p.kids = [];
+  return p;
+}
+function writeProfile(p) {
+  set(PROFILE_KEY, p);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("m360:profile:changed", { detail: p }));
+    window.dispatchEvent(
+      new CustomEvent("m360:toast", { detail: { message: "Preferências salvas 💛" } })
+    );
+  }
+}
+
+/* =========================
+   Minutos semanais (já existia)
+   ========================= */
 function useWeeklyMinutes() {
   const [minutes, setMinutes] = useState({ meditation: 0, breath: 0 });
 
@@ -23,6 +47,9 @@ function useWeeklyMinutes() {
   return minutes;
 }
 
+/* =========================
+   Gratidão (já existia)
+   ========================= */
 function GratitudeBlock() {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
@@ -82,6 +109,9 @@ function GratitudeBlock() {
   );
 }
 
+/* =========================
+   Humor da semana (já existia)
+   ========================= */
 function WeeklyMood() {
   // lê os 7 últimos check-ins (se existir chave m360:moods)
   const [dots, setDots] = useState([3, 3, 3, 3, 3, 3, 3]);
@@ -121,6 +151,93 @@ function WeeklyMood() {
   );
 }
 
+/* =========================
+   NOVO — Formulário de Personalização
+   ========================= */
+function PersonalizeForm() {
+  const [motherName, setMotherName] = useState("");
+  const [kids, setKids] = useState([{ name: "" }]);
+
+  useEffect(() => {
+    const p = readProfile();
+    setMotherName(p.motherName || "");
+    setKids(p.kids?.length ? p.kids.map(k => ({ name: k.name || "" })) : [{ name: "" }]);
+  }, []);
+
+  function addKid() {
+    setKids(prev => [...prev, { name: "" }]);
+  }
+  function removeKid(i) {
+    setKids(prev => prev.filter((_, idx) => idx !== i));
+  }
+  function updateKid(i, value) {
+    setKids(prev => prev.map((k, idx) => (idx === i ? { ...k, name: value } : k)));
+  }
+  function save(e) {
+    e.preventDefault();
+    const cleanKids = kids.map(k => ({ name: (k.name || "").trim() })).filter(k => k.name);
+    writeProfile({ motherName: (motherName || "").trim(), kids: cleanKids });
+  }
+
+  return (
+    <GlassCard className="p-4">
+      <div className="font-medium">Personalização</div>
+      <p className="text-sm opacity-60">Seu nome e o dos filhos deixam o app mais acolhedor 💛</p>
+
+      <form onSubmit={save} className="mt-4 space-y-3">
+        <div>
+          <label className="text-xs uppercase tracking-wide text-slate-500">Seu nome</label>
+          <input
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white"
+            placeholder="Ex.: Simone"
+            value={motherName}
+            onChange={(e) => setMotherName(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <label className="text-xs uppercase tracking-wide text-slate-500">Filhos</label>
+            <button type="button" onClick={addKid} className="text-sm px-3 py-1.5 rounded-xl bg-[#ffd8e6]">
+              + Adicionar
+            </button>
+          </div>
+
+          <div className="mt-2 space-y-2">
+            {kids.map((k, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white"
+                  placeholder={i === 0 ? "Ex.: Rafa" : "Ex.: nome do filho"}
+                  value={k.name}
+                  onChange={(e) => updateKid(i, e.target.value)}
+                />
+                {kids.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeKid(i)}
+                    className="text-xs px-2 py-2 rounded-xl bg-black/5 hover:bg-black/10"
+                    title="Remover"
+                  >
+                    Remover
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-1">
+          <button type="submit" className="btn btn-primary">Salvar preferências</button>
+        </div>
+      </form>
+    </GlassCard>
+  );
+}
+
+/* =========================
+   Página
+   ========================= */
 export default function Eu360Page() {
   const minutes = useWeeklyMinutes();
 
@@ -146,13 +263,13 @@ export default function Eu360Page() {
           <MoodCheckin />
         </div>
 
-        {/* ⬇️ Conquistas: logo DEPOIS do MoodCheckin */}
+        {/* Conquistas — agora exibindo os últimos 5 selos */}
         <div className="mt-4">
           <GlassCard className="p-4 bg-white/80">
             <div className="font-medium">Conquistas</div>
             <p className="text-sm opacity-60">Últimos selos ganhos</p>
             <div className="mt-3">
-              <BadgesStrip />
+              <BadgesLastFive />
             </div>
           </GlassCard>
         </div>
@@ -178,6 +295,11 @@ export default function Eu360Page() {
             </div>
           </div>
         </GlassCard>
+      </section>
+
+      {/* NOVO — Personalização */}
+      <section className="mt-4">
+        <PersonalizeForm />
       </section>
 
       {/* Gratidão */}
