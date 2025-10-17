@@ -5,7 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useChecklistProgress from "../../lib/hooks/useChecklistProgress.js";
 import PlannerWeekly from "../../components/PlannerWeekly.jsx";
-import { get, keys } from "../../lib/storage.js";
+import { get, keys } from "../../lib/storage";
+
+const PROFILE_KEY = (keys && keys.profile) || "m360:profile";
 
 // Card simples reutilizável
 function Card({ emoji, title, subtitle, href = "#" }) {
@@ -40,15 +42,14 @@ function DailyMessage() {
     "Gentileza com você mesma muda o dia.",
     "A rotina fica leve quando você se acolhe.",
   ];
-  // índice baseado no dia do ano (fixo por 24h)
   const index = useMemo(() => {
     const d = new Date();
     const start = new Date(d.getFullYear(), 0, 0);
     const diff = d - start;
     const oneDay = 1000 * 60 * 60 * 24;
-    const day = Math.floor(diff / oneDay); // 1..366
+    const day = Math.floor(diff / oneDay);
     return day % msgs.length;
-  }, []);
+  }, [msgs.length]);
   const text = msgs[index];
 
   return (
@@ -62,15 +63,13 @@ function DailyMessage() {
 }
 
 export default function MeuDiaPage() {
-  // Hook padronizado do checklist
   const { percent } = useChecklistProgress();
 
-  // Nome da mãe salvo no Eu360 → m360:profile
+  // nome salvo no Eu360
   const [motherName, setMotherName] = useState("");
   useEffect(() => {
-    const k = (keys && keys.profile) || "m360:profile";
-    const p = get(k, { motherName: "" });
-    setMotherName((p && p.motherName) || "");
+    const p = get(PROFILE_KEY, { motherName: "" });
+    setMotherName(p?.motherName || "");
   }, []);
 
   const greeting = useMemo(() => {
@@ -79,6 +78,8 @@ export default function MeuDiaPage() {
     if (h < 18) return "Boa tarde";
     return "Boa noite";
   }, []);
+
+  const displayName = motherName?.trim() || "Mãe";
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-rose-100 to-rose-50">
@@ -98,51 +99,26 @@ export default function MeuDiaPage() {
       {/* Saudação */}
       <section className="mx-auto max-w-5xl px-5 pt-8">
         <h1 className="text-[28px] md:text-[36px] font-bold text-[#1A2240]">
-          {greeting},{" "}
-          <span className="text-[#1A2240]">
-            {motherName?.trim() ? motherName.split(" ")[0] : "Mãe"}
-          </span>{" "}
-          <span>👋</span>
+          {greeting}, <span className="text-[#1A2240]">{displayName}</span> <span>👋</span>
         </h1>
         <p className="mt-2 text-[#1A2240]/60 text-lg md:text-xl">
           Atalhos do dia
         </p>
       </section>
 
-      {/* Mensagem do Dia (fixa por 24h, sem interação) */}
       <DailyMessage />
 
-      {/* Planner semanal + notas */}
+      {/* Planner semanal */}
       <section className="mx-auto max-w-5xl px-5 pt-4">
         <PlannerWeekly />
       </section>
 
       {/* Grid de Atalhos */}
       <section className="mx-auto max-w-5xl px-5 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <Card
-          emoji="📅"
-          title="Planner da Família"
-          subtitle="Organize suas tarefas"
-          href="/meu-dia/planner"
-        />
-        <Card
-          emoji="✅"
-          title="Checklist do Dia"
-          subtitle={`${percent}% concluído hoje`}
-          href="/meu-dia/checklist"
-        />
-        <Card
-          emoji="🎨"
-          title="Atividade do Dia"
-          subtitle="Brincadeira educativa"
-          href="/brincar"
-        />
-        <Card
-          emoji="🌿"
-          title="Momento para Mim"
-          subtitle="Pausa e autocuidado"
-          href="/cuidar"
-        />
+        <Card emoji="📅" title="Planner da Família" subtitle="Organize suas tarefas" href="/meu-dia/planner" />
+        <Card emoji="✅" title="Checklist do Dia" subtitle={`${percent}% concluído hoje`} href="/meu-dia/checklist" />
+        <Card emoji="🎨" title="Atividade do Dia" subtitle="Brincadeira educativa" href="/brincar" />
+        <Card emoji="🌿" title="Momento para Mim" subtitle="Pausa e autocuidado" href="/cuidar" />
       </section>
 
       {/* Humor do dia (teaser) */}
@@ -151,9 +127,7 @@ export default function MeuDiaPage() {
           <h2 className="text-xl md:text-2xl font-semibold text-[#1A2240]">
             Como você está hoje?
           </h2>
-          <p className="mt-1 text-[#1A2240]/60 text-sm">
-            Registre seu humor no Eu360
-          </p>
+          <p className="mt-1 text-[#1A2240]/60 text-sm">Registre seu humor no Eu360</p>
           <div className="mt-4 flex items-center gap-3 md:gap-4">
             <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😞</span>
             <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😐</span>
