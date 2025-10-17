@@ -34,24 +34,25 @@ export default function BadgesLastFive() {
     setItems(list.slice(-5).reverse());
   }, []);
 
-  if (!items.length) return null;
+  if (!items.length) {
+    return (
+      <div className="text-sm opacity-60">
+        Sem conquistas recentes ainda. Conquiste seu primeiro selo hoje 💛
+      </div>
+    );
+  }
 
   return (
-    <section className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-4 md:p-5">
-      <h2 className="text-base md:text-lg font-semibold text-[#1A2240] mb-3">
-        Conquistas recentes
-      </h2>
-      <div className="flex gap-2">
-        {items.map((b) => (
-          <div
-            key={b.id}
-            className={`h-12 w-12 rounded-full flex items-center justify-center ${colorByType[b.type] || "bg-white"}`}
-            title={new Date(b.earnedAt).toLocaleDateString("pt-BR")}
-          >
-            💗
-          </div>
-        ))}
-      </div>
-    </section>
+    <div className="flex gap-2">
+      {items.map((b) => (
+        <div
+          key={b.id}
+          className={`h-12 w-12 rounded-full flex items-center justify-center ${colorByType[b.type] || "bg-white"}`}
+          title={new Date(b.earnedAt).toLocaleDateString("pt-BR")}
+        >
+          💗
+        </div>
+      ))}
+    </div>
   );
 }
