@@ -1,86 +1,45 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ===========================================================
+   Materna360 — Paleta oficial v1.5 (Atualizada)
+   ===========================================================
+   Principal:    #ff005e
+   Secundária:   #ffd8e6
+   Complementar: #2f3a56 (navy), #545454 (gray),
+                 #000000 (black), #ffffff (white)
+   =========================================================== */
 
-/* ============= TOKENS (CORES, ESPAÇOS, RADIUS) ============= */
-:root{
-  --brand:#ff005e;          /* principal */
-  --brand-soft:#ffd8e6;     /* complemento */
-  --navy:#2f3a56;           /* títulos */
-  --ink:#545454;            /* texto */
-  --paper:#ffffff;          /* branco */
-  --bg:#faf8fb;             /* fundo suave */
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --shadow-soft: 0 8px 20px rgba(47,58,86,0.08);
-  --shadow-strong: 0 12px 32px rgba(47,58,86,0.14);
+:root {
+  --m360-coral: #ff005e;   /* principal */
+  --m360-blush: #ffd8e6;   /* secundária */
+  --m360-navy:  #2f3a56;   /* complementar */
+  --m360-gray:  #545454;   /* complementar */
+  --m360-black: #000000;   /* complementar */
+  --m360-white: #ffffff;   /* complementar */
+
+  /* Compatibilidade retroativa */
+  --m360-peach: var(--m360-blush);
 }
 
-/* ============= BASE ============= */
-@layer base{
-  html, body { @apply h-full; }
-  body{
-    background:
-      radial-gradient(1200px 600px at 10% -10%, rgba(255,216,230,0.50), transparent 60%),
-      radial-gradient(900px 500px at 110% 10%, rgba(255,0,94,0.07), transparent 50%),
-      var(--bg);
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  h1,h2,h3,h4 { color: var(--navy); }
+/* === Utilitários de UI === */
+.m360-card {
+  background: var(--m360-white);
+  border: 1px solid color-mix(in oklab, var(--m360-blush) 55%, transparent);
+  border-radius: 1rem;
+  box-shadow: 0 1px 6px color-mix(in oklab, var(--m360-navy) 8%, transparent);
 }
 
-/* ============= COMPONENTS ============= */
-@layer components{
-  .container-px{ @apply mx-auto max-w-5xl px-5; }
-
-  .card{
-    background: var(--paper);
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(47,58,86,0.06);
-  }
-
-  .glass{
-    backdrop-filter: blur(10px);
-    background: rgba(255,255,255,0.7);
-    border: 1px solid rgba(47,58,86,0.06);
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-soft);
-  }
-
-  .btn{
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition;
-    border-radius: 12px;
-  }
-  .btn-primary{
-    background: var(--brand);
-    color: white;
-    box-shadow: 0 6px 16px rgba(255,0,94,0.25);
-  }
-  .btn-primary:hover{ filter: brightness(0.96); }
-  .btn-ghost{
-    background: white;
-    border: 1px solid rgba(47,58,86,0.10);
-    color: var(--navy);
-  }
-
-  .chip{
-    @apply text-xs px-2.5 py-1;
-    background: var(--brand-soft);
-    color: var(--brand);
-    border-radius: 999px;
-  }
-
-  .title{ @apply text-2xl md:text-3xl font-semibold; color: var(--navy); }
-  .subtitle{ @apply text-sm md:text-base; color: rgba(47,58,86,0.65); }
+.m360-cta {
+  background: var(--m360-coral);
+  color: var(--m360-white);
+  border-radius: 0.75rem;
 }
 
-/* ============= UTILITIES ============= */
-@layer utilities{
-  .shadow-soft{ box-shadow: var(--shadow-soft); }
-  .shadow-strong{ box-shadow: var(--shadow-strong); }
-  .radius-xl{ border-radius: var(--radius-xl); }
-  .radius-2xl{ border-radius: var(--radius-2xl); }
+.m360-subtle {
+  background: color-mix(in oklab, var(--m360-blush) 40%, transparent);
+}
+
+/* === Animação usada na respiração === */
+@keyframes m360-breathe {
+  0%   { transform: scale(1);    opacity: .9; }
+  50%  { transform: scale(1.15); opacity: 1;  }
+  100% { transform: scale(1);    opacity: .9; }
 }
