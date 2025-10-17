@@ -2,9 +2,15 @@
 "use client";
 
 import { useState } from "react";
+
+simonebrusco-patch-905473
+import AppBar from "../../components/AppBar";
+import GlassCard from "../../components/GlassCard";
+
 import AppBar from "../../../components/AppBar";
 import GlassCard from "../../../components/GlassCard";
 import { get, set, keys } from "../../../lib/storage";
+main
 
 const AGE_RANGES = [
   { v: "0-1",  label: "0–1 ano" },
@@ -14,6 +20,8 @@ const AGE_RANGES = [
   { v: "5-7",  label: "5–7 anos" },
   { v: "7-9",  label: "7–9 anos" },
 ];
+
+simonebrusco-patch-905473
 
 const PLANNER_INBOX_KEY = (keys && keys.plannerInbox) || "m360:planner_inbox";
 
@@ -40,6 +48,7 @@ function saveToPlannerInbox(idea) {
   safeToast("Ideia salva no Planner ✨");
 }
 
+main
 export default function GerarIdeiasPage() {
   const [ageRange, setAgeRange] = useState("3-5");
   const [location, setLocation] = useState("casa");
@@ -143,6 +152,8 @@ export default function GerarIdeiasPage() {
                 </ul>
               </div>
             )}
+simonebrusco-patch-905473
+
 
             <div className="mt-3 flex justify-end">
               <button
@@ -152,6 +163,7 @@ export default function GerarIdeiasPage() {
                 Salvar no Planner
               </button>
             </div>
+main
           </GlassCard>
         ))}
 
