@@ -1,86 +1,59 @@
-// materna360_starter/app/cuidar/alegrar/page.jsx
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { get, set } from "../../../lib/storage";
-import { toast } from "../../../lib/toast";
-
-const K_GRATS = "m360:gratitudes";
+import AppBar from "../../../components/AppBar";
+import GlassCard from "../../../components/GlassCard";
+import { get, set, keys } from "../../../lib/storage";
 
 const PHRASES = [
-  "Sou uma mãe suficiente para o que meu filho precisa hoje.",
-  "Respiro fundo e sigo no meu ritmo.",
-  "Pequenos passos também são progresso.",
-  "Hoje escolho ser gentil comigo mesma.",
-  "Eu mereço pausas, carinho e cuidado.",
+  "Hoje eu me acolho com carinho.",
+  "Eu estou aprendendo e evoluindo.",
+  "Sou suficiente para o meu filho e para mim.",
+  "Respiro, pauso e sigo mais leve.",
+  "Pequenas alegrias fazem grandes dias."
 ];
 
-function pick() {
-  const i = Math.floor(Math.random() * PHRASES.length);
-  return PHRASES[i];
-}
-
 export default function AlegrarPage() {
-  const [phrase, setPhrase] = useState(() => pick());
-  const canShuffle = useMemo(() => PHRASES.length > 1, []);
+  const [saved, setSaved] = useState(false);
+  const phrase = useMemo(() => {
+    const seed = Math.floor((Date.now() / (1000 * 60)) % PHRASES.length);
+    return PHRASES[seed];
+  }, []);
 
-  function shuffle() {
-    let next = pick();
-    // evita repetir a mesma imediatamente
-    if (PHRASES.length > 1 && next === phrase) next = pick();
-    setPhrase(next);
-  }
+  function saveToGratitude() {
+    const k = keys.gratitudes || "m360:gratitudes";
+    const list = get(k, []);
+    const next = [{ text: phrase, date: new Date().toISOString() }, ...list];
+    set(k, next);
+    setSaved(true);
 
-  function save() {
-    const current = get(K_GRATS, []);
-    const next = [{ text: phrase, date: new Date().toISOString() }, ...current].slice(0, 50);
-    set(K_GRATS, next);
-    toast("Salvo no Eu360 (Gratidão) ✨");
+    // badge de autocuidado
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } }));
+      window.dispatchEvent(new CustomEvent("m360:win", {
+        detail: { type: "badge", name: "Cuidar de Mim" }
+      }));
     }
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-brand-soft to-white">
-      <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
-        <h1 className="text-[28px] md:text-[32px] font-semibold text-brand-navy">Alegrar</h1>
-        <Link href="/cuidar" className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm">
-          ← Voltar
-        </Link>
-      </header>
+    <main className="max-w-5xl mx-auto px-5 pb-24">
+      <AppBar title="Alegrar" backHref="/cuidar" />
+      <div className="container-px py-6 space-y-4">
+        <GlassCard className="p-6">
+          <div className="text-sm opacity-70 mb-1">Pílula positiva</div>
+          <p className="text-lg leading-snug">{phrase}</p>
 
-      <section className="mx-auto max-w-3xl px-5 pt-10 pb-28">
-        <div className="rounded-3xl bg-white ring-1 ring-black/5 shadow-sm p-8 md:p-10 text-center">
-          <div className="text-sm text-brand-navy/50 mb-2">Afeto do dia</div>
-          <blockquote className="text-xl md:text-2xl leading-relaxed text-brand-navy">
-            “{phrase}”
-          </blockquote>
-
-          <div className="mt-6 flex items-center justify-center gap-3">
-            {canShuffle && (
-              <button
-                onClick={shuffle}
-                className="rounded-xl px-4 py-2 text-sm ring-1 ring-black/10 bg-white"
-              >
-                Nova frase
-              </button>
-            )}
+          <div className="mt-4">
             <button
-              onClick={save}
-              className="rounded-xl px-4 py-2 text-sm text-white"
-              style={{ backgroundColor: "#ff005e" }}
+              onClick={saveToGratitude}
+              className="btn btn-primary"
+              disabled={saved}
             >
-              Salvar no Eu360
+              {saved ? "Salvo no Eu360 ✓" : "Salvar no Eu360"}
             </button>
           </div>
-
-          <p className="mt-6 text-brand-navy/60">
-            Ao salvar, a frase entra na sua lista de Gratidão no Eu360.
-          </p>
-        </div>
-      </section>
+        </GlassCard>
+      </div>
     </main>
   );
 }
