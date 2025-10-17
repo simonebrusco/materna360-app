@@ -1,14 +1,15 @@
-// =======================================================
-// Materna360 — utilitários de storage e datas (SSR-safe)
-// =======================================================
+// materna360_starter/lib/m360.js
+// Utilitários SSR-safe para storage e datas.
+// Mesmo que não sejam usados agora, este arquivo garante
+// que qualquer import '@/lib/m360' existente não quebre.
 
 export const keys = {
-  profile: 'm360:profile',            // { motherName: string, kids: Array<{name:string, ageRange:string}> }
+  profile: 'm360:profile',            // { motherName: string, kids: Array<{name, ageRange}> }
   planner: 'm360:planner',            // { [yyyy-mm-dd]: { items: string[], notes?: string } }
-  checklist: 'm360:checklist',        // { [yyyy-mm-dd]: Array<{ id:string, label:string, done:boolean }> }
+  checklist: 'm360:checklist',        // { [yyyy-mm-dd]: Array<{ id, label, done }> }
   history: 'm360:history',            // Array<{ date:string, completed:number }>
-  badges: 'm360:badges',              // Array<{ id:string, type:'weekly'|'special'|'streak', earnedAt:string }>
-  gratitudes: 'm360:gratitudes',      // Array<{ text:string, at:string }>
+  badges: 'm360:badges',              // Array<{ id, type:'weekly'|'special'|'streak', earnedAt }>
+  gratitudes: 'm360:gratitudes',      // Array<{ text, at }>
   mood: 'm360:mood'                   // { [yyyy-mm-dd]: number } // 1..5
 };
 
