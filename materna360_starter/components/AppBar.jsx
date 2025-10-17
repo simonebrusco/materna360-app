@@ -1,28 +1,25 @@
-// materna360_starter/components/AppBar.jsx
 "use client";
 
 import Link from "next/link";
 
-export default function AppBar({ title = "", backHref = null, right = null }){
+export default function AppBar({ title, backHref, right = null }) {
   return (
-    <div className="container-px pt-5">
-      <div className="glass px-4 py-3 flex items-center justify-between">
-        <div className="w-[64px]">
-          {backHref ? (
-            <Link href={backHref} className="btn btn-ghost px-3 py-1.5 radius-xl">
+    <header className="sticky top-0 z-30 bg-[color:var(--surface)]/85 backdrop-blur border-b border-black/5">
+      <div className="container-px py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {backHref && (
+            <Link
+              href={backHref}
+              className="rounded-xl bg-white border border-slate-200 px-3 py-1.5 text-sm hover:shadow-sm"
+              aria-label="Voltar"
+            >
               ←
             </Link>
-          ) : null}
+          )}
+          <h1 className="text-lg font-semibold">{title}</h1>
         </div>
-
-        <div className="text-base md:text-lg font-semibold text-[color:var(--navy)]">
-          {title}
-        </div>
-
-        <div className="w-[64px] flex justify-end">
-          {right}
-        </div>
+        <div>{right}</div>
       </div>
-    </div>
+    </header>
   );
 }
