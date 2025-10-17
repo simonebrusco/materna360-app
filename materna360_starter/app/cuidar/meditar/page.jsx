@@ -1,64 +1,59 @@
-// materna360_starter/app/cuidar/meditar/page.jsx
 "use client";
 
-import { addMinutes } from "../../../lib/wellbeing";
-import { toast } from "../../../lib/toast";
-import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import AppBar from "../../../components/AppBar";
+import GlassCard from "../../../components/GlassCard";
+import { get, set, keys } from "../../../lib/storage";
 
 const TRACKS = [
-  { id: "resp-curta",  title: "Respiração Curta",  minutes: 3, emoji: "🌬️" },
-  { id: "foco-leve",   title: "Foco Leve",        minutes: 5, emoji: "🎯" },
-  { id: "acalmar",     title: "Acalmar a mente",  minutes: 10, emoji: "🧘‍♀️" },
+  { id: "resp-3min",   title: "Respiração Suave (3 min)",  dur: 3 },
+  { id: "calma-5min",  title: "Calma e Presença (5 min)",  dur: 5 },
+  { id: "sono-8min",   title: "Relaxar para Dormir (8 min)", dur: 8 },
 ];
 
 export default function MeditarPage() {
-  const [playingId, setPlayingId] = useState(null);
+  const [playing, setPlaying] = useState(null);
+  const timerRef = useRef(null);
 
-  function play(t) {
-    setPlayingId(t.id);
-    // telemetria + badge
+  function trackStart(t) {
+    setPlaying(t.id);
+
+    // telemetria de minutos de autocuidado
+    const key = keys.minutes || "m360:minutes";
+    const minutes = get(key, { meditation: 0, breath: 0 });
+    set(key, { ...minutes, meditation: minutes.meditation + t.dur });
+
+    // badge
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } }));
-      window.dispatchEvent(new CustomEvent("m360:event", { detail: { type: "audio_play", track: t.id } }));
+      window.dispatchEvent(new CustomEvent("m360:win", {
+        detail: { type: "badge", name: "Cuidar de Mim" }
+      }));
     }
-    // soma minutos no painel do Eu360
-    addMinutes("meditate", t.minutes);
-    toast(`Tocando: ${t.title} • +${t.minutes} min`);
-    // simulação de “tocando” (visualmente)
-    setTimeout(() => setPlayingId(null), 1200);
+
+    // simula término
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setPlaying(null), t.dur * 1000); // 1s = 1min (demo)
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-brand-soft to-white">
-      <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
-        <h1 className="text-[28px] md:text-[32px] font-semibold text-brand-navy">Meditar</h1>
-        <Link href="/cuidar" className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm">
-          ← Voltar
-        </Link>
-      </header>
-
-      <section className="mx-auto max-w-5xl px-5 pt-6 pb-28 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+    <main className="max-w-5xl mx-auto px-5 pb-24">
+      <AppBar title="Meditar" backHref="/cuidar" />
+      <div className="container-px py-5 space-y-3">
         {TRACKS.map((t) => (
-          <article key={t.id} className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-5 flex items-center justify-between gap-3">
+          <GlassCard key={t.id} className="p-4 flex items-center justify-between">
             <div>
-              <div className="text-sm text-brand-navy/50">Meditação</div>
-              <div className="text-lg font-medium text-brand-navy flex items-center gap-2">
-                <span className="text-2xl">{t.emoji}</span>{t.title}
-              </div>
-              <div className="text-xs text-brand-navy/50 mt-1">{t.minutes} min</div>
+              <div className="font-semibold">{t.title}</div>
+              <div className="text-sm opacity-70">{t.dur} min</div>
             </div>
             <button
-              onClick={() => play(t)}
-              className="rounded-xl px-4 py-2 text-sm text-white"
-              style={{ backgroundColor: "#ff005e" }}
-              disabled={playingId === t.id}
+              onClick={() => trackStart(t)}
+              className={`btn ${playing === t.id ? "bg-slate-200 text-slate-700" : "btn-primary"}`}
             >
-              {playingId === t.id ? "Tocando…" : "Tocar"}
+              {playing === t.id ? "Tocando..." : "Tocar"}
             </button>
-          </article>
+          </GlassCard>
         ))}
-      </section>
+      </div>
     </main>
   );
 }
