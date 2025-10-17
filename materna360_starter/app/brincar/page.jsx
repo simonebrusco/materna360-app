@@ -11,7 +11,6 @@ import * as Acts from "../../lib/activities";
 import { addPlannerItem } from "../../lib/planner";
 import { toast } from "../../lib/toast";
 
-// ——— helpers defensivos (a lib pode variar um pouco entre branches)
 const ACTIVITIES = Array.isArray(Acts.ACTIVITIES) ? Acts.ACTIVITIES : (Acts.activities || []);
 const AGE_BUCKETS = Acts.AGE_BUCKETS || [
   { id: "0-1", label: "0–1" },
@@ -29,7 +28,6 @@ const PLACES = Acts.PLACES || [
 
 function safeFilterActivities(params) {
   if (typeof Acts.filterActivities === "function") return Acts.filterActivities(params) || [];
-  // fallback simples se a função não existir
   const { age, place } = params;
   return ACTIVITIES.filter(a => {
     const okAge   = !a.ages   || a.ages.includes(age);
@@ -46,15 +44,35 @@ function Badge({ children }) {
   );
 }
 
+// Ideias rápidas (geradas conforme idade/local)
+function quickIdeas(age, place) {
+  const base = {
+    "0-1": ["Explorar texturas com panos", "Cantiga com toques suaves", "Olhar figuras grandes"],
+    "2-3": ["Caça às cores pela casa", "Construir uma torre de 6 blocos", "Pintura com água no muro"],
+    "4-5": ["História maluca em 5 frases", "Pista de fita crepe", "Jogo de rimas"],
+    "6-7": ["Labirinto com cordas (leve)", "Mapa do tesouro do quarto", "Teatro com bonecos"],
+    "8+":  ["HQ rápida em 4 quadros", "Desafio de origami simples", "Coreografia de 30 segundos"],
+  }[age] || ["Brincadeira livre guiada", "Desenho de observação", "Jogo de mímica"];
+
+  const localHint = {
+    "casa": "que caiba no espaço da sala",
+    "parque": "aproveitando gramado/bancos",
+    "escola": "em duplas ou trio",
+    "ao-ar-livre": "com vento/sol à vista",
+  }[place];
+
+  return base.map((t) => (localHint ? `${t} (${localHint})` : t));
+}
+
 export default function BrincarPage() {
-  // defaults seguros
   const defaultAge = AGE_BUCKETS[0]?.id ?? "2-3";
   const defaultPlace = PLACES[0]?.id ?? "casa";
 
   const [age, setAge] = useState(defaultAge);
   const [place, setPlace] = useState(defaultPlace);
+  const [showQuick, setShowQuick] = useState(false);
+  const [myIdea, setMyIdea] = useState("");
 
-  // sugestão do dia (seed estático p/ não “pular” entre reloads)
   const suggestion = useMemo(() => {
     const len = ACTIVITIES.length || 1;
     const idx = Math.floor(0.37 * len) % len;
@@ -65,17 +83,18 @@ export default function BrincarPage() {
     };
   }, []);
 
-  // lista filtrada
   const list = useMemo(() => safeFilterActivities({ age, place }).slice(0, 12), [age, place]);
 
   function saveToPlanner(title) {
+    if (!title) return;
     addPlannerItem("filhos", title);
     toast("Atividade salva no Planner 💾");
-    // gamificação
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Exploradora" } }));
     }
   }
+
+  const ideas = useMemo(() => quickIdeas(age, place), [age, place]);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-5">
@@ -141,7 +160,7 @@ export default function BrincarPage() {
 
           <div className="shrink-0">
             <button
-              onClick={() => {/* o useMemo já reage às mudanças */}}
+              onClick={() => {/* useMemo já refiltra */}}
               className="rounded-xl bg-[var(--brand)] text-white px-4 py-2 text-sm"
             >
               Gerar Ideias
@@ -197,6 +216,67 @@ export default function BrincarPage() {
           </GlassCard>
         )}
       </div>
+
+      {/* FAB */}
+      <button
+        aria-label="Ideias rápidas"
+        onClick={() => setShowQuick(true)}
+        className="fixed bottom-24 right-5 rounded-full w-14 h-14 bg-[var(--brand)] text-white shadow-lg text-2xl"
+      >
+        +
+      </button>
+
+      {/* Painel de ideias rápidas */}
+      {showQuick && (
+        <div className="fixed inset-0 z-50">
+          {/* backdrop */}
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowQuick(false)} />
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-20 w-[min(92vw,700px)]">
+            <GlassCard className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold">Ideias rápidas</h3>
+                  <p className="text-sm text-[var(--ink-soft)]">Geradas para {AGE_BUCKETS.find(a=>a.id===age)?.label} • {PLACES.find(p=>p.id===place)?.label}</p>
+                </div>
+                <button onClick={() => setShowQuick(false)} className="rounded-xl bg-white ring-1 ring-black/10 px-3 py-1.5 text-sm">Fechar</button>
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {ideas.slice(0,3).map((t) => (
+                  <div key={t} className="flex items-center justify-between gap-3 rounded-xl bg-white ring-1 ring-black/10 px-3 py-2">
+                    <div className="text-sm">{t}</div>
+                    <button
+                      onClick={() => saveToPlanner(t)}
+                      className="rounded-lg bg-[var(--brand)] text-white px-3 py-1.5 text-sm"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 border-t pt-4">
+                <label className="text-sm text-[var(--ink-soft)]">Anotar minha brincadeira</label>
+                <div className="mt-1 flex gap-2">
+                  <input
+                    value={myIdea}
+                    onChange={(e)=>setMyIdea(e.target.value)}
+                    placeholder="Ex.: Teatro das fantoches com meias"
+                    className="flex-1 rounded-xl bg-white ring-1 ring-black/10 px-3 py-2 text-sm"
+                  />
+                  <button
+                    onClick={() => { saveToPlanner(myIdea); setMyIdea(""); setShowQuick(false); }}
+                    className="rounded-xl bg-[var(--brand)] text-white px-4 py-2 text-sm"
+                    disabled={!myIdea.trim()}
+                  >
+                    Adicionar
+                  </button>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
