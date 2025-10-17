@@ -2,7 +2,7 @@
    Materna360 — Tailwind + Paleta oficial v1.5 (Atualizada)
    =========================================================== */
 
-/* Tailwind layers */
+/* Tailwind layers — NECESSÁRIAS para os estilos aparecerem */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,11 +16,11 @@
   --m360-black: #000000;   /* complementar */
   --m360-white: #ffffff;   /* complementar */
 
-  /* Compat retroativa */
+  /* Compatibilidade retroativa */
   --m360-peach: var(--m360-blush);
 }
 
-/* === Base reset suave ======================================= */
+/* === Reset/base suave ======================================= */
 html, body {
   height: 100%;
   background: var(--m360-white);
@@ -47,7 +47,7 @@ html, body {
   background: color-mix(in oklab, var(--m360-blush) 40%, transparent);
 }
 
-/* === Animações ============================================== */
+/* === Animação usada na respiração =========================== */
 @keyframes m360-breathe {
   0%   { transform: scale(1);    opacity: .9; }
   50%  { transform: scale(1.15); opacity: 1;  }
