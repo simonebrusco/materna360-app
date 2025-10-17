@@ -1,24 +1,27 @@
 "use client";
-
 import Link from "next/link";
 
-export default function AppBar({ title, backHref, right = null }) {
+export default function AppBar({ title, backHref, right }) {
   return (
-    <header className="sticky top-0 z-30 bg-[color:var(--surface)]/85 backdrop-blur border-b border-black/5">
-      <div className="container-px py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {backHref && (
+    <header className="w-full">
+      <div className="m360-container py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {backHref ? (
             <Link
               href={backHref}
-              className="rounded-xl bg-white border border-slate-200 px-3 py-1.5 text-sm hover:shadow-sm"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-black/5 shadow-sm"
               aria-label="Voltar"
             >
               ←
             </Link>
+          ) : (
+            <div className="text-sm md:text-base font-medium m360-muted">
+              Materna<strong style={{ color: "var(--m360-coral)" }}>360</strong>
+            </div>
           )}
-          <h1 className="text-lg font-semibold">{title}</h1>
+          {title && <h1 className="m360-h2">{title}</h1>}
         </div>
-        <div>{right}</div>
+        {right ? <div className="shrink-0">{right}</div> : null}
       </div>
     </header>
   );
