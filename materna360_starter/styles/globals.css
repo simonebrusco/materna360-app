@@ -1,26 +1,22 @@
 /* ===========================================================
    Materna360 — Tailwind + Paleta oficial v1.5 (Atualizada)
    =========================================================== */
-
-/* Tailwind layers — NECESSÁRIAS para os estilos aparecerem */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* === Paleta (CSS Variables) ================================= */
 :root {
-  --m360-coral: #ff005e;   /* principal */
-  --m360-blush: #ffd8e6;   /* secundária */
-  --m360-navy:  #2f3a56;   /* complementar */
-  --m360-gray:  #545454;   /* complementar */
-  --m360-black: #000000;   /* complementar */
-  --m360-white: #ffffff;   /* complementar */
-
-  /* Compatibilidade retroativa */
+  --m360-coral: #ff005e;
+  --m360-blush: #ffd8e6;
+  --m360-navy:  #2f3a56;
+  --m360-gray:  #545454;
+  --m360-black: #000000;
+  --m360-white: #ffffff;
   --m360-peach: var(--m360-blush);
 }
 
-/* === Reset/base suave ======================================= */
+/* Base */
 html, body {
   height: 100%;
   background: var(--m360-white);
@@ -29,43 +25,18 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* === Contêiner padrão do app ================================ */
-/* Centraliza e limita a largura de TODAS as páginas
-   sem precisar alterar cada page.jsx individualmente. */
-.m360-page {
-  width: 100%;
-  max-width: 980px;       /* ~md/ lg confortável para mobile-first */
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;     /* 16px */
-  padding-right: 1rem;    /* 16px */
-  padding-bottom: 1rem;   /* evita grudar no BottomNav */
-}
-@media (min-width: 640px) {
-  .m360-page { padding-left: 1.5rem; padding-right: 1.5rem; }
-}
-
-/* === Utilitários Materna360 ================================ */
+/* Utilitários */
 .m360-card {
   background: var(--m360-white);
   border: 1px solid color-mix(in oklab, var(--m360-blush) 55%, transparent);
   border-radius: 1rem;
   box-shadow: 0 1px 6px color-mix(in oklab, var(--m360-navy) 8%, transparent);
 }
+.m360-cta { background: var(--m360-coral); color: var(--m360-white); border-radius: 0.75rem; }
+.m360-subtle { background: color-mix(in oklab, var(--m360-blush) 40%, transparent); }
 
-.m360-cta {
-  background: var(--m360-coral);
-  color: var(--m360-white);
-  border-radius: 0.75rem;
-}
-
-.m360-subtle {
-  background: color-mix(in oklab, var(--m360-blush) 40%, transparent);
-}
-
-/* === Animação usada na respiração =========================== */
 @keyframes m360-breathe {
-  0%   { transform: scale(1);    opacity: .9; }
-  50%  { transform: scale(1.15); opacity: 1;  }
-  100% { transform: scale(1);    opacity: .9; }
+  0% { transform: scale(1); opacity: .9; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: .9; }
 }
