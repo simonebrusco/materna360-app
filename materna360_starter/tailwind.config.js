@@ -5,7 +5,7 @@ module.exports = {
     "./app/**/*.{js,jsx,ts,tsx,md,mdx}",
     "./components/**/*.{js,jsx,ts,tsx}",
     "./pages/**/*.{js,jsx,ts,tsx}",
-    "./styles/**/*.{css}",
+    "./styles/**/*.css", // <- corrigido
   ],
 
   // Garante classes com CSS vars e opacidades (evita "purgar")
