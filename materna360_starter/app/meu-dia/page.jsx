@@ -1,37 +1,68 @@
 // materna360_starter/app/meu-dia/page.jsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { get } from "../../lib/storage.js";
-import ChecklistEditorModal from "../../components/ChecklistEditorModal.jsx";
+import useChecklistProgress from "../../lib/hooks/useChecklistProgress.js";
 
-// helpers locais para ler o log de hoje
-function todayStr() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+// Card simples reutilizável
+function Card({ emoji, title, subtitle, href = "#" }) {
+  return (
+    <Link
+      href={href}
+      className="block rounded-2xl bg-white ring-1 ring-black/5 shadow-sm hover:shadow-md transition-shadow p-5 md:p-6"
+    >
+      <div className="flex items-start gap-3">
+        <div className="text-2xl leading-none">{emoji}</div>
+        <div>
+          <h3 className="text-lg md:text-xl font-semibold text-[#1A2240]">
+            {title}
+          </h3>
+          {subtitle ? (
+            <p className="text-sm md:text-base text-[#1A2240]/60">{subtitle}</p>
+          ) : null}
+        </div>
+      </div>
+    </Link>
+  );
 }
-const tid = () => `m360:checklist_log:${todayStr()}`;
+
+// Mensagem do dia (troca automática a cada 24h, sem botão de trocar)
+function DailyMessage() {
+  const msgs = [
+    "Respire fundo — você está fazendo o seu melhor 💛",
+    "Pequenos passos também são progresso.",
+    "Seu cuidado é o coração da casa.",
+    "Hoje vale celebrar uma coisa simples.",
+    "Você não está sozinha — estamos juntas!",
+    "Gentileza com você mesma muda o dia.",
+    "A rotina fica leve quando você se acolhe.",
+  ];
+  // índice baseado no dia do ano (fixo por 24h)
+  const index = useMemo(() => {
+    const d = new Date();
+    const start = new Date(d.getFullYear(), 0, 0);
+    const diff = d - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    const day = Math.floor(diff / oneDay); // 1..366
+    return day % msgs.length;
+  }, []);
+  const text = msgs[index];
+
+  return (
+    <section className="mx-auto max-w-5xl px-5 mt-4">
+      <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-4 md:p-5">
+        <div className="text-sm text-[#1A2240]/60 mb-1">Mensagem do dia</div>
+        <p className="text-[#1A2240] text-lg md:text-xl">{text}</p>
+      </div>
+    </section>
+  );
+}
 
 export default function MeuDiaPage() {
-  // estado do editor (modal)
-  const [openChecklistEditor, setOpenChecklistEditor] = useState(false);
+  // Hook padronizado do checklist
+  const { percent } = useChecklistProgress();
 
-  // defs e log do dia (armazenamento local – tolerante a SSR)
-  const defs = get("m360:checklist_defs", []);
-  const done = get(tid(), []);
-
-  // percentual concluído do dia
-  const percentToday = useMemo(() => {
-    const total = Array.isArray(defs) ? defs.length : 0;
-    const count = Array.isArray(done) ? done.length : 0;
-    return total ? Math.round((count / total) * 100) : 0;
-  }, [defs, done]);
-
-  // saudação simples
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return "Bom dia";
@@ -40,110 +71,87 @@ export default function MeuDiaPage() {
   }, []);
 
   return (
-    <main className="max-w-5xl mx-auto px-5 py-6">
-      {/* Header simples */}
-      <header className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-2xl font-semibold">{greeting}, Mãe 💛</h1>
-          <p className="text-sm text-slate-500">Seu dia com leveza e presença</p>
+    <main className="min-h-screen bg-gradient-to-b from-rose-100 to-rose-50">
+      {/* Topbar */}
+      <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
+        <div className="text-sm md:text-base font-medium text-[#1A2240]/70">
+          Materna<strong className="text-rose-500">360</strong>
         </div>
-
-        {/* atalho para o Planner, opcional */}
-        <Link href="/meu-dia/planner" className="btn bg-white border border-slate-200">
-          Ver Planner
+        <Link
+          href="/eu360"
+          className="rounded-full bg-white px-4 py-1.5 text-sm md:text-base ring-1 ring-black/5 shadow-sm"
+        >
+          Eu360
         </Link>
       </header>
 
-      {/* ===== Card: Checklist do Dia (com botão ⋯ para editar via modal) ===== */}
-      <section className="card mb-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-semibold">Checklist do Dia</h3>
-            {typeof percentToday === "number" ? (
-              <p className="subtitle mt-0.5">{percentToday}% do dia concluído</p>
-            ) : (
-              <p className="subtitle mt-0.5">Organize microtarefas de hoje</p>
-            )}
+      {/* Saudação */}
+      <section className="mx-auto max-w-5xl px-5 pt-8">
+        <h1 className="text-[28px] md:text-[36px] font-bold text-[#1A2240]">
+          {greeting}, <span className="text-[#1A2240]">Mãe</span> <span>👋</span>
+        </h1>
+        <p className="mt-2 text-[#1A2240]/60 text-lg md:text-xl">
+          Atalhos do dia
+        </p>
+      </section>
+
+      {/* Mensagem do Dia (fixa por 24h, sem interação) */}
+      <DailyMessage />
+
+      {/* Grid de Atalhos */}
+      <section className="mx-auto max-w-5xl px-5 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <Card
+          emoji="📅"
+          title="Planner da Família"
+          subtitle="Organize suas tarefas"
+          href="/meu-dia/planner"
+        />
+        <Card
+          emoji="✅"
+          title="Checklist do Dia"
+          subtitle={`${percent}% concluído hoje`}
+          href="/meu-dia/checklist"
+        />
+        <Card
+          emoji="🎨"
+          title="Atividade do Dia"
+          subtitle="Brincadeira educativa"
+          href="/brincar"
+        />
+        <Card
+          emoji="🌿"
+          title="Momento para Mim"
+          subtitle="Pausa e autocuidado"
+          href="/cuidar"
+        />
+      </section>
+
+      {/* Humor do dia (teaser) */}
+      <section className="mx-auto max-w-5xl px-5 pt-6 pb-28">
+        <div className="rounded-2xl bg-white/80 ring-1 ring-black/5 shadow-sm p-5 md:p-6">
+          <h2 className="text-xl md:text-2xl font-semibold text-[#1A2240]">
+            Como você está hoje?
+          </h2>
+          <p className="mt-1 text-[#1A2240]/60 text-sm">
+            Registre seu humor no Eu360
+          </p>
+          <div className="mt-4 flex items-center gap-3 md:gap-4">
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😞</span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😐</span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">🙂</span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😊</span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">🤩</span>
           </div>
-
-          <div className="flex items-center gap-2">
-            {/* abre editor inline */}
-            <button
-              aria-label="Editar checklist"
-              onClick={() => setOpenChecklistEditor(true)}
-              className="h-9 w-9 grid place-items-center rounded-xl bg-white ring-1 ring-black/10 hover:ring-black/20"
-              title="Editar checklist"
-            >
-              ⋯
-            </button>
-
-            {/* abre a tela completa do checklist */}
+          <div className="mt-4">
             <Link
-              href="/meu-dia/checklist"
-              className="px-3 py-1.5 rounded-xl bg-[var(--brand)] text-white text-sm"
+              href="/eu360"
+              className="inline-flex items-center gap-2 rounded-xl bg-white ring-1 ring-black/5 px-4 py-2 text-sm hover:shadow"
             >
-              Abrir
+              Abrir Eu360 →
             </Link>
           </div>
         </div>
-
-        {/* mini barra de progresso */}
-        <div className="mt-3 h-2 rounded-full bg-black/5 overflow-hidden">
-          <div
-            className="h-full bg-[var(--brand)] rounded-full transition-all"
-            style={{ width: `${percentToday}%` }}
-          />
-        </div>
       </section>
-
-      {/* ===== Outros atalhos da Home (opcional, ilustrativo) ===== */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link href="/meu-dia/momentos" className="card hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">💕</div>
-            <div>
-              <h3 className="text-lg font-semibold">Tempo com Meu Filho</h3>
-              <p className="subtitle">Registrar momentos especiais</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/meu-dia/atividade" className="card hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">🎨</div>
-            <div>
-              <h3 className="text-lg font-semibold">Atividade do Dia</h3>
-              <p className="subtitle">Brincadeira educativa sugerida</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/meu-dia/rotina" className="card hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">🏠</div>
-            <div>
-              <h3 className="text-lg font-semibold">Rotina da Casa</h3>
-              <p className="subtitle">Organize as tarefas do lar</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/meu-dia/pausas" className="card hover:shadow-md transition-shadow">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">🌿</div>
-            <div>
-              <h3 className="text-lg font-semibold">Momento para Mim</h3>
-              <p className="subtitle">Pausas, afirmações e autocuidado</p>
-            </div>
-          </div>
-        </Link>
-      </section>
-
-      {/* ===== Modal de edição do Checklist ===== */}
-      <ChecklistEditorModal
-        open={openChecklistEditor}
-        onClose={() => setOpenChecklistEditor(false)}
-      />
     </main>
   );
 }
