@@ -4,6 +4,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import useChecklistProgress from "../../lib/hooks/useChecklistProgress.js";
+import PlannerWeekly from "../../components/PlannerWeekly.jsx";
 
 // Card simples reutilizável
 function Card({ emoji, title, subtitle, href = "#" }) {
@@ -97,6 +98,11 @@ export default function MeuDiaPage() {
 
       {/* Mensagem do Dia (fixa por 24h, sem interação) */}
       <DailyMessage />
+
+      {/* === NOVO: Planner semanal + notas (sem quebrar o resto) === */}
+      <section className="mx-auto max-w-5xl px-5 pt-4">
+        <PlannerWeekly />
+      </section>
 
       {/* Grid de Atalhos */}
       <section className="mx-auto max-w-5xl px-5 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
