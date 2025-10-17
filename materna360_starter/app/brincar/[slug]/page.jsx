@@ -1,84 +1,108 @@
 // materna360_starter/app/brincar/[slug]/page.jsx
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useMemo } from "react";
 
-// ⚠️ IMPORTS RELATIVOS (sem alias @)
-import { supabase } from "../../../lib/supabaseClient";
-import GlassCard from "../../../components/GlassCard";
 import AppBar from "../../../components/AppBar";
+import GlassCard from "../../../components/GlassCard";
+
+import * as Acts from "../../../lib/activities";
+import { addPlannerItem } from "../../../lib/planner";
+import { toast } from "../../../lib/toast";
+
+const ACTIVITIES = Array.isArray(Acts.ACTIVITIES) ? Acts.ACTIVITIES : (Acts.activities || []);
+
+function findBySlug(slug) {
+  if (typeof Acts.getBySlug === "function") return Acts.getBySlug(slug) || null;
+  return ACTIVITIES.find((a) => a.slug === slug) || null;
+}
+
+function Chip({ children }) {
+  return (
+    <span className="rounded-full bg-black/5 text-[13px] px-2.5 py-1">
+      {children}
+    </span>
+  );
+}
 
 export default function ActivityDetail({ params }) {
-  const { slug } = params;
-  const [item, setItem] = useState(null);
+  const { slug } = params || {};
+  const item = useMemo(() => findBySlug(slug), [slug]) || {
+    title: "Atividade",
+    subtitle: "Detalhes em breve.",
+    duration: 10,
+    ages: [],
+    places: [],
+    steps: [],
+    benefits: [],
+  };
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("activities")
-        .select(
-          "title, subtitle, icon, duration_min, zero_material, indoor, age_min, age_max, safety_note"
-        )
-        .eq("slug", slug)
-        .maybeSingle();
-
-      setItem(data);
-    })();
-  }, [slug]);
-
-  if (!item) {
-    return (
-      <main className="mx-auto max-w-md">
-        <AppBar title="Brincar" backHref="/brincar" />
-        <div className="container-px py-6">
-          <div className="h-24 glass animate-pulse" />
-        </div>
-      </main>
-    );
+  function save() {
+    addPlannerItem("filhos", item.title);
+    toast("Atividade salva no Planner 💾");
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Exploradora" } }));
+    }
   }
 
   return (
-    <main className="mx-auto max-w-md">
+    <main className="mx-auto max-w-3xl px-4 py-5">
       <AppBar title="Brincar" backHref="/brincar" />
 
-      <div className="container-px py-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="text-3xl">{item.icon || "🎨"}</div>
-          <h1 className="text-2xl font-semibold">{item.title}</h1>
-        </div>
-        {item.subtitle && <p className="subtitle">{item.subtitle}</p>}
+      <GlassCard className="p-5 mb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold">{item.title}</h1>
+            {item.subtitle && <p className="text-[var(--ink-soft)] mt-1">{item.subtitle}</p>}
 
-        <GlassCard className="p-4">
-          <h3 className="font-medium">Informações rápidas</h3>
-          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-            {item.zero_material && (
-              <span className="chip">0 materiais</span>
-            )}
-            {item.duration_min && (
-              <span className="chip">{item.duration_min} min</span>
-            )}
-            {(item.age_min || item.age_max) && (
-              <span className="chip">
-                {item.age_min ?? "?"}–{item.age_max ?? "?"} anos
-              </span>
-            )}
-            {item.indoor && <span className="chip">dentro de casa</span>}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {item.duration && <Chip>{item.duration} min</Chip>}
+              {!!item.ages?.length && <Chip>{item.ages.join(", ")}</Chip>}
+              {!!item.places?.length && <Chip>{item.places.join(", ")}</Chip>}
+            </div>
           </div>
-        </GlassCard>
 
-        <GlassCard className="p-4">
+          <div className="shrink-0 flex gap-2">
+            <button onClick={save} className="rounded-xl bg-[var(--brand)] text-white px-3 py-2 text-sm">
+              Salvar no Planner
+            </button>
+            <Link
+              href="/brincar"
+              className="rounded-xl bg-white ring-1 ring-black/10 px-3 py-2 text-sm"
+            >
+              Fechar
+            </Link>
+          </div>
+        </div>
+      </GlassCard>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <GlassCard className="p-5">
           <h3 className="font-medium">Passo a passo</h3>
-          <p className="mt-2 subtitle">
-            (Em breve) objetivo, materiais e passos da atividade.
-          </p>
+          {Array.isArray(item.steps) && item.steps.length ? (
+            <ol className="mt-2 space-y-2 list-decimal ml-5 text-[15px]">
+              {item.steps.map((s, i) => <li key={i}>{s}</li>)}
+            </ol>
+          ) : (
+            <p className="text-[var(--ink-soft)] mt-2">
+              Em breve: materiais e passos para facilitar a brincadeira. 💛
+            </p>
+          )}
         </GlassCard>
 
-        {item.safety_note && (
-          <GlassCard className="p-4">
-            <h3 className="font-medium">Segurança</h3>
-            <p className="mt-1 subtitle">{item.safety_note}</p>
-          </GlassCard>
-        )}
+        <GlassCard className="p-5">
+          <h3 className="font-medium">Benefícios de desenvolvimento</h3>
+          {Array.isArray(item.benefits) && item.benefits.length ? (
+            <ul className="mt-2 space-y-2 list-disc ml-5 text-[15px]">
+              {item.benefits.map((b, i) => <li key={i}>{b}</li>)}
+            </ul>
+          ) : (
+            <p className="text-[var(--ink-soft)] mt-2">
+              Vamos destacar os ganhos motores, cognitivos e socioemocionais desta atividade.
+            </p>
+          )}
+        </GlassCard>
       </div>
     </main>
   );
