@@ -7,6 +7,7 @@ import GlassCard from "../../components/GlassCard";
 import MoodCheckin from "../../components/MoodCheckin";
 import BadgesLastFive from "../../components/BadgesLastFive.jsx";
 import { get, set, keys } from "../../lib/storage";
+import ProfileCard from "../../components/ProfileCard";
 
 function useWeeklyMinutes() {
   const [minutes, setMinutes] = useState({ meditation: 0, breath: 0 });
@@ -179,9 +180,11 @@ export default function Eu360Page() {
       </section>
 
       {/* Gratidão */}
-      <section className="mt-4">
-        <GratitudeBlock />
-      </section>
-    </main>
-  );
-}
+<section className="mt-4">
+  <GratitudeBlock />
+</section>
+
+{/* Personalização (formulário) */}
+<section className="mt-4">
+  <ProfileCard />
+</section>
