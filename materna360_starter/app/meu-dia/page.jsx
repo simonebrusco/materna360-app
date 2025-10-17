@@ -3,273 +3,282 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import AppBar from "../../components/AppBar";
-import GlassCard from "../../components/GlassCard";
-import QuickNote from "../../components/QuickNote";          // ⬅️ FAB usa este composer
-import { get, set, keys } from "../../lib/storage";
-import { addPlannerItem } from "../../lib/planner";          // ⬅️ salvar nota no Planner
+import AppBar from "../../components/AppBar.jsx";
+import GlassCard from "../../components/GlassCard.jsx";
+import QuickNote from "../../components/QuickNote.jsx";
+import { addPlannerItem } from "../../lib/planner.js";
+import { get, set, keys } from "../../lib/storage.js";
 
-// (opcional) tenta importar a lista de mensagens se existir
-let EXTERNAL_MESSAGES = null;
-try {
-  EXTERNAL_MESSAGES = require("../../lib/messages").MESSAGES || null;
-} catch (_) {
-  EXTERNAL_MESSAGES = null;
-}
-
-const FALLBACK_MESSAGES = [
-  { quote: "Você é a melhor mãe para o seu filho 💛", author: "Materna360" },
-  { quote: "Pequenos passos também são progresso.", author: "Materna360" },
-  { quote: "Respire fundo. Você não está sozinha.", author: "Materna360" },
-  { quote: "Rotina leve, um dia de cada vez.", author: "Materna360" },
+// Mensagens girando 1x a cada 24h (sem ação do usuário)
+const MESSAGES = [
+  "Respire fundo. Você está fazendo o seu melhor 💛",
+  "Tudo bem desacelerar hoje — gentileza com você.",
+  "Pequenos passos contam muito. Valorize-se.",
+  "O seu cuidado também é prioridade. Você merece.",
+  "Um momento de presença transforma o dia ✨",
 ];
 
-const MESSAGES = Array.isArray(EXTERNAL_MESSAGES) && EXTERNAL_MESSAGES.length
-  ? EXTERNAL_MESSAGES
-  : FALLBACK_MESSAGES;
-
-function startOfDayStr(date = new Date()) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+// lê data YYYY-MM-DD local
+function todayStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
-function Greeting() {
-  const text = useMemo(() => {
+function useMessageOfDay() {
+  const [msg, setMsg] = useState(MESSAGES[0]);
+
+  useEffect(() => {
+    // estado persistido: { idx:number, date:'YYYY-MM-DD' }
+    const saved = get("m360:message_of_day", null);
+    const t = todayStr();
+
+    if (!saved) {
+      const idx = 0;
+      set("m360:message_of_day", { idx, date: t });
+      setMsg(MESSAGES[idx]);
+      return;
+    }
+
+    // se mudou o dia, avança 1 e dispara badge
+    if (saved.date !== t) {
+      const idx = (Number(saved.idx) + 1) % MESSAGES.length;
+      set("m360:message_of_day", { idx, date: t });
+      setMsg(MESSAGES[idx]);
+
+      // badge Organizada ao girar automaticamente
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("m360:win", {
+            detail: { type: "badge", name: "Organizada" },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent("m360:toast", {
+            detail: { message: "Nova Mensagem do Dia 💫" },
+          })
+        );
+      }
+    } else {
+      setMsg(MESSAGES[Number(saved.idx) || 0]);
+    }
+  }, []);
+
+  return msg;
+}
+
+// progresso do planner (local storage)
+function usePlannerProgress() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const p = get(keys.planner, { casa: [], filhos: [], eu: [] });
+    const all = [...(p.casa || []), ...(p.filhos || []), ...(p.eu || [])];
+    if (!all.length) {
+      setProgress(0);
+      return;
+    }
+    const done = all.filter((i) => i && i.done).length;
+    setProgress(Math.round((done / all.length) * 100));
+  }, []); // simples (atualiza no load)
+
+  return progress;
+}
+
+export default function MeuDiaPage() {
+  // saudação
+  const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return "Bom dia";
     if (h < 18) return "Boa tarde";
     return "Boa noite";
   }, []);
-  return (
-    <div className="mb-2">
-      <h1 className="text-2xl font-semibold">Meu Dia</h1>
-      <p className="text-sm opacity-70">{text}, Mãe 💛</p>
-    </div>
-  );
-}
 
-/** Mensagem do Dia — muda sozinha a cada 24h (sem botão de troca) */
-function MessageOfDay() {
-  const [msg, setMsg] = useState(MESSAGES[0]);
+  const message = useMessageOfDay();
+  const plannerProgress = usePlannerProgress();
 
-  useEffect(() => {
-    const k = keys.motd || "m360:motd";
-    const today = startOfDayStr();
-    const saved = get(k, null);
-
-    if (!saved) {
-      const first = { idx: 0, date: today };
-      set(k, first);
-      setMsg(MESSAGES[0]);
-      return;
-    }
-
-    if (saved.date === today) {
-      setMsg(MESSAGES[saved.idx % MESSAGES.length]);
-      return;
-    }
-
-    // virou o dia → avança índice, salva, badge + toast
-    const next = { idx: (Number(saved.idx || 0) + 1) % MESSAGES.length, date: today };
-    set(k, next);
-    setMsg(MESSAGES[next.idx]);
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("m360:win", {
-          detail: { type: "badge", name: "Organizada" },
-        })
-      );
-      window.dispatchEvent(
-        new CustomEvent("m360:toast", {
-          detail: { message: "Nova Mensagem do Dia ✨" },
-        })
-      );
-    }
-  }, []);
-
-  return (
-    <GlassCard className="p-4 bg-white/90">
-      <div className="text-xs uppercase tracking-wide opacity-60">Mensagem do Dia</div>
-      <blockquote className="mt-2 text-lg leading-snug">
-        “{msg?.quote}”
-      </blockquote>
-      {msg?.author && <div className="mt-1 text-sm opacity-60">— {msg.author}</div>}
-      <p className="mt-3 text-xs opacity-50">Atualiza automaticamente a cada novo dia.</p>
-    </GlassCard>
-  );
-}
-
-/** Preview do Planner (progresso simples) */
-function PlannerPreview() {
-  const [progress, setProgress] = useState({ done: 0, total: 0, pct: 0 });
-
-  useEffect(() => {
-    const k = keys.planner || "m360:planner";
-    const p = get(k, { casa: [], filhos: [], eu: [] });
-
-    const all = [
-      ...(Array.isArray(p.casa) ? p.casa : []),
-      ...(Array.isArray(p.filhos) ? p.filhos : []),
-      ...(Array.isArray(p.eu) ? p.eu : []),
-    ];
-    const total = all.length;
-    const done = all.filter((i) => !!i.done).length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    setProgress({ done, total, pct });
-  }, []);
-
-  return (
-    <GlassCard className="p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-medium">Planner da Família</div>
-          <div className="text-sm opacity-70">
-            {progress.total ? `${progress.done}/${progress.total} concluídos` : "Sem itens ainda"}
-          </div>
-        </div>
-        <Link href="/meu-dia/planner" className="btn btn-primary">Abrir</Link>
-      </div>
-
-      <div className="mt-3 w-full h-2 rounded-full bg-black/5 overflow-hidden">
-        <div className="h-2 bg-[var(--brand)] transition-all" style={{ width: `${progress.pct}%` }} />
-      </div>
-    </GlassCard>
-  );
-}
-
-/** Card de Checklist com % do dia (se existir algo no storage) */
-function ChecklistCard() {
-  const [pct, setPct] = useState(0);
-
-  useEffect(() => {
-    const kDay = (keys.checklistToday || "m360:checklist:today");
-    const kLogs = (keys.checklist || "m360:checklist");
-
-    let total = 0, done = 0;
-
-    const today = get(kDay, null);
-    if (today && Array.isArray(today.items)) {
-      total = today.items.length;
-      done = today.items.filter((i) => !!i.done).length;
-    } else {
-      const arr = get(kLogs, []);
-      if (Array.isArray(arr) && arr.length) {
-        const last = arr[arr.length - 1];
-        if (last && Array.isArray(last.items)) {
-          total = last.items.length;
-          done = last.items.filter((i) => !!i.done).length;
-        }
-      }
-    }
-
-    setPct(total ? Math.round((done / total) * 100) : 0);
-  }, []);
-
-  return (
-    <GlassCard className="p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-medium">Checklist do Dia</div>
-          <div className="text-sm opacity-70">{pct}% concluído</div>
-        </div>
-        <Link href="/meu-dia/checklist" className="btn bg-white border border-slate-200">
-          Abrir
-        </Link>
-      </div>
-      <div className="mt-3 w-full h-2 rounded-full bg-black/5 overflow-hidden">
-        <div className="h-2 bg-[var(--brand-ink)]/80 transition-all" style={{ width: `${pct}%` }} />
-      </div>
-    </GlassCard>
-  );
-}
-
-function HomeCard({ emoji, title, subtitle, href }) {
-  return (
-    <Link href={href} className="card block">
-      <div className="flex items-start gap-3">
-        <div className="text-2xl">{emoji}</div>
-        <div>
-          <div className="font-medium">{title}</div>
-          <div className="subtitle">{subtitle}</div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-export default function MeuDiaPage() {
+  // FAB + Anotação com seletor de destino
   const [noteOpen, setNoteOpen] = useState(false);
+  const [noteType, setNoteType] = useState("casa"); // casa | filhos | eu
 
   function handleSaveNote(text) {
-    if (!text || !text.trim()) {
-      // feedback suave
+    const value = (text || "").trim();
+    if (!value) {
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: "Escreva algo para salvar ✍️" } }));
+        window.dispatchEvent(
+          new CustomEvent("m360:toast", { detail: { message: "Escreva algo para salvar ✍️" } })
+        );
       }
       return;
     }
-    // salva como item do Planner (aba "Casa")
-    addPlannerItem("casa", text.trim());
-
-    // toast + badge opcional
+    addPlannerItem(noteType, value);
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: "Anotado no Planner 💾" } }));
-      window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Organizada" } }));
+      window.dispatchEvent(
+        new CustomEvent("m360:toast", {
+          detail: { message: `Anotado no Planner (${noteType[0].toUpperCase() + noteType.slice(1)}) 💾` },
+        })
+      );
+      // badge por registrar organização
+      window.dispatchEvent(
+        new CustomEvent("m360:win", { detail: { type: "badge", name: "Organizada" } })
+      );
     }
     setNoteOpen(false);
   }
 
   return (
-    <main className="max-w-5xl mx-auto px-5 pb-28">
+    <main className="max-w-5xl mx-auto px-5 py-6">
       <AppBar title="Meu Dia" />
 
-      {/* Saudação */}
-      <section className="mt-4">
-        <Greeting />
-      </section>
+      {/* Saudação + Mensagem do Dia */}
+      <section className="mt-2">
+        <h1 className="text-[22px] font-semibold">
+          {greeting}, Mãe 💛
+        </h1>
 
-      {/* Mensagem do Dia (auto-24h) */}
-      <section className="mt-3">
-        <MessageOfDay />
+        <GlassCard className="p-5 mt-3 bg-[var(--brand)]/7 ring-[var(--brand)]/10">
+          <div className="text-[13px] text-[var(--brand-navy-t60)] mb-1">
+            Mensagem do Dia
+          </div>
+          <p className="text-base leading-relaxed">{message}</p>
+          <p className="text-[12px] text-[var(--brand-navy-t60)] mt-2">
+            Gira automaticamente a cada 24h.
+          </p>
+        </GlassCard>
       </section>
 
       {/* Atalhos principais */}
-      <section className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <HomeCard emoji="🏠" title="Rotina da Casa"      subtitle="Organizar tarefas"     href="/meu-dia/rotina" />
-        <HomeCard emoji="💕" title="Tempo com Meu Filho"  subtitle="Registrar momentos"   href="/meu-dia/momentos" />
-        <HomeCard emoji="🎨" title="Atividade do Dia"     subtitle="Brincadeira educativa" href="/meu-dia/atividade" />
-        <HomeCard emoji="🌿" title="Momento para Mim"     subtitle="Pausa e autocuidado"  href="/meu-dia/pausas" />
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+        <Link href="/meu-dia/rotina" className="block">
+          <GlassCard className="p-5 hover:shadow-lg transition-shadow">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🏠</div>
+              <div>
+                <div className="font-semibold">Rotina da Casa</div>
+                <p className="subtitle mt-0.5">Organizar tarefas e micro-rotinas</p>
+              </div>
+            </div>
+          </GlassCard>
+        </Link>
+
+        <Link href="/meu-dia/momentos" className="block">
+          <GlassCard className="p-5 hover:shadow-lg transition-shadow">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">💕</div>
+              <div>
+                <div className="font-semibold">Tempo com Meu Filho</div>
+                <p className="subtitle mt-0.5">Registrar momentos especiais</p>
+              </div>
+            </div>
+          </GlassCard>
+        </Link>
+
+        <Link href="/meu-dia/atividade" className="block">
+          <GlassCard className="p-5 hover:shadow-lg transition-shadow">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🎨</div>
+              <div>
+                <div className="font-semibold">Atividade do Dia</div>
+                <p className="subtitle mt-0.5">Sugestão automática para hoje</p>
+              </div>
+            </div>
+          </GlassCard>
+        </Link>
+
+        <Link href="/meu-dia/pausas" className="block">
+          <GlassCard className="p-5 hover:shadow-lg transition-shadow">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🌿</div>
+              <div>
+                <div className="font-semibold">Momento para Mim</div>
+                <p className="subtitle mt-0.5">Pausas, afirmações e autocuidado</p>
+              </div>
+            </div>
+          </GlassCard>
+        </Link>
       </section>
 
       {/* Planner + Checklist */}
-      <section className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <PlannerPreview />
-        <ChecklistCard />
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+        <Link href="/meu-dia/planner" className="block">
+          <GlassCard className="p-5 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold">Planner da Família</div>
+                <p className="subtitle mt-0.5">Casa | Filhos | Eu</p>
+              </div>
+              <div className="text-sm font-medium">{plannerProgress}%</div>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-black/5 overflow-hidden">
+              <div
+                className="h-full bg-[var(--brand)] rounded-full transition-[width]"
+                style={{ width: `${plannerProgress}%` }}
+              />
+            </div>
+          </GlassCard>
+        </Link>
+
+        <Link href="/meu-dia/checklist" className="block">
+          <GlassCard className="p-5 hover:shadow-lg transition-shadow">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">✅</div>
+              <div>
+                <div className="font-semibold">Checklist do Dia</div>
+                <p className="subtitle mt-0.5">Seus 3–5 micro-itens essenciais</p>
+              </div>
+            </div>
+          </GlassCard>
+        </Link>
       </section>
 
       {/* FAB “＋ Anotar” */}
       <button
         onClick={() => setNoteOpen(true)}
         aria-label="Adicionar anotação"
-        className="
-          fixed right-5 bottom-24 z-[60]
-          rounded-full shadow-lg
-          h-14 w-14 text-2xl leading-none
-          bg-[var(--brand)] text-white
-          hover:scale-105 active:scale-95 transition
-          grid place-items-center
-        "
+        className="fixed right-5 bottom-24 z-[60] rounded-full shadow-lg h-14 w-14 text-2xl
+                   bg-[var(--brand)] text-white hover:scale-105 active:scale-95 transition grid place-items-center"
       >
         ＋
       </button>
 
-      {/* Composer de nota (QuickNote) */}
+      {/* Seletor de destino (pílulas) */}
+      {noteOpen && (
+        <div className="fixed bottom-[140px] left-1/2 -translate-x-1/2 z-[65]">
+          <div className="rounded-full bg-white/95 ring-1 ring-black/5 shadow-lg px-2 py-1 flex gap-1">
+            {[
+              { id: "casa", label: "Casa" },
+              { id: "filhos", label: "Filhos" },
+              { id: "eu", label: "Eu" },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setNoteType(opt.id)}
+                className={`px-3 py-1 rounded-full text-sm ${
+                  noteType === opt.id
+                    ? "bg-[var(--brand)] text-white"
+                    : "bg-transparent text-[var(--brand-navy)]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Composer da nota */}
       {noteOpen && (
         <QuickNote
-          title="Nova anotação"
-          placeholder="Ex.: comprar fraldas, ligar para a pediatra..."
+          title={`Nova anotação — ${noteType[0].toUpperCase() + noteType.slice(1)}`}
+          placeholder={
+            noteType === "casa"
+              ? "Ex.: lavar uniforme, separar lixo reciclável…"
+              : noteType === "filhos"
+              ? "Ex.: preparar caixa sensorial, atividade de pintura…"
+              : "Ex.: 10 min de respiração, alongar, beber água…"
+          }
           confirmLabel="Salvar no Planner"
           onSave={handleSaveNote}
           onClose={() => setNoteOpen(false)}
