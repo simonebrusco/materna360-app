@@ -9,7 +9,7 @@ import QuickNote from "../../components/QuickNote.jsx";
 import { addPlannerItem } from "../../lib/planner.js";
 import { get, set, keys } from "../../lib/storage.js";
 
-// Mensagens girando 1x a cada 24h (sem ação do usuário)
+// ===================== helpers ======================
 const MESSAGES = [
   "Respire fundo. Você está fazendo o seu melhor 💛",
   "Tudo bem desacelerar hoje — gentileza com você.",
@@ -18,7 +18,6 @@ const MESSAGES = [
   "Um momento de presença transforma o dia ✨",
 ];
 
-// lê data YYYY-MM-DD local
 function todayStr() {
   const d = new Date();
   const y = d.getFullYear();
@@ -31,7 +30,6 @@ function useMessageOfDay() {
   const [msg, setMsg] = useState(MESSAGES[0]);
 
   useEffect(() => {
-    // estado persistido: { idx:number, date:'YYYY-MM-DD' }
     const saved = get("m360:message_of_day", null);
     const t = todayStr();
 
@@ -41,14 +39,11 @@ function useMessageOfDay() {
       setMsg(MESSAGES[idx]);
       return;
     }
-
-    // se mudou o dia, avança 1 e dispara badge
     if (saved.date !== t) {
       const idx = (Number(saved.idx) + 1) % MESSAGES.length;
       set("m360:message_of_day", { idx, date: t });
       setMsg(MESSAGES[idx]);
 
-      // badge Organizada ao girar automaticamente
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("m360:win", {
@@ -69,7 +64,6 @@ function useMessageOfDay() {
   return msg;
 }
 
-// progresso do planner (local storage)
 function usePlannerProgress() {
   const [progress, setProgress] = useState(0);
 
@@ -82,13 +76,51 @@ function usePlannerProgress() {
     }
     const done = all.filter((i) => i && i.done).length;
     setProgress(Math.round((done / all.length) * 100));
-  }, []); // simples (atualiza no load)
+  }, []);
 
   return progress;
 }
 
+// cria/usa defs padrão (3–5 itens) e calcula progresso de hoje
+function useChecklistToday() {
+  const [total, setTotal] = useState(0);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const defsKey = "m360:checklist_defs";
+    const tid = `m360:checklist_log:${todayStr()}`;
+
+    // se não houver defs, semeia 5 sugestões
+    const DEFAULT_ITEMS = [
+      { id: "agua", title: "Beber água 6–8 copos" },
+      { id: "respirar", title: "1 min de respiração" },
+      { id: "momento-filho", title: "Um momento com meu filho" },
+      { id: "movimento", title: "5 min de alongamento" },
+      { id: "gentileza", title: "Uma gentileza comigo" },
+    ];
+    const defs = get(defsKey, null);
+    if (!defs || !Array.isArray(defs) || defs.length === 0) {
+      set(defsKey, DEFAULT_ITEMS);
+      setTotal(DEFAULT_ITEMS.length);
+    } else {
+      setTotal(defs.length);
+    }
+
+    const log = get(tid, null);
+    if (!log || !Array.isArray(log)) {
+      set(tid, []);
+      setCount(0);
+    } else {
+      setCount(log.length);
+    }
+  }, []);
+
+  const percent = total ? Math.round((count / total) * 100) : 0;
+  return { total, count, percent };
+}
+
+// ===================== page ======================
 export default function MeuDiaPage() {
-  // saudação
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return "Bom dia";
@@ -98,10 +130,11 @@ export default function MeuDiaPage() {
 
   const message = useMessageOfDay();
   const plannerProgress = usePlannerProgress();
+  const checklist = useChecklistToday();
 
-  // FAB + Anotação com seletor de destino
+  // FAB Anotar
   const [noteOpen, setNoteOpen] = useState(false);
-  const [noteType, setNoteType] = useState("casa"); // casa | filhos | eu
+  const [noteType, setNoteType] = useState("casa");
 
   function handleSaveNote(text) {
     const value = (text || "").trim();
@@ -120,7 +153,6 @@ export default function MeuDiaPage() {
           detail: { message: `Anotado no Planner (${noteType[0].toUpperCase() + noteType.slice(1)}) 💾` },
         })
       );
-      // badge por registrar organização
       window.dispatchEvent(
         new CustomEvent("m360:win", { detail: { type: "badge", name: "Organizada" } })
       );
@@ -139,13 +171,9 @@ export default function MeuDiaPage() {
         </h1>
 
         <GlassCard className="p-5 mt-3 bg-[var(--brand)]/7 ring-[var(--brand)]/10">
-          <div className="text-[13px] text-[var(--brand-navy-t60)] mb-1">
-            Mensagem do Dia
-          </div>
+          <div className="text-[13px] text-[var(--brand-navy-t60)] mb-1">Mensagem do Dia</div>
           <p className="text-base leading-relaxed">{message}</p>
-          <p className="text-[12px] text-[var(--brand-navy-t60)] mt-2">
-            Gira automaticamente a cada 24h.
-          </p>
+          <p className="text-[12px] text-[var(--brand-navy-t60)] mt-2">Gira automaticamente a cada 24h.</p>
         </GlassCard>
       </section>
 
@@ -222,12 +250,19 @@ export default function MeuDiaPage() {
 
         <Link href="/meu-dia/checklist" className="block">
           <GlassCard className="p-5 hover:shadow-lg transition-shadow">
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">✅</div>
+            <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold">Checklist do Dia</div>
-                <p className="subtitle mt-0.5">Seus 3–5 micro-itens essenciais</p>
+                <p className="subtitle mt-0.5">
+                  {checklist.count}/{checklist.total} — {checklist.percent}%
+                </p>
               </div>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-black/5 overflow-hidden">
+              <div
+                className="h-full bg-[var(--brand)] rounded-full transition-[width]"
+                style={{ width: `${checklist.percent}%` }}
+              />
             </div>
           </GlassCard>
         </Link>
@@ -243,7 +278,7 @@ export default function MeuDiaPage() {
         ＋
       </button>
 
-      {/* Seletor de destino (pílulas) */}
+      {/* Seletor de destino */}
       {noteOpen && (
         <div className="fixed bottom-[140px] left-1/2 -translate-x-1/2 z-[65]">
           <div className="rounded-full bg-white/95 ring-1 ring-black/5 shadow-lg px-2 py-1 flex gap-1">
