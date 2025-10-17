@@ -4,6 +4,7 @@
 import { useState } from "react";
 import AppBar from "../../../components/AppBar";
 import GlassCard from "../../../components/GlassCard";
+import { get, set, keys } from "../../../lib/storage";
 
 const AGE_RANGES = [
   { v: "6-12m", label: "6–12 meses" },
@@ -12,6 +13,33 @@ const AGE_RANGES = [
   { v: "4-6",   label: "4–6 anos" },
   { v: "6-9",   label: "6–9 anos" },
 ];
+
+const CHECKLIST_DEFS_KEY = (keys && keys.checklist_defs) || "m360:checklist_defs";
+
+function safeToast(message) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message } }));
+    window.dispatchEvent(new CustomEvent("m360:checklist:changed"));
+  }
+}
+
+function slugify(s) {
+  return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40);
+}
+
+function addToChecklist(title) {
+  const defs = Array.isArray(get(CHECKLIST_DEFS_KEY, [])) ? get(CHECKLIST_DEFS_KEY, []) : [];
+  const id = `ai-${slugify(title)}`;
+  const exists = defs.some((d) => d.id === id || d.label?.toLowerCase() === title.toLowerCase());
+  if (!exists) {
+    defs.push({ id, label: title });
+    set(CHECKLIST_DEFS_KEY, defs);
+    safeToast("Item adicionado ao Checklist ✅");
+  } else {
+    safeToast("Esse item já está no seu Checklist");
+  }
+}
 
 function Chip({ label, onRemove }) {
   return (
@@ -33,9 +61,7 @@ export default function ReceitasPage() {
     e.preventDefault();
     const v = input.trim();
     if (!v) return;
-    if (!pantry.includes(v.toLowerCase())) {
-      setPantry((p) => [...p, v.toLowerCase()]);
-    }
+    if (!pantry.includes(v.toLowerCase())) setPantry((p) => [...p, v.toLowerCase()]);
     setInput("");
   }
 
@@ -138,6 +164,15 @@ export default function ReceitasPage() {
                 {r.notes}
               </div>
             )}
+
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={() => addToChecklist(`Preparar: ${r.title}`)}
+                className="px-3 py-2 rounded-xl bg-[#ffd8e6] text-[#1A2240] hover:opacity-90"
+              >
+                Adicionar ao Checklist
+              </button>
+            </div>
           </GlassCard>
         ))}
 
