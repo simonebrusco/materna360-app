@@ -5,74 +5,81 @@ import AppBar from "../../../components/AppBar";
 import GlassCard from "../../../components/GlassCard";
 import { get, set, keys } from "../../../lib/storage";
 
-const TOTAL = 60; // 60s de prática guiada (MVP)
+function addBreathMinute() {
+  const kMin = keys.minutes || "m360:minutes";
+  const kLog = keys.minutesLog || "m360:minutes_log";
+
+  const cur = get(kMin, { meditation: 0, breath: 0 });
+  const next = { ...cur, breath: Number(cur.breath || 0) + 1 };
+  set(kMin, next);
+
+  const log = get(kLog, []);
+  log.push({ type: "breath", minutes: 1, date: new Date().toISOString() });
+  set(kLog, log);
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } }));
+    window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: "+1 min de respiração 🌬️" } }));
+  }
+}
 
 export default function RespirarPage() {
-  const [sec, setSec] = useState(0);
+  const [sec, setSec] = useState(60);
   const [running, setRunning] = useState(false);
-  const idRef = useRef(null);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     if (!running) return;
-    idRef.current = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setSec((s) => {
-        const next = s + 1;
-        if (next >= TOTAL) {
-          clearInterval(idRef.current);
+        if (s <= 1) {
+          clearInterval(timerRef.current);
           setRunning(false);
-
-          // telemetria e badge
-          const key = keys.minutes || "m360:minutes";
-          const minutes = get(key, { meditation: 0, breath: 0 });
-          set(key, { ...minutes, breath: minutes.breath + 1 });
-
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("m360:win", {
-              detail: { type: "badge", name: "Cuidar de Mim" }
-            }));
-          }
+          addBreathMinute(); // registra 1 min ao completar 60s
+          return 60;
         }
-        return next;
+        return s - 1;
       });
     }, 1000);
-    return () => clearInterval(idRef.current);
+    return () => clearInterval(timerRef.current);
   }, [running]);
-
-  function start() {
-    setSec(0);
-    setRunning(true);
-  }
-  function pause() {
-    setRunning(false);
-    clearInterval(idRef.current);
-  }
-
-  const pct = Math.min(100, Math.round((sec / TOTAL) * 100));
 
   return (
     <main className="max-w-5xl mx-auto px-5 pb-24">
       <AppBar title="Respirar" backHref="/cuidar" />
-      <div className="container-px py-6">
-        <GlassCard className="p-6">
-          <div className="font-semibold mb-1">Ciclo guiado • 60s</div>
-          <div className="h-2 w-full bg-black/10 rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--brand)]" style={{ width: `${pct}%` }} />
-          </div>
+
+      <section className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <GlassCard className="p-6 flex flex-col items-center justify-center">
+          <div className="text-5xl font-semibold tabular-nums">{sec}s</div>
+          <div className="mt-2 text-sm opacity-60">Ciclo guiado (60s)</div>
 
           <div className="mt-4 flex gap-2">
             {!running ? (
-              <button onClick={start} className="btn btn-primary">Iniciar</button>
+              <button onClick={() => setRunning(true)} className="btn btn-primary">Iniciar</button>
             ) : (
-              <button onClick={pause} className="btn bg-white border border-slate-200">Pausar</button>
+              <button onClick={() => { setRunning(false); clearInterval(timerRef.current); }} className="btn bg-white border border-slate-200">
+                Pausar
+              </button>
             )}
-            <span className="text-sm opacity-70 self-center">{sec}s</span>
+            <button
+              onClick={() => { setRunning(false); clearInterval(timerRef.current); setSec(60); }}
+              className="btn bg-white border border-slate-200"
+            >
+              Resetar
+            </button>
           </div>
-
-          <p className="mt-4 text-sm opacity-70">
-            Inspire 4s • segure 2s • expire 6s — repita com suavidade.
-          </p>
         </GlassCard>
-      </div>
+
+        <GlassCard className="p-6">
+          <div className="font-medium">Como fazer</div>
+          <ul className="mt-2 text-sm opacity-80 space-y-1">
+            <li>• Inspire profundamente por 4 segundos</li>
+            <li>• Segure o ar por 4 segundos</li>
+            <li>• Expire lentamente por 6–8 segundos</li>
+            <li>• Repita até o ciclo completar 60s</li>
+          </ul>
+        </GlassCard>
+      </section>
     </main>
   );
 }
