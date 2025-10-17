@@ -29,6 +29,22 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* === Contêiner padrão do app ================================ */
+/* Centraliza e limita a largura de TODAS as páginas
+   sem precisar alterar cada page.jsx individualmente. */
+.m360-page {
+  width: 100%;
+  max-width: 980px;       /* ~md/ lg confortável para mobile-first */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;     /* 16px */
+  padding-right: 1rem;    /* 16px */
+  padding-bottom: 1rem;   /* evita grudar no BottomNav */
+}
+@media (min-width: 640px) {
+  .m360-page { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+
 /* === Utilitários Materna360 ================================ */
 .m360-card {
   background: var(--m360-white);
