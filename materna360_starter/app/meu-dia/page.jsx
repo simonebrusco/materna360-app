@@ -5,13 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AppBar from "../../components/AppBar";
 import GlassCard from "../../components/GlassCard";
+import QuickNote from "../../components/QuickNote";          // ⬅️ FAB usa este composer
 import { get, set, keys } from "../../lib/storage";
+import { addPlannerItem } from "../../lib/planner";          // ⬅️ salvar nota no Planner
 
 // (opcional) tenta importar a lista de mensagens se existir
 let EXTERNAL_MESSAGES = null;
 try {
-  // se você já criou ../../lib/messages.js exportando MESSAGES, usamos aqui:
-  // export const MESSAGES = [{ quote, author }, ...]
   EXTERNAL_MESSAGES = require("../../lib/messages").MESSAGES || null;
 } catch (_) {
   EXTERNAL_MESSAGES = null;
@@ -31,7 +31,7 @@ const MESSAGES = Array.isArray(EXTERNAL_MESSAGES) && EXTERNAL_MESSAGES.length
 function startOfDayStr(date = new Date()) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  return d.toISOString(); // comparável como string
+  return d.toISOString();
 }
 
 function Greeting() {
@@ -49,7 +49,7 @@ function Greeting() {
   );
 }
 
-/** Mensagem do Dia — muda sozinha a cada 24h */
+/** Mensagem do Dia — muda sozinha a cada 24h (sem botão de troca) */
 function MessageOfDay() {
   const [msg, setMsg] = useState(MESSAGES[0]);
 
@@ -58,7 +58,6 @@ function MessageOfDay() {
     const today = startOfDayStr();
     const saved = get(k, null);
 
-    // estrutura salva: { idx: number, date: string(iso-start-of-day) }
     if (!saved) {
       const first = { idx: 0, date: today };
       set(k, first);
@@ -66,13 +65,12 @@ function MessageOfDay() {
       return;
     }
 
-    const isSameDay = saved.date === today;
-    if (isSameDay) {
+    if (saved.date === today) {
       setMsg(MESSAGES[saved.idx % MESSAGES.length]);
       return;
     }
 
-    // novo dia → avança índice, salva, dispara badge + toast
+    // virou o dia → avança índice, salva, badge + toast
     const next = { idx: (Number(saved.idx || 0) + 1) % MESSAGES.length, date: today };
     set(k, next);
     setMsg(MESSAGES[next.idx]);
@@ -97,12 +95,8 @@ function MessageOfDay() {
       <blockquote className="mt-2 text-lg leading-snug">
         “{msg?.quote}”
       </blockquote>
-      {msg?.author && (
-        <div className="mt-1 text-sm opacity-60">— {msg.author}</div>
-      )}
-      <p className="mt-3 text-xs opacity-50">
-        Atualiza automaticamente a cada novo dia.
-      </p>
+      {msg?.author && <div className="mt-1 text-sm opacity-60">— {msg.author}</div>}
+      <p className="mt-3 text-xs opacity-50">Atualiza automaticamente a cada novo dia.</p>
     </GlassCard>
   );
 }
@@ -139,10 +133,7 @@ function PlannerPreview() {
       </div>
 
       <div className="mt-3 w-full h-2 rounded-full bg-black/5 overflow-hidden">
-        <div
-          className="h-2 bg-[var(--brand)] transition-all"
-          style={{ width: `${progress.pct}%` }}
-        />
+        <div className="h-2 bg-[var(--brand)] transition-all" style={{ width: `${progress.pct}%` }} />
       </div>
     </GlassCard>
   );
@@ -153,7 +144,6 @@ function ChecklistCard() {
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
-    // formato livre — tentamos dois jeitos comuns
     const kDay = (keys.checklistToday || "m360:checklist:today");
     const kLogs = (keys.checklist || "m360:checklist");
 
@@ -164,7 +154,6 @@ function ChecklistCard() {
       total = today.items.length;
       done = today.items.filter((i) => !!i.done).length;
     } else {
-      // fallback genérico
       const arr = get(kLogs, []);
       if (Array.isArray(arr) && arr.length) {
         const last = arr[arr.length - 1];
@@ -190,10 +179,7 @@ function ChecklistCard() {
         </Link>
       </div>
       <div className="mt-3 w-full h-2 rounded-full bg-black/5 overflow-hidden">
-        <div
-          className="h-2 bg-[var(--brand-ink)]/80 transition-all"
-          style={{ width: `${pct}%` }}
-        />
+        <div className="h-2 bg-[var(--brand-ink)]/80 transition-all" style={{ width: `${pct}%` }} />
       </div>
     </GlassCard>
   );
@@ -214,8 +200,29 @@ function HomeCard({ emoji, title, subtitle, href }) {
 }
 
 export default function MeuDiaPage() {
+  const [noteOpen, setNoteOpen] = useState(false);
+
+  function handleSaveNote(text) {
+    if (!text || !text.trim()) {
+      // feedback suave
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: "Escreva algo para salvar ✍️" } }));
+      }
+      return;
+    }
+    // salva como item do Planner (aba "Casa")
+    addPlannerItem("casa", text.trim());
+
+    // toast + badge opcional
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: "Anotado no Planner 💾" } }));
+      window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Organizada" } }));
+    }
+    setNoteOpen(false);
+  }
+
   return (
-    <main className="max-w-5xl mx-auto px-5 pb-24">
+    <main className="max-w-5xl mx-auto px-5 pb-28">
       <AppBar title="Meu Dia" />
 
       {/* Saudação */}
@@ -230,30 +237,10 @@ export default function MeuDiaPage() {
 
       {/* Atalhos principais */}
       <section className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <HomeCard
-          emoji="🏠"
-          title="Rotina da Casa"
-          subtitle="Organizar tarefas"
-          href="/meu-dia/rotina"
-        />
-        <HomeCard
-          emoji="💕"
-          title="Tempo com Meu Filho"
-          subtitle="Registrar momentos"
-          href="/meu-dia/momentos"
-        />
-        <HomeCard
-          emoji="🎨"
-          title="Atividade do Dia"
-          subtitle="Brincadeira educativa"
-          href="/meu-dia/atividade"
-        />
-        <HomeCard
-          emoji="🌿"
-          title="Momento para Mim"
-          subtitle="Pausa e autocuidado"
-          href="/meu-dia/pausas"
-        />
+        <HomeCard emoji="🏠" title="Rotina da Casa"      subtitle="Organizar tarefas"     href="/meu-dia/rotina" />
+        <HomeCard emoji="💕" title="Tempo com Meu Filho"  subtitle="Registrar momentos"   href="/meu-dia/momentos" />
+        <HomeCard emoji="🎨" title="Atividade do Dia"     subtitle="Brincadeira educativa" href="/meu-dia/atividade" />
+        <HomeCard emoji="🌿" title="Momento para Mim"     subtitle="Pausa e autocuidado"  href="/meu-dia/pausas" />
       </section>
 
       {/* Planner + Checklist */}
@@ -261,6 +248,33 @@ export default function MeuDiaPage() {
         <PlannerPreview />
         <ChecklistCard />
       </section>
+
+      {/* FAB “＋ Anotar” */}
+      <button
+        onClick={() => setNoteOpen(true)}
+        aria-label="Adicionar anotação"
+        className="
+          fixed right-5 bottom-24 z-[60]
+          rounded-full shadow-lg
+          h-14 w-14 text-2xl leading-none
+          bg-[var(--brand)] text-white
+          hover:scale-105 active:scale-95 transition
+          grid place-items-center
+        "
+      >
+        ＋
+      </button>
+
+      {/* Composer de nota (QuickNote) */}
+      {noteOpen && (
+        <QuickNote
+          title="Nova anotação"
+          placeholder="Ex.: comprar fraldas, ligar para a pediatra..."
+          confirmLabel="Salvar no Planner"
+          onSave={handleSaveNote}
+          onClose={() => setNoteOpen(false)}
+        />
+      )}
     </main>
   );
 }
