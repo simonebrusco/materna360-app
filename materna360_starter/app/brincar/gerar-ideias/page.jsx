@@ -2,8 +2,15 @@
 "use client";
 
 import { useState } from "react";
+
+simonebrusco-patch-905473
 import AppBar from "../../components/AppBar";
 import GlassCard from "../../components/GlassCard";
+
+import AppBar from "../../../components/AppBar";
+import GlassCard from "../../../components/GlassCard";
+import { get, set, keys } from "../../../lib/storage";
+main
 
 const AGE_RANGES = [
   { v: "0-1",  label: "0–1 ano" },
@@ -14,6 +21,34 @@ const AGE_RANGES = [
   { v: "7-9",  label: "7–9 anos" },
 ];
 
+simonebrusco-patch-905473
+
+const PLANNER_INBOX_KEY = (keys && keys.plannerInbox) || "m360:planner_inbox";
+
+function safeToast(message) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message } }));
+  }
+}
+
+function saveToPlannerInbox(idea) {
+  const inbox = Array.isArray(get(PLANNER_INBOX_KEY, [])) ? get(PLANNER_INBOX_KEY, []) : [];
+  const payload = {
+    id: `idea-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    title: idea.title,
+    description: idea.description,
+    duration: idea.duration,
+    type: idea.type,
+    createdAt: new Date().toISOString(),
+    materials: idea.materials || [],
+    source: "ai-ideas",
+  };
+  inbox.push(payload);
+  set(PLANNER_INBOX_KEY, inbox);
+  safeToast("Ideia salva no Planner ✨");
+}
+
+main
 export default function GerarIdeiasPage() {
   const [ageRange, setAgeRange] = useState("3-5");
   const [location, setLocation] = useState("casa");
@@ -117,6 +152,18 @@ export default function GerarIdeiasPage() {
                 </ul>
               </div>
             )}
+simonebrusco-patch-905473
+
+
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={() => saveToPlannerInbox(it)}
+                className="px-3 py-2 rounded-xl bg-[#ffd8e6] text-[#1A2240] hover:opacity-90"
+              >
+                Salvar no Planner
+              </button>
+            </div>
+main
           </GlassCard>
         ))}
 
