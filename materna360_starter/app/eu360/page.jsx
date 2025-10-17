@@ -6,8 +6,10 @@ import AppBar from "../../components/AppBar";
 import GlassCard from "../../components/GlassCard";
 import MoodCheckin from "../../components/MoodCheckin";
 import BadgesLastFive from "../../components/BadgesLastFive.jsx";
+import ProfileCard from "../../components/ProfileCard";
 import { get, set, keys } from "../../lib/storage";
 
+/* ----------------------- hooks auxiliares ----------------------- */
 function useWeeklyMinutes() {
   const [minutes, setMinutes] = useState({ meditation: 0, breath: 0 });
 
@@ -23,6 +25,7 @@ function useWeeklyMinutes() {
   return minutes;
 }
 
+/* ----------------------- blocos de UI ----------------------- */
 function GratitudeBlock() {
   const [text, setText] = useState("");
   const [items, setItems] = useState([]);
@@ -65,7 +68,9 @@ function GratitudeBlock() {
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <button className="btn btn-primary" type="submit">Salvar</button>
+        <button className="btn btn-primary" type="submit">
+          Salvar
+        </button>
       </form>
 
       <ul className="mt-3 space-y-2">
@@ -83,6 +88,7 @@ function GratitudeBlock() {
 }
 
 function WeeklyMood() {
+  // lê os 7 últimos check-ins (se existir chave m360:moods)
   const [dots, setDots] = useState([3, 3, 3, 3, 3, 3, 3]);
 
   useEffect(() => {
@@ -90,6 +96,7 @@ function WeeklyMood() {
     const arr = Array.isArray(get(k, [])) ? get(k, []) : [];
     const last7 = arr.slice(-7).map((m) => Number(m.score || 3));
     if (last7.length) {
+      // preenche à esquerda com 3 (neutro) se faltar
       const padded = Array(7 - last7.length).fill(3).concat(last7);
       setDots(padded);
     }
@@ -111,7 +118,7 @@ function WeeklyMood() {
             }}
             title={`Dia ${i + 1}: ${s}`}
           >
-            {["😞","😐","🙂","😊","🤩"][s-1] || "🙂"}
+            {["😞", "😐", "🙂", "😊", "🤩"][s - 1] || "🙂"}
           </div>
         ))}
       </div>
@@ -119,13 +126,14 @@ function WeeklyMood() {
   );
 }
 
+/* ----------------------- página ----------------------- */
 export default function Eu360Page() {
   const minutes = useWeeklyMinutes();
 
   const bannerCopy = useMemo(
     () => ({
       title: "Você é importante 💛",
-      subtitle: "Acolha seu ritmo. Aqui é seu espaço de cuidado."
+      subtitle: "Acolha seu ritmo. Aqui é seu espaço de cuidado.",
     }),
     []
   );
@@ -166,12 +174,16 @@ export default function Eu360Page() {
           <div className="mt-3 grid grid-cols-2 gap-3 text-center">
             <div className="rounded-xl bg-white ring-1 ring-black/5 p-4">
               <div className="text-xs opacity-60">Meditar</div>
-              <div className="text-2xl font-semibold tabular-nums">{minutes.meditation}</div>
+              <div className="text-2xl font-semibold tabular-nums">
+                {minutes.meditation}
+              </div>
               <div className="text-xs opacity-60">min</div>
             </div>
             <div className="rounded-xl bg-white ring-1 ring-black/5 p-4">
               <div className="text-xs opacity-60">Respirar</div>
-              <div className="text-2xl font-semibold tabular-nums">{minutes.breath}</div>
+              <div className="text-2xl font-semibold tabular-nums">
+                {minutes.breath}
+              </div>
               <div className="text-xs opacity-60">min</div>
             </div>
           </div>
@@ -181,6 +193,11 @@ export default function Eu360Page() {
       {/* Gratidão */}
       <section className="mt-4">
         <GratitudeBlock />
+      </section>
+
+      {/* Personalização — FORMULÁRIO */}
+      <section className="mt-4">
+        <ProfileCard />
       </section>
     </main>
   );
