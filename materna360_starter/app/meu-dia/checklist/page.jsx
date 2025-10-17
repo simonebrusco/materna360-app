@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import useChecklistProgress, { todayStr, tid } from "../../../lib/hooks/useChecklistProgress.js";
 import { get, set } from "../../../lib/storage.js";
+import ChecklistDay from "../../../components/ChecklistDay.jsx";
 
 export default function ChecklistPage() {
   const { defs, done, percent, toggleToday } = useChecklistProgress();
@@ -38,11 +39,12 @@ export default function ChecklistPage() {
         </Link>
       </header>
 
+      {/* === Seção existente (mantida) ============================== */}
       {/* barra de progresso */}
       <div className="card mb-4">
         <div className="h-2 rounded-full bg-black/5 overflow-hidden">
           <div
-            className="h-full bg-[var(--brand)] rounded-full transition-all"
+            className="h-full bg-[#ff005e] rounded-full transition-all" /* antes: bg-[var(--brand)] */
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -62,7 +64,7 @@ export default function ChecklistPage() {
                   type="checkbox"
                   checked={checked}
                   onChange={() => toggleToday(it.id)}
-                  className="h-5 w-5 rounded-md border-slate-300 text-[var(--brand)] focus:ring-[var(--brand)]"
+                  className="h-5 w-5 rounded-md border-slate-300 text-[#ff005e] focus:ring-[#ff005e]" /* antes: text-[var(--brand)] focus:ring-[var(--brand)] */
                 />
                 <span className="text-[15px]">{it.label}</span>
               </div>
@@ -87,11 +89,19 @@ export default function ChecklistPage() {
 
         <Link
           href="/meu-dia"
-          className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white"
+          className="px-4 py-2 rounded-xl bg-[#ff005e] text-white" /* antes: bg-[var(--brand)] */
         >
           Concluir
         </Link>
       </footer>
+
+      {/* === NOVO BLOCO v1.5 (incremental, sem apagar o anterior) === */}
+      <section className="mt-10">
+        <div className="mb-3 text-sm text-slate-500">
+          Versão nova do Checklist (v1.5) com data no cabeçalho e histórico leve:
+        </div>
+        <ChecklistDay />
+      </section>
     </main>
   );
 }
