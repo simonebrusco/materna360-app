@@ -1,4 +1,3 @@
-// materna360_starter/components/ProfileCard.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,48 +10,30 @@ export default function ProfileCard() {
   const [motherName, setMotherName] = useState("");
   const [kids, setKids] = useState([""]);
 
-  // carregar do localStorage
   useEffect(() => {
     const p = get(PROFILE_KEY, { motherName: "", kids: [] });
     setMotherName(p.motherName || "");
     setKids(Array.isArray(p.kids) && p.kids.length ? p.kids : [""]);
   }, []);
 
-  function addKid() {
-    setKids((arr) => [...arr, ""]);
-  }
-  function updKid(i, v) {
-    setKids((arr) => {
-      const copy = [...arr];
-      copy[i] = v;
-      return copy;
-    });
-  }
-  function rmKid(i) {
-    setKids((arr) => (arr.length <= 1 ? [""] : arr.filter((_, idx) => idx !== i)));
-  }
+  function addKid() { setKids((arr) => [...arr, ""]); }
+  function updKid(i, v) { setKids((arr) => { const c=[...arr]; c[i]=v; return c; }); }
+  function rmKid(i) { setKids((arr) => (arr.length <= 1 ? [""] : arr.filter((_, idx) => idx !== i))); }
 
   function save() {
     const cleanKids = kids.map((k) => (k || "").trim()).filter(Boolean);
     const payload = { motherName: (motherName || "").trim(), kids: cleanKids };
     set(PROFILE_KEY, payload);
-
     if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("m360:toast", { detail: { message: "Preferências salvas 💛" } })
-      );
-      window.dispatchEvent(
-        new CustomEvent("m360:profile:changed", { detail: payload })
-      );
+      window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: "Preferências salvas 💛" } }));
+      window.dispatchEvent(new CustomEvent("m360:profile:changed", { detail: payload }));
     }
   }
 
   return (
     <GlassCard className="p-4">
       <div className="font-medium">Personalização</div>
-      <p className="text-sm opacity-60">
-        Seu nome e o(s) nome(s) do(s) filho(s) deixam o app mais acolhedor 💛
-      </p>
+      <p className="text-sm opacity-60">Seu nome e o(s) nome(s) do(s) filho(s) deixam o app mais acolhedor 💛</p>
 
       <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
         <label className="block">
@@ -76,23 +57,10 @@ export default function ProfileCard() {
                   value={k}
                   onChange={(e) => updKid(i, e.target.value)}
                 />
-                <button
-                  type="button"
-                  onClick={() => rmKid(i)}
-                  className="px-3 rounded-xl bg-white border border-slate-200 text-sm"
-                  title="Remover"
-                >
-                  −
-                </button>
+                <button type="button" onClick={() => rmKid(i)} className="px-3 rounded-xl bg-white border border-slate-200 text-sm">−</button>
               </div>
             ))}
-            <button
-              type="button"
-              onClick={addKid}
-              className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-sm"
-            >
-              + Adicionar filho
-            </button>
+            <button type="button" onClick={addKid} className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-sm">+ Adicionar filho</button>
           </div>
         </div>
       </div>
