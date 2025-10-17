@@ -1,65 +1,64 @@
+// materna360_starter/components/MessageOfDay.jsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { messageForDate, messageIndexForDate } from "../lib/messages";
+import { get, set } from "../lib/storage";
 
-const MESSAGES = [
-  "Respire fundo. Você está fazendo o melhor que pode.",
-  "Pequenos passos também são progresso. 💛",
-  "Seu cuidado importa — com você e com quem você ama.",
-  "Hoje vale celebrar até as pequenas vitórias.",
-  "Você não está sozinha. Um passo de cada vez.",
-];
+// Chave local para persistir a mensagem do dia
+const K = "m360:messageOfDay"; // { dateISO: '2025-10-16', idx: number, text: string, ts: number }
 
-const STORAGE_KEY = "m360:messageOfDay";
-
-function startOfDayISO(d = new Date()) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x.toISOString();
+function isOlderThan24h(ts) {
+  if (!ts) return true;
+  return Date.now() - ts > 24 * 60 * 60 * 1000;
 }
 
 export default function MessageOfDay() {
   const [msg, setMsg] = useState("");
 
-  // define a mensagem 1x por dia; sem opção de trocar manualmente
   useEffect(() => {
     try {
-      const today = startOfDayISO();
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const saved = raw ? JSON.parse(raw) : null;
+      const today = new Date();
+      const todayISO = today.toISOString().slice(0, 10);
 
-      if (saved?.date === today && typeof saved?.message === "string") {
-        setMsg(saved.message);
-        return;
+      const saved = get(K, null);
+      // Se não existir, ou passou 24h, ou o índice do dia mudou → rotaciona
+      const todaysIndex = messageIndexForDate(today);
+      const needsRotate =
+        !saved ||
+        isOlderThan24h(saved?.ts) ||
+        saved?.idx !== todaysIndex ||
+        saved?.dateISO !== todayISO;
+
+      if (needsRotate) {
+        const text = messageForDate(today);
+        const payload = { dateISO: todayISO, idx: todaysIndex, text, ts: Date.now() };
+        set(K, payload);
+        setMsg(text);
+
+        // Gamificação: ao “trocar” a mensagem do dia, premiamos organização
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("m360:win", {
+              detail: { type: "badge", name: "Organizada" },
+            })
+          );
+        }
+      } else {
+        setMsg(saved.text);
       }
-
-      // escolhe pseudo-aleatória com base no dia
-      const seed = new Date().getDate() + new Date().getMonth() * 31;
-      const idx = seed % MESSAGES.length;
-      const message = MESSAGES[idx];
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, message }));
-      setMsg(message);
-
-      // badge “Organizada” (dispara só quando a mensagem é definida no dia)
-      window.dispatchEvent(
-        new CustomEvent("m360:win", {
-          detail: { type: "badge", name: "Organizada" },
-        })
-      );
     } catch {
-      // fallback silencioso
-      setMsg(MESSAGES[0]);
+      // fallback harden
+      setMsg(messageForDate(new Date()));
     }
   }, []);
 
-  const subtitle = useMemo(() => "Boa noite, Mãe 💛", []); // saudação simples
-
   return (
-    <section className="rounded-2xl bg-white ring-1 ring-black/5 p-5 mb-6">
-      <div className="text-sm text-slate-500">{subtitle}</div>
-      <p className="mt-1 text-[15px] leading-relaxed">
-        {msg || "Respire fundo. Você está fazendo o melhor que pode."}
+    <section className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-5 md:p-6">
+      <div className="text-sm text-brand-navy/60 mb-1">Mensagem do dia</div>
+      <p className="text-lg md:text-xl leading-relaxed text-brand-navy">“{msg}”</p>
+      <p className="mt-3 text-xs text-brand-navy/50">
+        Atualiza automaticamente a cada 24 horas.
       </p>
     </section>
   );
