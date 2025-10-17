@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import AppBar from "../../components/AppBar";
 import GlassCard from "../../components/GlassCard";
 import MoodCheckin from "../../components/MoodCheckin";
-import BadgesStrip from "../../components/BadgesStrip";
+// ⬇️ trocamos o strip antigo pelo componente novo de "últimos 5"
+import BadgesLastFive from "../../components/BadgesLastFive.jsx";
 import { get, set, keys } from "../../lib/storage";
 
 function useWeeklyMinutes() {
@@ -146,13 +147,13 @@ export default function Eu360Page() {
           <MoodCheckin />
         </div>
 
-        {/* ⬇️ Conquistas: logo DEPOIS do MoodCheckin */}
+        {/* Conquistas — agora exibindo os últimos 5 selos */}
         <div className="mt-4">
           <GlassCard className="p-4 bg-white/80">
             <div className="font-medium">Conquistas</div>
             <p className="text-sm opacity-60">Últimos selos ganhos</p>
             <div className="mt-3">
-              <BadgesStrip />
+              <BadgesLastFive />
             </div>
           </GlassCard>
         </div>
