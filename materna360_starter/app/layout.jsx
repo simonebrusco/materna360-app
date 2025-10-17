@@ -1,25 +1,19 @@
-// materna360_starter/app/layout.jsx
-import "./globals.css";
-import dynamic from "next/dynamic";
+// =======================================================
+// Materna360 — Root layout (importa Tailwind/globals)
+// =======================================================
 
-const ClientInit = dynamic(() => import("../components/ClientInit.jsx"), { ssr: false });
-const BottomNav  = dynamic(() => import("../components/BottomNav.jsx"),  { ssr: false });
-const ToastHost  = dynamic(() => import("../components/ToastHost.jsx"),  { ssr: false });
+import "../styles/globals.css";
 
 export const metadata = {
   title: "Materna360",
-  description: "Bem-vinda ao seu cantinho de rotina leve, brincadeiras e autocuidado.",
+  description: "Acolhimento, rotina e desenvolvimento infantil",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-[#F5F5F5] text-[#1E1E1E] antialiased" suppressHydrationWarning>
-        <ClientInit />
-        <div className="min-h-[100dvh] pb-24">{children}</div>
-        <BottomNav />
-        <ToastHost />
-        <noscript>Habilite o JavaScript para usar o Materna360.</noscript>
+      <body className="min-h-dvh bg-white text-[--m360-navy]">
+        {children}
       </body>
     </html>
   );
