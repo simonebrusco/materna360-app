@@ -1,20 +1,29 @@
 // materna360_starter/lib/messages.js
-const MESSAGES = [
-  "Hoje pode ser mais leve. Um passo de cada vez 💛",
-  "Respire: você está fazendo o melhor que pode.",
-  "Pequenas pausas, grandes efeitos no coração.",
-  "A rotina é corrida, mas o amor acalma o passo.",
-  "Um gesto de autocuidado é um ato de amor por todos.",
+
+// Frases curtas, acolhedoras, alinhadas ao tom Materna360
+export const MESSAGES = [
+  "Pequenos passos também são cuidado 💛",
+  "Respire fundo: você está fazendo o seu melhor.",
+  "Carinho e presença valem ouro hoje.",
+  "Seu ritmo importa — vá com gentileza.",
+  "Celebrar o simples também é progresso.",
+  "Pedir ajuda é um ato de amor próprio.",
+  "Dê um sorriso para si; você merece.",
+  "Organize o essencial e abrace o resto.",
+  "Uma pausa curta pode mudar o dia.",
+  "Acolha o que cabe hoje — e só.",
+  "Você não está sozinha. Estamos juntas.",
+  "Cada momento com seu filho é um tesouro.",
 ];
 
-export function getMessage() {
-  if (typeof window === "undefined") return MESSAGES[0];
-  const i = Number(localStorage.getItem("m360:msgIndex") || "0");
-  return MESSAGES[i % MESSAGES.length];
+// Índice determinístico para a data informada (UTC, estável)
+export function messageIndexForDate(d = new Date()) {
+  const base = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  // número de dias desde 1970-01-01
+  const days = Math.floor(base / 86400000);
+  return Math.abs(days) % MESSAGES.length;
 }
 
-export function nextMessage() {
-  if (typeof window === "undefined") return;
-  const i = Number(localStorage.getItem("m360:msgIndex") || "0");
-  localStorage.setItem("m360:msgIndex", String((i + 1) % MESSAGES.length));
+export function messageForDate(d = new Date()) {
+  return MESSAGES[messageIndexForDate(d)];
 }
