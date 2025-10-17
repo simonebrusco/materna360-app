@@ -1,201 +1,201 @@
+// materna360_starter/app/brincar/page.jsx
 "use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ACTIVITIES,
-  AGE_BUCKETS,
-  PLACES,
-  filterActivities,
-} from "../../lib/activities";
-import { addPlannerItem } from "../../lib/planner";
-import { toast } from "../../lib/toast";
-
-// fallback seguro para quando algo vier vazio da lib
-const SAFE_AGE = (Array.isArray(AGE_BUCKETS) && AGE_BUCKETS[0]?.id) || "2-3";
-const SAFE_PLACE = (Array.isArray(PLACES) && PLACES[0]?.id) || "casa";
-
-function indexByToday(len) {
-  const d = new Date();
-  const stamp = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-  let hash = 0;
-  for (let i = 0; i < stamp.length; i++) hash = (hash * 31 + stamp.charCodeAt(i)) >>> 0;
-  return len ? hash % len : 0;
-}
+import AppBar from "../../components/AppBar.jsx";
+import GlassCard from "../../components/GlassCard.jsx";
+import QuickNote from "../../components/QuickNote.jsx";
+import { ACTIVITIES, AGE_BUCKETS, PLACES, filterActivities } from "../../lib/activities.js";
+import { addPlannerItem } from "../../lib/planner.js";
 
 export default function BrincarPage() {
-  const [age, setAge] = useState(SAFE_AGE);
-  const [place, setPlace] = useState(SAFE_PLACE);
-  const [ideas, setIdeas] = useState([]);
+  // defaults seguros (caso algo não esteja definido na lib)
+  const defaultAge = AGE_BUCKETS?.[0]?.id ?? "2-3";
+  const defaultPlace = PLACES?.[0]?.id ?? "casa";
 
-  // sugestão do dia (determinística)
+  const [age, setAge] = useState(defaultAge);
+  const [place, setPlace] = useState(defaultPlace);
+
+  // sugestão do dia com seed fixo (estável em build)
   const suggestion = useMemo(() => {
-    const list = Array.isArray(ACTIVITIES) ? ACTIVITIES : [];
-    if (!list.length)
-      return { slug: "atividade", title: "Atividade surpresa", subtitle: "" };
-    return list[indexByToday(list.length)];
+    const len = ACTIVITIES?.length || 1;
+    const idx = Math.floor(0.37 * len) % len;
+    return (
+      ACTIVITIES?.[idx] ?? {
+        slug: "atividade-surpresa",
+        title: "Atividade surpresa",
+        subtitle: "Uma ideia leve para hoje ✨",
+      }
+    );
   }, []);
 
-  // lista filtrada (defensivo)
-  const list = useMemo(() => {
-    try {
-      return filterActivities({ age, place });
-    } catch {
-      return [];
-    }
-  }, [age, place]);
+  // lista filtrada (a lib trata defaults)
+  const list = useMemo(() => filterActivities({ age, place }), [age, place]);
 
-  function save(title) {
-    addPlannerItem("filhos", title);
-    toast("Atividade salva no Planner 💾");
+  function saveToPlanner(title) {
+    const t = (title || "Atividade").trim();
+    addPlannerItem("filhos", t);
+    // toast + badge
     if (typeof window !== "undefined") {
       window.dispatchEvent(
-        new CustomEvent("m360:win", {
-          detail: { type: "badge", name: "Exploradora" },
-        })
+        new CustomEvent("m360:toast", { detail: { message: "Atividade salva no Planner 💾" } })
+      );
+      window.dispatchEvent(
+        new CustomEvent("m360:win", { detail: { type: "badge", name: "Exploradora" } })
       );
     }
   }
 
-  function onGenerate() {
-    // se a lib já traz filtrado, só exibimos; senão, cortamos a 12 ideias
-    const base = Array.isArray(list) ? list : [];
-    setIdeas(base.slice(0, 12));
+  // --- FAB “＋ Anotar” (salva em Filhos) ---
+  const [noteOpen, setNoteOpen] = useState(false);
+  function handleSaveNote(text) {
+    const value = (text || "").trim();
+    if (!value) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("m360:toast", { detail: { message: "Escreva algo para salvar ✍️" } })
+        );
+      }
+      return;
+    }
+    addPlannerItem("filhos", value);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("m360:toast", { detail: { message: "Salvo no Planner (Filhos) 💾" } })
+      );
+      window.dispatchEvent(
+        new CustomEvent("m360:win", { detail: { type: "badge", name: "Exploradora" } })
+      );
+    }
+    setNoteOpen(false);
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-brand-soft to-white">
-      {/* Topbar */}
-      <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
-        <h1 className="text-[28px] md:text-[32px] font-semibold text-brand-navy">
-          Brincar
-        </h1>
-        <Link
-          href="/meu-dia/planner"
-          className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm"
-        >
-          Ver Planner
-        </Link>
-      </header>
+    <main className="max-w-5xl mx-auto px-5 py-6">
+      <AppBar title="Brincar" />
 
       {/* Sugestão do dia */}
-      <section className="mx-auto max-w-5xl px-5 pt-6">
-        <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-5 md:p-6 flex items-start justify-between gap-4">
+      <GlassCard className="p-4 mb-4">
+        <div className="text-sm text-[var(--brand-navy-t60)] mb-1">Sugestão do dia</div>
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-sm text-brand-navy/50 mb-1">Sugestão do dia</div>
-            <h3 className="text-lg md:text-xl font-semibold text-brand-navy">
-              {suggestion.title}
-            </h3>
-            {suggestion.subtitle ? (
-              <p className="text-sm md:text-base text-brand-navy/60 mt-1">
+            <div className="text-lg font-medium">{suggestion.title}</div>
+            {suggestion.subtitle && (
+              <div className="text-sm text-[var(--brand-navy-t60)] mt-1">
                 {suggestion.subtitle}
-              </p>
-            ) : null}
+              </div>
+            )}
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2">
             <Link
               href={`/brincar/${suggestion.slug}`}
-              className="rounded-xl bg-white ring-1 ring-black/5 px-3 py-1.5 text-sm"
+              className="rounded-xl bg-white ring-1 ring-black/5 px-3 py-1.5"
             >
               Detalhes
             </Link>
             <button
-              onClick={() => save(suggestion.title)}
-              className="rounded-xl px-3 py-1.5 text-sm text-white"
-              style={{ backgroundColor: "#ff005e" }}
+              onClick={() => saveToPlanner(suggestion.title)}
+              className="rounded-xl bg-[var(--brand)] text-white px-3 py-1.5"
             >
               Salvar
             </button>
           </div>
         </div>
-      </section>
+      </GlassCard>
 
       {/* Filtros */}
-      <section className="mx-auto max-w-5xl px-5 pt-6">
-        <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-4 md:p-5 flex flex-wrap items-center gap-3">
+      <GlassCard className="p-4 mb-4">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-brand-navy/60">Idade:</label>
+            <label className="text-sm text-[var(--brand-navy-t60)]">Idade:</label>
             <select
               value={age}
               onChange={(e) => setAge(e.target.value)}
               className="rounded-xl bg-white ring-1 ring-black/5 px-3 py-1.5 text-sm"
             >
-              {(AGE_BUCKETS || []).map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.label}
+              {AGE_BUCKETS.map((it) => (
+                <option key={it.id} value={it.id}>
+                  {it.label}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm text-brand-navy/60">Local:</label>
+            <label className="text-sm text-[var(--brand-navy-t60)]">Local:</label>
             <select
               value={place}
               onChange={(e) => setPlace(e.target.value)}
               className="rounded-xl bg-white ring-1 ring-black/5 px-3 py-1.5 text-sm"
             >
-              {(PLACES || []).map((p) => (
+              {PLACES.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
                 </option>
               ))}
             </select>
           </div>
-
-          <div className="ms-auto">
-            <button
-              onClick={onGenerate}
-              className="rounded-xl px-4 py-2 text-sm text-white"
-              style={{ backgroundColor: "#ff005e" }}
-            >
-              Gerar Ideias
-            </button>
-          </div>
         </div>
+      </GlassCard>
 
-        {!ideas.length ? (
-          <p className="text-brand-navy/60 text-sm mt-3">
-            Use os filtros e toque em <strong>Gerar Ideias</strong>.
-          </p>
-        ) : null}
+      {/* Lista de atividades */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {list.map((a) => (
+          <GlassCard key={a.slug} className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-lg font-medium">{a.title}</div>
+                {a.subtitle && (
+                  <div className="text-sm text-[var(--brand-navy-t60)] mt-1">
+                    {a.subtitle}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Link
+                  href={`/brincar/${a.slug}`}
+                  className="rounded-xl bg-white ring-1 ring-black/5 px-3 py-1.5"
+                >
+                  Abrir
+                </Link>
+                <button
+                  onClick={() => saveToPlanner(a.title)}
+                  className="rounded-xl bg-[var(--brand)] text-white px-3 py-1.5"
+                >
+                  Salvar
+                </button>
+              </div>
+            </div>
+          </GlassCard>
+        ))}
+
+        {list.length === 0 && (
+          <div className="text-sm text-[var(--brand-navy-t60)]">
+            Nenhuma atividade para esse filtro por enquanto.
+          </div>
+        )}
       </section>
 
-      {/* Lista */}
-      {!!ideas.length && (
-        <section className="mx-auto max-w-5xl px-5 pt-5 pb-28 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-          {ideas.map((a) => (
-            <article
-              key={a.slug || a.id || a.title}
-              className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-4 md:p-5 flex flex-col gap-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-lg font-medium text-brand-navy">{a.title}</div>
-                <div className="flex gap-2 shrink-0">
-                  <Link
-                    href={`/brincar/${a.slug || "atividade"}`}
-                    className="rounded-xl bg-white ring-1 ring-black/5 px-3 py-1.5 text-sm"
-                  >
-                    Abrir
-                  </Link>
-                  <button
-                    onClick={() => save(a.title)}
-                    className="rounded-xl px-3 py-1.5 text-sm text-white"
-                    style={{ backgroundColor: "#ff005e" }}
-                  >
-                    Salvar
-                  </button>
-                </div>
-              </div>
-              {a.subtitle ? (
-                <p className="text-sm text-brand-navy/60">{a.subtitle}</p>
-              ) : null}
-              {a.duration ? (
-                <div className="text-xs text-brand-navy/50">{a.duration} min</div>
-              ) : null}
-            </article>
-          ))}
-        </section>
+      {/* FAB “＋ Anotar” */}
+      <button
+        onClick={() => setNoteOpen(true)}
+        aria-label="Adicionar anotação"
+        className="fixed right-5 bottom-24 z-[60] rounded-full shadow-lg h-14 w-14 text-2xl
+                   bg-[var(--brand)] text-white hover:scale-105 active:scale-95 transition grid place-items-center"
+      >
+        ＋
+      </button>
+
+      {/* Composer de nota */}
+      {noteOpen && (
+        <QuickNote
+          title="Salvar no Planner (Filhos)"
+          placeholder="Ex.: preparar caixa sensorial, separar pintura…"
+          confirmLabel="Salvar"
+          onSave={handleSaveNote}
+          onClose={() => setNoteOpen(false)}
+        />
       )}
     </main>
   );
