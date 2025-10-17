@@ -1,8 +1,7 @@
 // =======================================================
 // Materna360 — Root layout com AppShell e BottomNav
 // Mantém ClientInit, ToastHost e aplica o Tailwind global
-// Agora envolve as páginas com um contêiner .m360-page
-// para restaurar o layout das abas sem tocar nelas.
+// Agora usa container Tailwind + max-w-screen-md (padrão)
 // =======================================================
 
 import "../styles/globals.css";
@@ -24,7 +23,7 @@ export default function RootLayout({ children }) {
         <ClientInit />
         {/* conteúdo principal + respiro para o BottomNav */}
         <div className="min-h-[100dvh] pb-24">
-          <main className="m360-page">
+          <main className="container mx-auto max-w-screen-md px-4 sm:px-6 lg:px-8">
             {children}
           </main>
         </div>
