@@ -6,6 +6,9 @@ import Link from "next/link";
 import useChecklistProgress from "../../lib/hooks/useChecklistProgress.js";
 import PlannerWeekly from "../../components/PlannerWeekly.jsx";
 import { get, keys } from "../../lib/storage";
+import PlannerWeeklyNotes from "@/components/PlannerWeeklyNotes";
+import PlannerNotesPeek from "@/components/PlannerNotesPeek";
+
 
 const PROFILE_KEY = (keys && keys.profile) || "m360:profile";
 
