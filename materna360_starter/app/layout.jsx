@@ -5,6 +5,7 @@
 // =======================================================
 
 import "../styles/globals.css";
+import "../styles/m360.css"; // tokens + fundo Soft Luxury
 import dynamic from "next/dynamic";
 
 const ClientInit = dynamic(() => import("../components/ClientInit.jsx"), { ssr: false });
@@ -19,7 +20,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-dvh bg-[--m360-white] text-[--m360-navy] antialiased" suppressHydrationWarning>
+      {/* Fundo global Soft Luxury + tokens carregados via m360.css */}
+      <body className="m360-screen-bg min-h-dvh text-[--m360-navy] antialiased" suppressHydrationWarning>
         <ClientInit />
         {/* conteúdo principal + respiro para o BottomNav */}
         <div className="min-h-[100dvh] pb-24">
