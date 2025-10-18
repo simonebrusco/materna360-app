@@ -1,3 +1,4 @@
+// materna360_starter/app/cuidar/meditar/page.jsx
 "use client";
 
 import { useState } from "react";
@@ -24,8 +25,15 @@ function addMinutes(minutes) {
   set(kLog, log);
 
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } }));
-    window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: `+${minutes} min de meditação 🌿` } }));
+    // avisa o app que os minutos mudaram (Eu360 atualiza na hora)
+    try { window.dispatchEvent(new CustomEvent("m360:minutes:changed")); } catch {}
+
+    window.dispatchEvent(
+      new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } })
+    );
+    window.dispatchEvent(
+      new CustomEvent("m360:toast", { detail: { message: `+${minutes} min de meditação 🌿` } })
+    );
   }
 }
 
@@ -34,7 +42,7 @@ export default function MeditarPage() {
 
   function onPlay(t) {
     setPlaying(t.id);
-    // Aqui você pode integrar o áudio real. Por enquanto, simulamos fim imediato:
+    // Simulação: considera a faixa concluída imediatamente
     addMinutes(t.minutes);
     setPlaying(null);
   }
