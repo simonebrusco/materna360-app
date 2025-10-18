@@ -1,12 +1,19 @@
+// next.config.js
+const path = require("path");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async redirects() {
-    return [
-      { source: '/activities', destination: '/brincar', permanent: true },
-      { source: '/activities/:slug*', destination: '/brincar/:slug*', permanent: true },
-      { source: '/wellbeing', destination: '/cuidar', permanent: true },
-      { source: '/profile', destination: '/eu360', permanent: true },
-    ];
+  reactStrictMode: true,
+
+  // Garante que "@/..." resolva a partir da RAIZ do projeto
+  // (onde estão "app/" e "lib/").
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      "@": path.resolve(__dirname),
+    };
+    return config;
   },
 };
+
 module.exports = nextConfig;
