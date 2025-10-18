@@ -25,13 +25,16 @@ export default function BreathCircle({ total = 60, elapsed = 0, size = 160 }) {
     return circ * (1 - progress);
   }, [circ, progress]);
 
-  // fase respiratória visual (opcional): 4s inspirar, 4 segurar, 4 expirar → 12s ciclo
+  // fase: 4s inspirar, 2 segurar, 6 expirar → 12s ciclo
   const phase = useMemo(() => {
     const t = Math.floor((elapsed || 0) % 12);
-    if (t < 4) return { label: "Inspire", hint: "nariz" };
-    if (t < 8) return { label: "Segure", hint: "calma" };
-    return { label: "Expire", hint: "boca" };
+    if (t < 4) return { label: "Inspire", hint: "nariz" }; // 0..3
+    if (t < 6) return { label: "Segure", hint: "calma" };  // 4..5
+    return { label: "Expire", hint: "boca" };               // 6..11
   }, [elapsed]);
+
+  // usa cor da brand, com fallback #ff005e
+  const brand = "var(--brand, #ff005e)";
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -50,7 +53,7 @@ export default function BreathCircle({ total = 60, elapsed = 0, size = 160 }) {
           cx={center}
           cy={center}
           r={radius}
-          stroke="#ff005e"
+          stroke={brand}
           strokeWidth={10}
           fill="none"
           strokeDasharray={circ}
@@ -64,7 +67,7 @@ export default function BreathCircle({ total = 60, elapsed = 0, size = 160 }) {
           cx={center}
           cy={center - radius}
           r={4}
-          fill="#ff005e"
+          fill={brand}
           opacity="0.7"
         />
       </svg>
