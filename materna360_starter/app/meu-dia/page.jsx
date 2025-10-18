@@ -50,7 +50,7 @@ function Card({ emoji, title, subtitle, href = "#" }) {
   );
 }
 
-// Mensagem do dia (troca automática a cada 24h, sem botão de trocar)
+// Mensagem do dia
 function DailyMessage() {
   const msgs = [
     "Respire fundo — você está fazendo o seu melhor 💛",
@@ -109,7 +109,6 @@ export default function MeuDiaPage() {
   const displayName = motherName?.trim() || "Mãe";
 
   return (
-    {/* Fundo global já vem do layout (m360-screen-bg). Mantemos apenas containers aqui. */}
     <main className="min-h-screen">
       {/* Topbar */}
       <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
@@ -142,7 +141,7 @@ export default function MeuDiaPage() {
 
       <DailyMessage />
 
-      {/* 👀 Visão rápida da semana (notas + progresso do checklist de cada dia) */}
+      {/* 👀 Visão rápida da semana */}
       <section className="mx-auto max-w-5xl px-5 mt-2">
         <PlannerNotesPeek />
       </section>
@@ -152,7 +151,7 @@ export default function MeuDiaPage() {
         <PlannerWeekly />
       </section>
 
-      {/* 🗓️ Planner semanal com notas por dia + resumo do checklist do dia selecionado */}
+      {/* 🗓️ Planner + resumo do dia */}
       <section className="mx-auto max-w-5xl px-5 mt-4">
         <h2 className="text-lg font-semibold mb-2 text-[var(--m360-navy)]">
           Planner
@@ -162,57 +161,23 @@ export default function MeuDiaPage() {
 
       {/* Grid de Atalhos */}
       <section className="mx-auto max-w-5xl px-5 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <Card
-          emoji="📅"
-          title="Planner da Família"
-          subtitle="Organize suas tarefas"
-          href="/meu-dia/planner"
-        />
-        <Card
-          emoji="✅"
-          title="Checklist do Dia"
-          subtitle={`${percent}% concluído hoje`}
-          href="/meu-dia/checklist"
-        />
-        <Card
-          emoji="🎨"
-          title="Atividade do Dia"
-          subtitle="Brincadeira educativa"
-          href="/brincar"
-        />
-        <Card
-          emoji="🌿"
-          title="Momento para Mim"
-          subtitle="Pausa e autocuidado"
-          href="/cuidar"
-        />
+        <Card emoji="📅" title="Planner da Família" subtitle="Organize suas tarefas" href="/meu-dia/planner" />
+        <Card emoji="✅" title="Checklist do Dia" subtitle={`${percent}% concluído hoje`} href="/meu-dia/checklist" />
+        <Card emoji="🎨" title="Atividade do Dia" subtitle="Brincadeira educativa" href="/brincar" />
+        <Card emoji="🌿" title="Momento para Mim" subtitle="Pausa e autocuidado" href="/cuidar" />
       </section>
 
       {/* Humor do dia (teaser) */}
       <section className="mx-auto max-w-5xl px-5 pt-6 pb-28">
         <div className="rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] p-5 md:p-6 m360-animate-in">
-          <h2 className="text-xl md:text-2xl font-semibold text-[var(--m360-navy)]">
-            Como você está hoje?
-          </h2>
-          <p className="mt-1 text-[color:var(--m360-navy)]/60 text-sm">
-            Registre seu humor no Eu360
-          </p>
+          <h2 className="text-xl md:text-2xl font-semibold text-[var(--m360-navy)]">Como você está hoje?</h2>
+          <p className="mt-1 text-[color:var(--m360-navy)]/60 text-sm">Registre seu humor no Eu360</p>
           <div className="mt-4 flex items-center gap-3 md:gap-4">
-            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
-              😞
-            </span>
-            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
-              😐
-            </span>
-            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
-              🙂
-            </span>
-            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
-              😊
-            </span>
-            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
-              🤩
-            </span>
+            {["😞","😐","🙂","😊","🤩"].map((e) => (
+              <span key={e} className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
+                {e}
+              </span>
+            ))}
           </div>
           <div className="mt-4">
             <Link
