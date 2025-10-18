@@ -191,6 +191,11 @@ export default function Eu360Page() {
         </GlassCard>
       </section>
 
+      {/* === RELATÓRIO SEMANAL CTA === */}
+      <section className="mt-4">
+        <Eu360ReportCTA />
+      </section>
+
       {/* Gratidão */}
       <section className="mt-4">
         <GratitudeBlock />
