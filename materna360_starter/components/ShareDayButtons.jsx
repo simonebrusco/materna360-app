@@ -1,87 +1,57 @@
 "use client";
 
-import { useMemo } from "react";
-import Button from "@/components/Button";
+import GlassCard from "@/components/GlassCard";
+import SaveToPlannerButton from "@/components/SaveToPlannerButton";
+import ShareDayButtons from "@/components/ShareDayButtons";
 
 /**
- * Botões de compartilhamento do conteúdo do dia.
+ * DayActionsBlock
+ * Seção pronta com:
+ *  - CTA “Salvar no Planner” (usa SaveToPlannerButton)
+ *  - Botões de compartilhamento (ShareDayButtons)
+ *
  * Props:
- *  - dayKey: "yyyy-mm-dd"
- *  - title: string (ex.: "Sexta, 17 de outubro")
+ *  - dayKey: "yyyy-mm-dd" (obrigatório)
+ *  - title: string (ex.: "Sexta, 17 de outubro") (obrigatório)
  *  - notes: string (bloco de notas do dia)
- *  - checklistEntry?: { items?: Array<{label:string, done?:boolean}>, progress?: number }
+ *  - checklistEntry?: { items?: Array<{label,done}>, progress?: number }
+ *  - activityTitle?: string (para salvar como “• Atividade: {activityTitle}”)
  */
-export default function ShareDayButtons({ dayKey, title, notes, checklistEntry }) {
-  const textToShare = useMemo(() => {
-    const lines = [];
-    lines.push(`Dia ${title} (${dayKey})`);
-    const progress =
-      typeof checklistEntry?.progress === "number"
-        ? Math.max(0, Math.min(100, Math.round(checklistEntry.progress)))
-        : inferProgress(checklistEntry);
-    lines.push(`Checklist: ${progress}% concluído`);
-    if (Array.isArray(checklistEntry?.items) && checklistEntry.items.length) {
-      lines.push("");
-      lines.push("Itens do checklist:");
-      for (const it of checklistEntry.items) {
-        const mark = it?.done ? "✅" : "▫️";
-        lines.push(`${mark} ${it.label}`);
-      }
-    }
-    if (notes && String(notes).trim().length) {
-      lines.push("");
-      lines.push("Notas do dia:");
-      for (const line of String(notes).trim().split("\n")) {
-        lines.push(`• ${line}`);
-      }
-    }
-    return lines.join("\n");
-  }, [dayKey, title, notes, checklistEntry]);
-
-  async function shareNative() {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `Meu dia — ${title}`, text: textToShare });
-      } else {
-        await copy();
-      }
-    } catch {
-      // usuário cancelou ou share não disponível
-    }
-  }
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(textToShare);
-      alert("Texto copiado!");
-    } catch {
-      alert("Não foi possível copiar.");
-    }
-  }
-
-  function shareWhatsApp() {
-    // encoding seguro; funciona com app e web
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(textToShare)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-
+export default function DayActionsBlock({
+  dayKey,
+  title,
+  notes = "",
+  checklistEntry = { items: [], progress: 0 },
+  activityTitle = "",
+  className = "",
+}) {
   return (
-    <div className="flex flex-wrap gap-3">
-      <Button variant="secondary" onClick={shareNative} aria-label="Compartilhar resumo do dia">
-        Compartilhar
-      </Button>
-      <Button variant="primary" onClick={shareWhatsApp} aria-label="Compartilhar no WhatsApp">
-        WhatsApp
-      </Button>
-      <Button variant="ghost" onClick={copy} aria-label="Copiar texto do dia">
-        Copiar texto
-      </Button>
-    </div>
-  );
-}
+    <GlassCard className={["flex flex-col gap-6", className].join(" ")}>
+      <header>
+        <h3 className="text-m360-navy font-semibold">Ações do Dia</h3>
+        <p className="text-m360-gray mt-1 text-sm">
+          Salve sua atividade e compartilhe seu progresso.
+        </p>
+      </header>
 
-function inferProgress(entry) {
-  if (!entry || !Array.isArray(entry.items) || entry.items.length === 0) return 0;
-  const done = entry.items.filter((i) => i?.done).length;
-  return Math.round((done / entry.items.length) * 100);
+      <div className="flex flex-wrap gap-3">
+        {/* Botão principal: Salvar no Planner */}
+        <SaveToPlannerButton
+          title={activityTitle || "Atividade do Dia"}
+          dayKey={dayKey}
+          label="Salvar no Planner"
+        />
+      </div>
+
+      <div className="h-px w-full bg-black/5" />
+
+      {/* Botões de compartilhamento (native/share/copy/whatsapp) */}
+      <ShareDayButtons
+        dayKey={dayKey}
+        title={title}
+        notes={notes}
+        checklistEntry={checklistEntry}
+      />
+    </GlassCard>
+  );
 }
