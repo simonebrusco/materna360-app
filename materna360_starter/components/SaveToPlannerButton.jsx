@@ -41,8 +41,16 @@ function writeNotes(map) {
  *  - title (string) → será gravado como “• Atividade: {title}”
  *  - dayKey? (string yyyy-mm-dd) → default: hoje
  *  - onDone? (fn) → callback após salvar
+ *  - label? (string) → rótulo do botão (default "Salvar no Planner")
+ *  - className? (string) → classes extras para estilização
  */
-export default function SaveToPlannerButton({ title, dayKey, onDone }) {
+export default function SaveToPlannerButton({
+  title,
+  dayKey,
+  onDone,
+  label = "Salvar no Planner",
+  className = "",
+}) {
   const [loading, setLoading] = useState(false);
   const userId = useMemo(() => getUserId(), []);
   const dk = dayKey || todayKey();
@@ -66,10 +74,10 @@ export default function SaveToPlannerButton({ title, dayKey, onDone }) {
       // sincroniza remoto (fallback local automático)
       await setPlannerNote(userId, dk, nextText);
 
-      alert("Atividade salva no Planner!");
+      try { alert("Atividade salva no Planner!"); } catch {}
       onDone?.();
     } catch {
-      alert("Não foi possível salvar agora.");
+      try { alert("Não foi possível salvar agora."); } catch {}
     } finally {
       setLoading(false);
     }
@@ -79,9 +87,11 @@ export default function SaveToPlannerButton({ title, dayKey, onDone }) {
     <button
       onClick={handleSave}
       disabled={loading || !title}
-      className="px-4 py-2 rounded-xl bg-[#ff005e] text-white disabled:opacity-60"
+      className={
+        `px-4 py-2 rounded-xl bg-[#ff005e] text-white disabled:opacity-60 ${className}`.trim()
+      }
     >
-      {loading ? "Salvando..." : "Salvar no Planner"}
+      {loading ? "Salvando..." : label}
     </button>
   );
 }
