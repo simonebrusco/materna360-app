@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import activities, { toActivityHref } from "@/lib/activities/index.js";
 import { filterByAge, filterByPlace } from "@/lib/activities/helpers.js";
+import SaveToPlannerButton from "@/components/SaveToPlannerButton";
 
 const AGE_OPTIONS = ["todas", "2-4", "3-6", "2-5", "livre"];
 const PLACE_OPTIONS = ["todos", "casa", "fora"];
@@ -131,6 +132,11 @@ export default function BrincarPage() {
               >
                 Abrir
               </Link>
+              <SaveToPlannerButton
+                title={a.title}
+                label="Salvar"
+                className="bg-white text-[#1A2240] border border-slate-200"
+              />
               <Link
                 href="/meu-dia/planner"
                 className="px-4 py-2 rounded-xl bg-white border border-slate-200"
