@@ -6,7 +6,6 @@ import React from "react";
  * Button — Materna360 (Soft Luxury)
  * Variants: primary | secondary | ghost
  * Sizes: sm | md | lg
- * Props comuns: type, disabled, className, children, ...rest
  */
 export default function Button({
   variant = "primary",
@@ -29,7 +28,7 @@ export default function Button({
   };
 
   const bySize = {
-    sm: "h-10 px-4 text-sm",  // ≥ 40px; nosso alvo mínimo está no md
+    sm: "h-10 px-4 text-sm",
     md: "h-[var(--touch-min)] px-5 text-base", // 44px
     lg: "h-14 px-6 text-base",
   };
@@ -41,7 +40,14 @@ export default function Button({
 
   return (
     <button
-      className={[base, byVariant[variant] || byVariant.primary, bySize[size] || bySize.md, disabledCls, width, className]
+      className={[
+        base,
+        byVariant[variant] || byVariant.primary,
+        bySize[size] || bySize.md,
+        disabledCls,
+        width,
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
       {...rest}
