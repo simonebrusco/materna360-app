@@ -1,42 +1,132 @@
-/* ===========================================================
-   Materna360 — Tailwind + Paleta oficial v1.5 (Atualizada)
-   =========================================================== */
+/* Tailwind layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* === Paleta (CSS Variables) ================================= */
-:root {
-  --m360-coral: #ff005e;
-  --m360-blush: #ffd8e6;
-  --m360-navy:  #2f3a56;
-  --m360-gray:  #545454;
-  --m360-black: #000000;
-  --m360-white: #ffffff;
-  --m360-peach: var(--m360-blush);
+/* ================================
+   Materna360 – Tokens & Utilities
+   ================================= */
+
+/* Design Tokens (CSS Variables) */
+:root{
+  /* Colors */
+  --m360-primary:#ff005e;
+  --m360-soft:#ffd8e6;
+  --m360-navy:#2f3a56;
+  --m360-gray:#545454;
+  --m360-white:#ffffff;
+  --m360-black:#000000;
+
+  /* Radii */
+  --r-sm:8px; 
+  --r-md:12px; 
+  --r-lg:16px; 
+  --r-xl:20px;
+
+  /* Elevation */
+  --elev-1:0 2px 4px rgba(0,0,0,.04);
+  --elev-2:0 6px 16px rgba(0,0,0,.08);
+
+  /* Motion */
+  --ease-soft:cubic-bezier(0.25,0.1,0.25,1); 
+  --dur-std:450ms;
+
+  /* Touch size */
+  --touch-min:44px;
 }
 
-/* Base */
-html, body {
-  height: 100%;
-  background: var(--m360-white);
+/* --------------------------------
+   Color utility classes (tailwind-friendly)
+   -------------------------------- */
+.text-m360-navy     { color: var(--m360-navy); }
+.text-m360-gray     { color: var(--m360-gray); }
+.text-m360-primary  { color: var(--m360-primary); }
+.text-m360-soft     { color: var(--m360-soft); }
+.text-m360-white    { color: var(--m360-white); }
+
+.bg-m360-primary    { background-color: var(--m360-primary); }
+.bg-m360-soft       { background-color: var(--m360-soft); }
+.bg-m360-white      { background-color: var(--m360-white); }
+.bg-m360-navy       { background-color: var(--m360-navy); }
+
+.border-m360-navy   { border-color: var(--m360-navy); }
+.border-m360-primary{ border-color: var(--m360-primary); }
+.border-m360-soft   { border-color: var(--m360-soft); }
+
+/* Radius helpers */
+.rounded-m360-sm { border-radius: var(--r-sm); }
+.rounded-m360-md { border-radius: var(--r-md); }
+.rounded-m360-lg { border-radius: var(--r-lg); }
+.rounded-m360-xl { border-radius: var(--r-xl); }
+
+/* Shadow/elevation helpers */
+.shadow-m360-1 { box-shadow: var(--elev-1); }
+.shadow-m360-2 { box-shadow: var(--elev-2); }
+
+/* Minimum touch target */
+.m360-touch { min-height: var(--touch-min); min-width: var(--touch-min); }
+
+/* --------------------------------
+   Global background (Soft Luxury)
+   Aplicar no <body> via class="m360-screen-bg"
+   -------------------------------- */
+.m360-screen-bg {
+  background:
+    linear-gradient(180deg, #ffffff 0%, rgba(255,216,230,0.85) 100%),
+    radial-gradient(1200px 800px at 50% -200px, rgba(255,255,255,0.6), rgba(255,255,255,0));
+  background-blend-mode: screen, normal;
+}
+
+/* Tab/App Bar glass surfaces */
+.m360-glass {
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 -2px 16px rgba(0,0,0,.06);
+}
+
+/* Optional card border */
+.m360-card-border {
+  border: 1px solid rgba(47,58,86,.08);
+}
+
+/* --------------------------------
+   Motion System (keyframes)
+   -------------------------------- */
+@keyframes m360-fade-slide {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes m360-heart-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes m360-dissolve-blur {
+  0%   { opacity: 0; filter: blur(4px); }
+  100% { opacity: 1; filter: blur(0); }
+}
+
+/* Helpers to use with Tailwind's arbitrary animation */
+.m360-animate-in { animation: m360-fade-slide var(--dur-std) var(--ease-soft) both; }
+.m360-animate-dissolve { animation: m360-dissolve-blur var(--dur-std) var(--ease-soft) both; }
+.m360-animate-pulse { animation: m360-heart-pulse 380ms var(--ease-soft) both; }
+
+/* Badge spec (tempo/idade/local) */
+.m360-badge {
+  border: 1px solid rgba(255,0,94,.30);
+  background: rgba(255,216,230,.35);
   color: var(--m360-navy);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-family: 'Quicksand', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Noto Color Emoji', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
 }
 
-/* Utilitários */
-.m360-card {
-  background: var(--m360-white);
-  border: 1px solid color-mix(in oklab, var(--m360-blush) 55%, transparent);
-  border-radius: 1rem;
-  box-shadow: 0 1px 6px color-mix(in oklab, var(--m360-navy) 8%, transparent);
-}
-.m360-cta { background: var(--m360-coral); color: var(--m360-white); border-radius: 0.75rem; }
-.m360-subtle { background: color-mix(in oklab, var(--m360-blush) 40%, transparent); }
-
-@keyframes m360-breathe {
-  0% { transform: scale(1); opacity: .9; }
-  50% { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1); opacity: .9; }
-}
+/* Accessible focus ring */
+.m360-focus { outline: 3px solid rgba(255,0,94,.35); outline-offset: 2px; }
+.m360-focus:focus-visible { outline: 3px solid rgba(255,0,94,.55); outline-offset: 2px; }
