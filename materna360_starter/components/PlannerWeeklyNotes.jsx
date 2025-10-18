@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import PlannerQuickIdeas from "./PlannerQuickIdeas";
+import ShareDayButtons from "./ShareDayButtons";
 
 /** ========= Helpers locais (sem dependências externas) ========= */
 const K_NOTES = "m360:planner_notes";
@@ -109,6 +110,7 @@ export default function PlannerWeeklyNotes(){
 
   const entry = history[selectedKey] || null;
   const progress = entry?.progress ?? inferProgress(entry);
+  const titleFull = fmtFull(selectedDate);
 
   return (
     <div className="bg-white rounded-xl border shadow-sm">
@@ -133,7 +135,7 @@ export default function PlannerWeeklyNotes(){
 
       {/* cabeçalho do dia */}
       <div className="px-4 pb-2">
-        <div className="text-sm text-slate-500">{fmtFull(selectedDate)}</div>
+        <div className="text-sm text-slate-500">{titleFull}</div>
       </div>
 
       {/* bloco de notas */}
@@ -145,7 +147,7 @@ export default function PlannerWeeklyNotes(){
           placeholder="Anote compromissos, lembretes ou ideias…"
           className="mt-1 w-full min-h-[110px] rounded-lg border p-2"
         />
-        <div className="flex gap-2 justify-end mt-2">
+        <div className="flex flex-wrap gap-2 justify-end mt-2">
           <button onClick={clearDay} className="px-3 py-2 rounded-lg border border-rose-200 text-rose-600">Limpar</button>
           <button onClick={copyDay}  className="px-3 py-2 rounded-lg border">Copiar</button>
           <button onClick={save}     className="px-3 py-2 rounded-lg bg-[#ff005e] text-white">Salvar</button>
@@ -153,6 +155,16 @@ export default function PlannerWeeklyNotes(){
 
         {/* 🔮 IA: Gerar ideias e adicionar ao bloco de notas */}
         <PlannerQuickIdeas dayKey={selectedKey} onAppend={appendToNotes} />
+
+        {/* 📤 Compartilhar do dia (nativo/WhatsApp/clipboard) */}
+        <div className="mt-3">
+          <ShareDayButtons
+            dayKey={selectedKey}
+            title={titleFull}
+            notes={text}
+            checklistEntry={entry}
+          />
+        </div>
       </div>
 
       {/* resumo do checklist do dia */}
