@@ -6,6 +6,7 @@ import Link from "next/link";
 import AppBar from "../../../components/AppBar";
 import { get, set, keys } from "../../../lib/storage";
 import { toast } from "../../../lib/toast";
+import PlannerBreathCTA from "@/components/PlannerBreathCTA";
 
 // ----- tipos e helpers ------------------------------------------------------
 const DEFAULT_PLANNER = { casa: [], filhos: [], eu: [] };
