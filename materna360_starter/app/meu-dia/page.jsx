@@ -3,12 +3,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import useChecklistProgress from "../../lib/hooks/useChecklistProgress.js";
-import PlannerWeekly from "../../components/PlannerWeekly.jsx";
-import { get, keys } from "../../lib/storage";
+
+// 🧩 hooks e libs
+import useChecklistProgress from "@/lib/hooks/useChecklistProgress.js";
+import { get, keys } from "@/lib/storage.js";
+
+// 🧱 componentes existentes
+import PlannerWeekly from "@/components/PlannerWeekly.jsx";
+
+// 🆕 componentes de integração Planner x Checklist
 import PlannerWeeklyNotes from "@/components/PlannerWeeklyNotes";
 import PlannerNotesPeek from "@/components/PlannerNotesPeek";
-
 
 const PROFILE_KEY = (keys && keys.profile) || "m360:profile";
 
@@ -102,7 +107,8 @@ export default function MeuDiaPage() {
       {/* Saudação */}
       <section className="mx-auto max-w-5xl px-5 pt-8">
         <h1 className="text-[28px] md:text-[36px] font-bold text-[#1A2240]">
-          {greeting}, <span className="text-[#1A2240]">{displayName}</span> <span>👋</span>
+          {greeting}, <span className="text-[#1A2240]">{displayName}</span>{" "}
+          <span>👋</span>
         </h1>
         <p className="mt-2 text-[#1A2240]/60 text-lg md:text-xl">
           Atalhos do dia
@@ -111,17 +117,48 @@ export default function MeuDiaPage() {
 
       <DailyMessage />
 
-      {/* Planner semanal */}
+      {/* 👀 Visão rápida da semana (notas + progresso do checklist de cada dia) */}
+      <section className="mx-auto max-w-5xl px-5 mt-2">
+        <PlannerNotesPeek />
+      </section>
+
+      {/* Planner semanal (componente anterior, mantido) */}
       <section className="mx-auto max-w-5xl px-5 pt-4">
         <PlannerWeekly />
       </section>
 
+      {/* 🗓️ Planner semanal com notas por dia + resumo do checklist do dia selecionado */}
+      <section className="mx-auto max-w-5xl px-5 mt-4">
+        <h2 className="text-lg font-semibold mb-2">Planner</h2>
+        <PlannerWeeklyNotes />
+      </section>
+
       {/* Grid de Atalhos */}
       <section className="mx-auto max-w-5xl px-5 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <Card emoji="📅" title="Planner da Família" subtitle="Organize suas tarefas" href="/meu-dia/planner" />
-        <Card emoji="✅" title="Checklist do Dia" subtitle={`${percent}% concluído hoje`} href="/meu-dia/checklist" />
-        <Card emoji="🎨" title="Atividade do Dia" subtitle="Brincadeira educativa" href="/brincar" />
-        <Card emoji="🌿" title="Momento para Mim" subtitle="Pausa e autocuidado" href="/cuidar" />
+        <Card
+          emoji="📅"
+          title="Planner da Família"
+          subtitle="Organize suas tarefas"
+          href="/meu-dia/planner"
+        />
+        <Card
+          emoji="✅"
+          title="Checklist do Dia"
+          subtitle={`${percent}% concluído hoje`}
+          href="/meu-dia/checklist"
+        />
+        <Card
+          emoji="🎨"
+          title="Atividade do Dia"
+          subtitle="Brincadeira educativa"
+          href="/brincar"
+        />
+        <Card
+          emoji="🌿"
+          title="Momento para Mim"
+          subtitle="Pausa e autocuidado"
+          href="/cuidar"
+        />
       </section>
 
       {/* Humor do dia (teaser) */}
@@ -130,13 +167,25 @@ export default function MeuDiaPage() {
           <h2 className="text-xl md:text-2xl font-semibold text-[#1A2240]">
             Como você está hoje?
           </h2>
-          <p className="mt-1 text-[#1A2240]/60 text-sm">Registre seu humor no Eu360</p>
+          <p className="mt-1 text-[#1A2240]/60 text-sm">
+            Registre seu humor no Eu360
+          </p>
           <div className="mt-4 flex items-center gap-3 md:gap-4">
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😞</span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😐</span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">🙂</span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">😊</span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">🤩</span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+              😞
+            </span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+              😐
+            </span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+              🙂
+            </span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+              😊
+            </span>
+            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+              🤩
+            </span>
           </div>
           <div className="mt-4">
             <Link
