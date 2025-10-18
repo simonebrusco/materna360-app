@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import PlannerQuickIdeas from "./PlannerQuickIdeas";
 import ShareDayButtons from "./ShareDayButtons";
+import { getPlannerNotes, setPlannerNote } from "@/lib/persistM360";
 
 /** ========= Helpers locais (sem dependências externas) ========= */
 const K_NOTES = "m360:planner_notes";
 const K_HISTORY = "m360:checklist_history";
+const PROFILE_KEY = "m360:profile";
 const WD = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
 const MONTHS = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 
@@ -23,6 +25,15 @@ function writeJSON(key, val){
   if(!isBrowser()) return;
   localStorage.setItem(key, JSON.stringify(val));
   try{ window.dispatchEvent(new CustomEvent("m360:planner:changed")); }catch{}
+}
+function getUserId(){
+  if(!isBrowser()) return null;
+  try{
+    const raw = localStorage.getItem(PROFILE_KEY);
+    const p = raw ? JSON.parse(raw) : {};
+    // se no futuro você salvar p.userId, ele será usado automaticamente
+    return p?.userId || null;
+  }catch{ return null; }
 }
 
 function mondayOf(d=new Date()){
@@ -50,6 +61,24 @@ export default function PlannerWeeklyNotes(){
   const [notes, setNotes] = useState(()=> readJSON(K_NOTES, {}));
   const [history, setHistory] = useState(()=> readJSON(K_HISTORY, {}));
   const [text, setText] = useState(notes[todayKey] ?? "");
+  const userId = useMemo(()=>getUserId(),[]);
+
+  // carregar notas do Supabase (merge com local) ao montar
+  useEffect(()=>{
+    let active = true;
+    (async () => {
+      try{
+        const all = await getPlannerNotes(userId /* null => apenas local */);
+        if (active && all && typeof all === "object") {
+          setNotes(all);
+          // manter texto do dia selecionado sincronizado
+          setText(all[selectedKey] ?? "");
+        }
+      }catch{/* silencioso */}
+    })();
+    return ()=>{ active = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]); // roda quando o userId existir
 
   // sincroniza quando houver mudanças externas
   useEffect(()=>{
@@ -63,21 +92,33 @@ export default function PlannerWeeklyNotes(){
     };
   },[]);
 
-  // trocar de dia: persiste o texto anterior e carrega o novo
-  function selectDay(k){
+  // trocar de dia: persiste o texto anterior (local + supa) e carrega o novo
+  async function selectDay(k){
     if(k===selectedKey) return;
-    const nextNotes = { ...notes, [selectedKey]: text };
-    setNotes(nextNotes);
-    writeJSON(K_NOTES, nextNotes);
+    const prevKey = selectedKey;
+    const prevText = text;
+
+    // persiste o dia anterior
+    if (prevKey) {
+      // atualiza local imediatamente
+      const nextLocal = { ...notes, [prevKey]: prevText };
+      setNotes(nextLocal);
+      writeJSON(K_NOTES, nextLocal);
+      // dispara persistência opcional no Supabase (fallback para local já está garantido)
+      await setPlannerNote(userId, prevKey, prevText);
+    }
+
     setSelectedKey(k);
-    setText(nextNotes[k] ?? "");
+    setText((notes[k] ?? ""));
   }
 
-  function save(){
+  async function save(){
     const next = { ...notes, [selectedKey]: text };
     setNotes(next);
     writeJSON(K_NOTES, next);
+    await setPlannerNote(userId, selectedKey, text);
   }
+
   function clearDay(){
     if(!confirm("Limpar as anotações deste dia?")) return;
     const next = { ...notes };
@@ -85,7 +126,10 @@ export default function PlannerWeeklyNotes(){
     setNotes(next);
     writeJSON(K_NOTES, next);
     setText("");
+    // opcional: persistir vazio no Supabase (mantive simples; se quiser excluir remoto, me avisa)
+    setPlannerNote(userId, selectedKey, "");
   }
+
   async function copyDay(){
     try{
       await navigator.clipboard.writeText(text || "");
@@ -93,14 +137,15 @@ export default function PlannerWeeklyNotes(){
     }catch{ alert("Não foi possível copiar."); }
   }
 
-  // ⤵️ novo: adicionar texto ao bloco de notas de hoje (usado pelo PlannerQuickIdeas)
-  function appendToNotes(extra){
+  // ⤵️ adicionar texto ao bloco de notas e persistir
+  async function appendToNotes(extra){
     const current = text ? (text.endsWith("\n") ? text : text + "\n") : "";
     const nextText = current + String(extra || "");
     setText(nextText);
     const next = { ...notes, [selectedKey]: nextText };
     setNotes(next);
     writeJSON(K_NOTES, next);
+    await setPlannerNote(userId, selectedKey, nextText);
   }
 
   const selectedDate = useMemo(()=>{
@@ -144,6 +189,7 @@ export default function PlannerWeeklyNotes(){
         <textarea
           value={text}
           onChange={e=>setText(e.target.value)}
+          onBlur={save} // salva ao sair do textarea (prático e discreto)
           placeholder="Anote compromissos, lembretes ou ideias…"
           className="mt-1 w-full min-h-[110px] rounded-lg border p-2"
         />
