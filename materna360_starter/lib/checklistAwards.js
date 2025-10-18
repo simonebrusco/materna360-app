@@ -1,29 +1,60 @@
-// lib/checklistAwards.js
-// Dispara eventos de gamificação quando certos itens do checklist são marcados.
+// lib/awards.js
+// Registro leve de conquistas locais baseado no evento global "m360:win".
+// Formato salvo: { items: [{ id, ts, label, emoji }], lastTs }
 
-const AWARD_IDS = new Set([
-  "respirar", // 1 min de respiração
-  "momento",  // um momento com meu filho
-  // adicione mais IDs se necessário
-]);
+const K = "m360:awards_log";
 
-export function handleChecklistAward({ id, willCheck }) {
-  // evita rodar no SSR
-  if (typeof window === "undefined") return;
+const LABELS = {
+  respirar: { label: "Respiração concluída", emoji: "🌬️" },
+  momento:  { label: "Momento com o filho",  emoji: "💛" },
+  gratidao: { label: "Gratidão registrada",  emoji: "🌼" },
+  mentoria: { label: "Mentoria realizada",    emoji: "🎯" },
+};
+
+export function readAwards() {
   try {
-    if (willCheck && AWARD_IDS.has(id)) {
-      window.dispatchEvent(
-        new CustomEvent("m360:win", {
-          detail: { source: "checklist", id }
-        })
-      );
-    }
-    // manter histórico em sincronia
-    window.dispatchEvent(new CustomEvent("m360:checklist:changed"));
+    const raw = localStorage.getItem(K);
+    return raw ? JSON.parse(raw) : { items: [], lastTs: 0 };
   } catch {
-    // silencioso
+    return { items: [], lastTs: 0 };
   }
 }
 
-// export default opcional, caso algum import use default
-export default { handleChecklistAward };
+export function writeAwards(state) {
+  try {
+    localStorage.setItem(K, JSON.stringify(state));
+    safeDispatch("m360:awards:changed");
+  } catch {}
+}
+
+export function pushAward(id, ts = Date.now()) {
+  const meta = LABELS[id] || { label: `Conquista: ${id}`, emoji: "🏅" };
+  const s = readAwards();
+  s.items.unshift({ id, ts, label: meta.label, emoji: meta.emoji });
+  s.items = dedupeKeepRecent(s.items).slice(0, 50);
+  s.lastTs = ts;
+  writeAwards(s);
+}
+
+export function handleWinEvent(detail) {
+  // detail: { source?: string, id: string, ts?: number }
+  if (!detail || !detail.id) return;
+  pushAward(detail.id, detail.ts || Date.now());
+}
+
+/* ===== helpers ===== */
+function dedupeKeepRecent(arr) {
+  const seen = new Set();
+  const out = [];
+  for (const it of arr) {
+    const key = `${it.id}-${new Date(it.ts).toDateString()}`; // 1 por dia/ID
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(it);
+    }
+  }
+  return out;
+}
+function safeDispatch(name) {
+  try { window.dispatchEvent(new CustomEvent(name)); } catch {}
+}
