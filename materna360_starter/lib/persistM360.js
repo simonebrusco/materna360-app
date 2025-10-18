@@ -1,7 +1,7 @@
 // lib/persistM360.js
 // Persistência de Planner (notes) e Awards com fallback automático para localStorage.
 
-import { getSupabase } from "./supaClient.js"; // ✅ extensão .js é obrigatória no Next 13/14 com ESM
+import { getSupabase } from "@/lib/supaClient"; // ✅ usa alias @ para evitar erro de caminho
 
 // ===== LocalStorage helpers =====
 const K_NOTES = "m360:planner_notes";   // { "yyyy-mm-dd": "texto\n..." }
@@ -18,8 +18,6 @@ function writeLS(key, val){
 }
 
 // ===== Supabase tables =====
-// public.planner_notes(user_id text, day text, notes text, updated_at timestamptz, PK(user_id,day))
-// public.awards_log  (user_id text, id text, ts timestamptz, label text, emoji text, PK(user_id,id,ts))
 const TB_NOTES = "planner_notes";
 const TB_AWARDS = "awards_log";
 
