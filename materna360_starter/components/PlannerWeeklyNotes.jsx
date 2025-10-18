@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import PlannerQuickIdeas from "./PlannerQuickIdeas";
 
 /** ========= Helpers locais (sem dependências externas) ========= */
-const K_NOTES = "m360:planner_notes";              // { "yyyy-mm-dd": "texto\n..." }
-const K_HISTORY = "m360:checklist_history";        // { "yyyy-mm-dd": { items:[{id,label,done}], progress, ... } }
+const K_NOTES = "m360:planner_notes";
+const K_HISTORY = "m360:checklist_history";
 const WD = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
 const MONTHS = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 
@@ -91,6 +92,16 @@ export default function PlannerWeeklyNotes(){
     }catch{ alert("Não foi possível copiar."); }
   }
 
+  // ⤵️ novo: adicionar texto ao bloco de notas de hoje (usado pelo PlannerQuickIdeas)
+  function appendToNotes(extra){
+    const current = text ? (text.endsWith("\n") ? text : text + "\n") : "";
+    const nextText = current + String(extra || "");
+    setText(nextText);
+    const next = { ...notes, [selectedKey]: nextText };
+    setNotes(next);
+    writeJSON(K_NOTES, next);
+  }
+
   const selectedDate = useMemo(()=>{
     const [y,m,d] = selectedKey.split("-").map(n=>parseInt(n,10));
     return new Date(y, m-1, d, 12,0,0,0);
@@ -139,6 +150,9 @@ export default function PlannerWeeklyNotes(){
           <button onClick={copyDay}  className="px-3 py-2 rounded-lg border">Copiar</button>
           <button onClick={save}     className="px-3 py-2 rounded-lg bg-[#ff005e] text-white">Salvar</button>
         </div>
+
+        {/* 🔮 IA: Gerar ideias e adicionar ao bloco de notas */}
+        <PlannerQuickIdeas dayKey={selectedKey} onAppend={appendToNotes} />
       </div>
 
       {/* resumo do checklist do dia */}
