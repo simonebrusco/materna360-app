@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { setPlannerNote } from "@/lib/persistM360";
+import Button from "@/components/Button";
 
 const PROFILE_KEY = "m360:profile";
 const K_NOTES = "m360:planner_notes";
@@ -32,7 +33,9 @@ function readNotes() {
 }
 function writeNotes(map) {
   localStorage.setItem(K_NOTES, JSON.stringify(map));
-  try { window.dispatchEvent(new CustomEvent("m360:planner:changed")); } catch {}
+  try {
+    window.dispatchEvent(new CustomEvent("m360:planner:changed"));
+  } catch {}
 }
 
 /**
@@ -62,7 +65,9 @@ export default function SaveToPlannerButton({
       const line = `• Atividade: ${title}`;
       const notes = readNotes();
       const prev = notes[dk] ? String(notes[dk]) : "";
-      const already = prev.split("\n").some((l) => l.trim().startsWith("• Atividade:"));
+      const already = prev
+        .split("\n")
+        .some((l) => l.trim().startsWith("• Atividade:"));
       const nextText = already
         ? prev.replace(/(^|\n)• Atividade:.*$/m, `\n${line}`).trim()
         : (prev ? prev + "\n" : "") + line;
@@ -74,24 +79,29 @@ export default function SaveToPlannerButton({
       // sincroniza remoto (fallback local automático)
       await setPlannerNote(userId, dk, nextText);
 
-      try { alert("Atividade salva no Planner!"); } catch {}
+      try {
+        alert("Atividade salva no Planner!");
+      } catch {}
       onDone?.();
     } catch {
-      try { alert("Não foi possível salvar agora."); } catch {}
+      try {
+        alert("Não foi possível salvar agora.");
+      } catch {}
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <button
+    <Button
+      variant="primary"
+      size="md"
       onClick={handleSave}
       disabled={loading || !title}
-      className={
-        `px-4 py-2 rounded-xl bg-[#ff005e] text-white disabled:opacity-60 ${className}`.trim()
-      }
+      aria-busy={loading ? "true" : "false"}
+      className={className}
     >
       {loading ? "Salvando..." : label}
-    </button>
+    </Button>
   );
 }
