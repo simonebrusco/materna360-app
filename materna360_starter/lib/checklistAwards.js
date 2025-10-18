@@ -1,60 +1,63 @@
-// lib/awards.js
-// Registro leve de conquistas locais baseado no evento global "m360:win".
-// Formato salvo: { items: [{ id, ts, label, emoji }], lastTs }
+// lib/checklistAwards.js
+// Compat: fornece handleChecklistAward sem imports estáticos.
+// Mantém gamificação local (evento m360:win) e tenta (best-effort) persistir/ sincronizar.
 
-const K = "m360:awards_log";
-
-const LABELS = {
-  respirar: { label: "Respiração concluída", emoji: "🌬️" },
-  momento:  { label: "Momento com o filho",  emoji: "💛" },
-  gratidao: { label: "Gratidão registrada",  emoji: "🌼" },
-  mentoria: { label: "Mentoria realizada",    emoji: "🎯" },
-};
-
-export function readAwards() {
+export function handleChecklistAward({
+  id = "checklist",
+  title = "Checklist do Dia",
+  points = 1,
+  ts = Date.now(),
+} = {}) {
+  // 1) Dispara evento global para a engine de badges (sem depender de nada externo)
   try {
-    const raw = localStorage.getItem(K);
-    return raw ? JSON.parse(raw) : { items: [], lastTs: 0 };
-  } catch {
-    return { items: [], lastTs: 0 };
-  }
-}
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("m360:win", {
+          detail: { id, source: "checklist", title, points, ts },
+        })
+      );
+    }
+  } catch {}
 
-export function writeAwards(state) {
+  // 2) Tenta gravar no storage/engine local (se existir)
   try {
-    localStorage.setItem(K, JSON.stringify(state));
-    safeDispatch("m360:awards:changed");
+    import("./persistM360.js").then((m) => {
+      if (m?.appendAward) {
+        m.appendAward({
+          kind: "heart",
+          title,
+          points,
+          ts,
+          meta: { from: "checklist", id },
+        });
+      }
+    });
+  } catch {}
+
+  // 3) Tenta sincronizar no Supabase (best-effort e totalmente opcional)
+  //    Não usar import estático aqui!
+  try {
+    import("./supaClient").then(async (m) => {
+      const client = m?.getSupabase?.() || m?.supabase || null;
+      if (!client) return; // sem ENV, ignora
+
+      try {
+        await client.from("awards_log").insert([
+          {
+            id: String(id),
+            label: String(title || "Checklist do Dia"),
+            emoji: "✅",
+            ts,
+            source: "checklist",
+            points,
+          },
+        ]);
+      } catch {
+        // silencioso — não quebrar fluxo
+      }
+    });
   } catch {}
 }
 
-export function pushAward(id, ts = Date.now()) {
-  const meta = LABELS[id] || { label: `Conquista: ${id}`, emoji: "🏅" };
-  const s = readAwards();
-  s.items.unshift({ id, ts, label: meta.label, emoji: meta.emoji });
-  s.items = dedupeKeepRecent(s.items).slice(0, 50);
-  s.lastTs = ts;
-  writeAwards(s);
-}
-
-export function handleWinEvent(detail) {
-  // detail: { source?: string, id: string, ts?: number }
-  if (!detail || !detail.id) return;
-  pushAward(detail.id, detail.ts || Date.now());
-}
-
-/* ===== helpers ===== */
-function dedupeKeepRecent(arr) {
-  const seen = new Set();
-  const out = [];
-  for (const it of arr) {
-    const key = `${it.id}-${new Date(it.ts).toDateString()}`; // 1 por dia/ID
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push(it);
-    }
-  }
-  return out;
-}
-function safeDispatch(name) {
-  try { window.dispatchEvent(new CustomEvent(name)); } catch {}
-}
+// Export default opcional para importações antigas
+export default { handleChecklistAward };
