@@ -1,51 +1,52 @@
 "use client";
 
-import clsx from "clsx";
+import React from "react";
 
 /**
- * Button — Variantes: primary | secondary | ghost
- * - Altura mínima 44–48px
- * - Radius 16px
- * - Acessível (foco visível, área de toque)
+ * Button — Materna360 (Soft Luxury)
+ * Variants: primary | secondary | ghost
+ * Sizes: sm | md | lg
+ * Props comuns: type, disabled, className, children, ...rest
  */
 export default function Button({
-  as: Tag = "button",
   variant = "primary",
   size = "md",
-  className,
+  block = false,
+  className = "",
   children,
-  ...props
+  ...rest
 }) {
   const base =
-    "inline-flex items-center justify-center select-none whitespace-nowrap " +
-    "rounded-[var(--r-lg)] font-semibold tracking-wide " +
-    "transition-all duration-300 ease-[var(--ease-soft)] " +
-    "focus:outline-none focus-visible:m360-focus m360-touch";
+    "inline-flex items-center justify-center gap-2 rounded-[var(--r-lg)] transition-all duration-300 ease-[var(--ease-soft)] focus:outline-none focus-visible:m360-focus select-none";
 
-  const sizes = {
-    sm: "h-11 px-4 text-sm",
-    md: "h-12 px-5 text-base",
+  const byVariant = {
+    primary:
+      "bg-[var(--m360-primary)] text-[var(--m360-white)] shadow-[var(--elev-1)] hover:shadow-[var(--elev-2)] active:scale-[1.02]",
+    secondary:
+      "bg-[var(--m360-white)] text-[var(--m360-navy)] m360-card-border shadow-[var(--elev-1)] hover:shadow-[var(--elev-2)] active:scale-[1.02]",
+    ghost:
+      "bg-transparent text-[var(--m360-navy)] underline underline-offset-4 hover:no-underline",
+  };
+
+  const bySize = {
+    sm: "h-10 px-4 text-sm",  // ≥ 40px; nosso alvo mínimo está no md
+    md: "h-[var(--touch-min)] px-5 text-base", // 44px
     lg: "h-14 px-6 text-base",
   };
 
-  const variants = {
-    primary:
-      "bg-[var(--m360-primary)] text-white shadow-[var(--elev-1)] " +
-      "hover:shadow-[var(--elev-2)] active:scale-[1.02]",
-    secondary:
-      "bg-[var(--m360-white)] text-[var(--m360-navy)] border border-m360-navy " +
-      "hover:shadow-[var(--elev-1)] active:scale-[1.02]",
-    ghost:
-      "bg-transparent text-[var(--m360-navy)] underline-offset-4 " +
-      "hover:underline active:scale-[1.01]",
-  };
+  const disabledCls =
+    "disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100";
+
+  const width = block ? "w-full" : "";
 
   return (
-    <Tag
-      className={clsx(base, sizes[size], variants[variant], className)}
-      {...props}
+    <button
+      className={[base, byVariant[variant] || byVariant.primary, bySize[size] || bySize.md, disabledCls, width, className]
+        .filter(Boolean)
+        .join(" ")}
+      {...rest}
     >
       {children}
-    </Tag>
+    </button>
   );
 }
