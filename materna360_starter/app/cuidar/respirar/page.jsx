@@ -1,7 +1,6 @@
-// app/cuidar/respirar/page.jsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import BreathCircle from "@/components/BreathCircle";
 
@@ -9,107 +8,119 @@ const TOTAL = 60; // segundos
 
 export default function RespirarPage() {
   const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0); // 0..TOTAL
-  const rafRef = useRef(null);
-  const startRef = useRef(null);
-  const carriedRef = useRef(0); // acumula quando pausa/retoma
+  const [left, setLeft] = useState(TOTAL);
+  const tickRef = useRef(null);
 
-  // formata mm:ss
-  const mmss = useMemo(() => {
-    const left = Math.max(0, TOTAL - Math.floor(elapsed));
-    const m = String(Math.floor(left / 60)).padStart(2, "0");
-    const s = String(left % 60).padStart(2, "0");
-    return `${m}:${s}`;
-  }, [elapsed]);
+  // segundos já decorridos (0..TOTAL) — usado pelo seu BreathCircle
+  const elapsed = Math.min(TOTAL, Math.max(0, TOTAL - left));
 
   useEffect(() => {
     if (!running) return;
-    // start timestamp
-    startRef.current = performance.now();
-    const tick = (t) => {
-      const deltaSec = (t - startRef.current) / 1000;
-      const next = Math.min(TOTAL, carriedRef.current + deltaSec);
-      setElapsed(next);
-      if (next >= TOTAL) {
-        setRunning(false);
-        carriedRef.current = 0;
-        // 🔔 gamificação
-        try {
-          window.dispatchEvent(
-            new CustomEvent("m360:win", { detail: { source: "respirar", id: "respirar" } })
-          );
-        } catch {}
-        return;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    tickRef.current = setInterval(() => {
+      setLeft((s) => {
+        const next = s - 1;
+        if (next <= 0) {
+          clearInterval(tickRef.current);
+          // gamificação existente
+          try {
+            window.dispatchEvent(
+              new CustomEvent("m360:win", { detail: { source: "respirar", id: "respirar" } })
+            );
+          } catch {}
+          setRunning(false);
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(tickRef.current);
   }, [running]);
 
   function start() {
-    if (running) return;
+    setLeft(TOTAL);
     setRunning(true);
   }
-  function pause() {
-    if (!running) return;
+  function stop() {
     setRunning(false);
-    carriedRef.current = elapsed; // guarda progresso
-  }
-  function reset() {
-    setRunning(false);
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    carriedRef.current = 0;
-    setElapsed(0);
+    setLeft(TOTAL);
   }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-rose-100 to-rose-50">
       <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
-        <Link href="/meu-dia" className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm">
+        <Link
+          href="/meu-dia"
+          className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm"
+        >
           ← Meu Dia
         </Link>
-        <Link href="/cuidar" className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm">
-          Cuidar
+        <div className="text-sm md:text-base font-medium text-[#1A2240]/70">Cuidar</div>
+        <Link
+          href="/cuidar"
+          className="rounded-full bg-white px-4 py-1.5 text-sm ring-1 ring-black/5 shadow-sm"
+        >
+          Voltar
         </Link>
       </header>
 
-      <section className="mx-auto max-w-md px-5 pt-8 pb-28">
+      <section className="mx-auto max-w-5xl px-5 pt-6 pb-28">
         <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6">
           <h1 className="text-2xl md:text-3xl font-bold text-[#1A2240]">Respirar</h1>
-          <p className="mt-1 text-[#1A2240]/60">Um minuto para você — inspire, segure, expire.</p>
+          <p className="mt-1 text-[#1A2240]/60">
+            Siga o círculo: Inspire, Segure, Expire. 60s de respiração gentil.
+          </p>
 
-          {/* 🔵 círculo sincronizado */}
-          <div className="mt-6 flex justify-center">
-            <BreathCircle total={TOTAL} elapsed={elapsed} size={200} />
+          {/* usa seu BreathCircle (elapsed/total) */}
+          <div className="mt-6 grid place-items-center">
+            <BreathCircle total={TOTAL} elapsed={elapsed} size={220} />
           </div>
 
-          {/* cronômetro */}
-          <div className="mt-4 text-center text-3xl font-semibold text-[#1A2240] tabular-nums">
-            {mmss}
-          </div>
+          {/* timer + controles */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+            <div className="rounded-xl bg-white ring-1 ring-black/5 p-4 text-center">
+              <div className="text-xs opacity-60">Tempo</div>
+              <div className="text-3xl font-semibold tabular-nums">
+                {String(Math.floor(left / 60)).padStart(2, "0")}:
+                {String(left % 60).padStart(2, "0")}
+              </div>
+            </div>
 
-          {/* controles */}
-          <div className="mt-6 flex items-center justify-center gap-3">
-            {!running ? (
-              <button onClick={start} className="px-4 py-2 rounded-xl bg-[#ff005e] text-white">
-                Iniciar
+            <div className="flex gap-2 justify-center md:col-span-2">
+              {!running ? (
+                <button
+                  onClick={start}
+                  className="px-4 py-2 rounded-xl bg-[#ff005e] text-white"
+                >
+                  Iniciar 60s
+                </button>
+              ) : (
+                <button
+                  onClick={stop}
+                  className="px-4 py-2 rounded-xl bg-white border border-slate-200"
+                >
+                  Parar
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  try {
+                    window.dispatchEvent(
+                      new CustomEvent("m360:toast", { detail: { message: "Dica: faça 2 ciclos hoje 💛" } })
+                    );
+                  } catch {}
+                }}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200"
+              >
+                Dica
               </button>
-            ) : (
-              <button onClick={pause} className="px-4 py-2 rounded-xl bg-white border border-slate-200">
-                Pausar
-              </button>
-            )}
-            <button onClick={reset} className="px-4 py-2 rounded-xl bg-white border border-slate-200">
-              Reiniciar
-            </button>
+            </div>
           </div>
 
-          {/* dica respiratória */}
-          <div className="mt-6 text-sm text-[#1A2240]/70 text-center">
-            Dica: respire pelo nariz em 4s, segure 4s e solte pela boca em 4s.
+          <hr className="my-6 border-black/10" />
+
+          <div className="text-sm text-slate-600 space-y-1">
+            <p><strong>Ritmo de referência:</strong> 4s inspirar · 2s segurar · 6s expirar.</p>
+            <p>O círculo acompanha o tempo total e a fase respiratória visual.</p>
           </div>
         </div>
       </section>
