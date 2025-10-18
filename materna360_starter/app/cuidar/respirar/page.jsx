@@ -1,18 +1,73 @@
+// materna360_starter/app/cuidar/respirar/page.jsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
 import BreathCircle from "@/components/BreathCircle";
+import { setPlannerNote } from "@/lib/persistM360.js"; // ✅ alias estável no Vercel
 
 const TOTAL = 60; // segundos
+const PROFILE_KEY = "m360:profile";
+const K_NOTES = "m360:planner_notes";
+
+function todayKey() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+function getProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+function readNotes() {
+  try {
+    const raw = localStorage.getItem(K_NOTES);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+function writeNotes(map) {
+  try {
+    localStorage.setItem(K_NOTES, JSON.stringify(map));
+    window.dispatchEvent(new CustomEvent("m360:planner:changed"));
+  } catch {}
+}
 
 export default function RespirarPage() {
   const [running, setRunning] = useState(false);
   const [left, setLeft] = useState(TOTAL);
   const tickRef = useRef(null);
 
-  // segundos já decorridos (0..TOTAL) — usado pelo seu BreathCircle
-  const elapsed = Math.min(TOTAL, Math.max(0, TOTAL - left));
+  // segundos já decorridos (0..TOTAL) — usado pelo BreathCircle
+  const elapsed = useMemo(() => Math.min(TOTAL, Math.max(0, TOTAL - left)), [left]);
+
+  // salva no Planner quando concluir 60s
+  async function saveBreathToPlanner() {
+    const dk = todayKey();
+    const profile = getProfile();
+    const userId = profile?.userId || null;
+
+    const map = readNotes();
+    const prev = String(map[dk] || "");
+    const line = "• Respiração concluída (60s)";
+    const already = prev.split("\n").some((l) => l.trim().startsWith("• Respiração concluída"));
+
+    const nextText = already ? prev : (prev ? prev + "\n" : "") + line;
+
+    // salva local imediato
+    const nextMap = { ...map, [dk]: nextText };
+    writeNotes(nextMap);
+
+    // sincroniza remoto (fallback local automático no persistM360)
+    await setPlannerNote(userId, dk, nextText);
+  }
 
   useEffect(() => {
     if (!running) return;
@@ -21,12 +76,23 @@ export default function RespirarPage() {
         const next = s - 1;
         if (next <= 0) {
           clearInterval(tickRef.current);
+
           // gamificação existente
           try {
             window.dispatchEvent(
               new CustomEvent("m360:win", { detail: { source: "respirar", id: "respirar" } })
             );
           } catch {}
+
+          // ✅ salva no Planner + toast
+          saveBreathToPlanner().finally(() => {
+            try {
+              window.dispatchEvent(
+                new CustomEvent("m360:toast", { detail: { message: "Respiração salva no Planner 💛" } })
+              );
+            } catch {}
+          });
+
           setRunning(false);
           return 0;
         }
@@ -70,7 +136,7 @@ export default function RespirarPage() {
             Siga o círculo: Inspire, Segure, Expire. 60s de respiração gentil.
           </p>
 
-          {/* usa seu BreathCircle (elapsed/total) */}
+          {/* círculo sincronizado ao timer */}
           <div className="mt-6 grid place-items-center">
             <BreathCircle total={TOTAL} elapsed={elapsed} size={220} />
           </div>
@@ -101,18 +167,12 @@ export default function RespirarPage() {
                   Parar
                 </button>
               )}
-              <button
-                onClick={() => {
-                  try {
-                    window.dispatchEvent(
-                      new CustomEvent("m360:toast", { detail: { message: "Dica: faça 2 ciclos hoje 💛" } })
-                    );
-                  } catch {}
-                }}
+              <Link
+                href="/meu-dia/planner"
                 className="px-4 py-2 rounded-xl bg-white border border-slate-200"
               >
-                Dica
-              </button>
+                Abrir Planner
+              </Link>
             </div>
           </div>
 
@@ -120,7 +180,7 @@ export default function RespirarPage() {
 
           <div className="text-sm text-slate-600 space-y-1">
             <p><strong>Ritmo de referência:</strong> 4s inspirar · 2s segurar · 6s expirar.</p>
-            <p>O círculo acompanha o tempo total e a fase respiratória visual.</p>
+            <p>Ao concluir, salvamos no Planner do dia: “Respiração concluída (60s)”.</p>
           </div>
         </div>
       </section>
