@@ -66,8 +66,9 @@
    Aplicar em páginas sandbox: class="m360-screen-bg"
    -------------------------------- */
 .m360-screen-bg {
+  /* Base suave: #ffd8e6 com saturação ~10% + overlay branco 0.6 */
   background:
-    linear-gradient(180deg, #ffffff 0%, rgba(255,216,230,0.85) 100%),
+    linear-gradient(180deg, #ffffff 0%, rgba(255,216,230,0.12) 100%),
     radial-gradient(1200px 800px at 50% -200px, rgba(255,255,255,0.6), rgba(255,255,255,0));
   background-blend-mode: screen, normal;
 }
@@ -78,6 +79,14 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 -2px 16px rgba(0,0,0,.06);
+}
+
+/* Fallback elegante quando não houver suporte a backdrop-filter */
+@supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+  .m360-glass {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(47,58,86,.08);
+  }
 }
 
 /* Optional card border */
@@ -113,6 +122,17 @@
 }
 .m360-animate-pulse {
   animation: m360-heart-pulse 380ms var(--ease-soft) both;
+}
+
+/* Acessibilidade: reduzir animações quando o usuário preferir menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  .m360-animate-in,
+  .m360-animate-dissolve,
+  .m360-animate-pulse {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .m360-animate-pulse { transform: none !important; }
 }
 
 /* Badge spec (tempo/idade/local) */
