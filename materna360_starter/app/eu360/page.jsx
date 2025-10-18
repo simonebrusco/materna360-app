@@ -7,7 +7,7 @@ import GlassCard from "../../components/GlassCard";
 import MoodCheckin from "../../components/MoodCheckin";
 import BadgesLastFive from "../../components/BadgesLastFive.jsx";
 import ProfileCard from "../../components/ProfileCard";
-import { get, set, keys } from "../../lib/storage";
+import { get, keys } from "../../lib/storage";
 import Eu360ReportCTA from "@/components/Eu360ReportCTA";
 
 /* ----------------------- hooks auxiliares ----------------------- */
@@ -16,11 +16,34 @@ function useWeeklyMinutes() {
 
   useEffect(() => {
     const k = keys.minutes || "m360:minutes";
-    const cur = get(k, { meditation: 0, breath: 0 });
-    setMinutes({
-      meditation: Number(cur.meditation || 0),
-      breath: Number(cur.breath || 0),
-    });
+
+    const read = () => {
+      const cur = get(k, { meditation: 0, breath: 0 });
+      setMinutes({
+        meditation: Number(cur.meditation || 0),
+        breath: Number(cur.breath || 0),
+      });
+    };
+
+    // carga inicial
+    read();
+
+    // eventos internos do app
+    const onEvt = () => read();
+    window.addEventListener("m360:minutes:changed", onEvt);
+    window.addEventListener("m360:planner:changed", onEvt);
+
+    // cross-tab (outra aba alterando localStorage)
+    const onStorage = (e) => {
+      if (e.key === k) read();
+    };
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("m360:minutes:changed", onEvt);
+      window.removeEventListener("m360:planner:changed", onEvt);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   return minutes;
@@ -45,7 +68,7 @@ function GratitudeBlock() {
     const k = keys.gratitudes || "m360:gratitudes";
     const arr = Array.isArray(get(k, [])) ? get(k, []) : [];
     const next = [...arr, { text: v, date: new Date().toISOString() }];
-    set(k, next);
+    localStorage.setItem(k, JSON.stringify(next));
     setItems(next.slice(-8).reverse());
     setText("");
 
