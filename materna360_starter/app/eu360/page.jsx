@@ -8,6 +8,7 @@ import MoodCheckin from "../../components/MoodCheckin";
 import BadgesLastFive from "../../components/BadgesLastFive.jsx";
 import ProfileCard from "../../components/ProfileCard";
 import { get, set, keys } from "../../lib/storage";
+import Eu360ReportCTA from "@/components/Eu360ReportCTA";
 
 /* ----------------------- hooks auxiliares ----------------------- */
 function useWeeklyMinutes() {
