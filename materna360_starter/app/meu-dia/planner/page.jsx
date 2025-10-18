@@ -1,5 +1,7 @@
 // materna360_starter/app/meu-dia/planner/page.jsx
 "use client";
+<PlannerBreathCTA className="mt-4" />
+
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
