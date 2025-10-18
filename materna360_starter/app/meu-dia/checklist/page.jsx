@@ -6,7 +6,8 @@ import useChecklistProgress, { todayStr, tid } from "../../../lib/hooks/useCheck
 import { get, set } from "../../../lib/storage.js";
 import ChecklistDay from "../../../components/ChecklistDay.jsx";
 import { formatFullDatePtBR } from "../../../lib/date.js";
-import { handleChecklistAward } from "../../../lib/checklistAwards.js"; // ✅ integração gamificação
+import { handleChecklistAward } from "../../../lib/checklistAwards.js";
+import { exportHistoryToPlanner, clearChecklistHistory } from "../../../lib/checklistTools.js"; // ✅ novo
 
 export default function ChecklistPage() {
   const { defs, done, percent, toggleToday } = useChecklistProgress();
@@ -48,6 +49,20 @@ export default function ChecklistPage() {
     alert("Checklist salvo no Planner!");
   }
 
+  // exporta todo o histórico para o Planner (em lote)
+  function onExportAll() {
+    const count = exportHistoryToPlanner();
+    alert(count > 0
+      ? `Histórico exportado/atualizado para ${count} dia(s) no Planner.`
+      : "Nada para exportar: o Planner já está sincronizado com o histórico.");
+  }
+
+  // limpa TODO o histórico com confirmação
+  function onClearHistory() {
+    const ok = clearChecklistHistory();
+    if (ok) alert("Histórico do Checklist limpo com sucesso.");
+  }
+
   return (
     <main className="max-w-5xl mx-auto px-5 py-6">
       <header className="flex items-center justify-between mb-5">
@@ -79,7 +94,7 @@ export default function ChecklistPage() {
           const onToggle = () => {
             const willCheck = !checked;
             toggleToday(it.id);
-            handleChecklistAward({ id: it.id, willCheck }); // ✅ dispara “m360:win”
+            handleChecklistAward({ id: it.id, willCheck });
           };
 
           return (
@@ -114,12 +129,27 @@ export default function ChecklistPage() {
           Limpar marcações de hoje
         </button>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={saveToPlanner}
             className="px-4 py-2 rounded-xl bg-white border border-slate-200"
           >
             Salvar no Planner
+          </button>
+
+          {/* ✅ novos botões */}
+          <button
+            onClick={onExportAll}
+            className="px-4 py-2 rounded-xl bg-white border border-slate-200"
+          >
+            Exportar histórico → Planner
+          </button>
+
+          <button
+            onClick={onClearHistory}
+            className="px-4 py-2 rounded-xl bg-white border border-rose-200 text-rose-600"
+          >
+            Limpar histórico
           </button>
 
           <Link
