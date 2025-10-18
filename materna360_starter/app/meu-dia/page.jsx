@@ -11,7 +11,7 @@ import { get, keys } from "@/lib/storage.js";
 // 🧱 componentes existentes
 import PlannerWeekly from "@/components/PlannerWeekly.jsx";
 
-// 🆕 componentes de integração Planner x Checklist
+// 🆕 integração Planner x Checklist
 import PlannerWeeklyNotes from "@/components/PlannerWeeklyNotes";
 import PlannerNotesPeek from "@/components/PlannerNotesPeek";
 
@@ -50,7 +50,7 @@ function Card({ emoji, title, subtitle, href = "#" }) {
   );
 }
 
-// Mensagem do dia
+// Mensagem do dia (rotativa diária)
 function DailyMessage() {
   const msgs = [
     "Respire fundo — você está fazendo o seu melhor 💛",
@@ -69,7 +69,6 @@ function DailyMessage() {
     const day = Math.floor(diff / oneDay);
     return day % msgs.length;
   }, [msgs.length]);
-  const text = msgs[index];
 
   return (
     <section className="mx-auto max-w-5xl px-5 mt-4">
@@ -83,7 +82,9 @@ function DailyMessage() {
         <div className="text-sm text-[color:var(--m360-navy)]/60 mb-1">
           Mensagem do dia
         </div>
-        <p className="text-[var(--m360-navy)] text-lg md:text-xl">{text}</p>
+        <p className="text-[var(--m360-navy)] text-lg md:text-xl">
+          {msgs[index]}
+        </p>
       </div>
     </section>
   );
@@ -131,8 +132,7 @@ export default function MeuDiaPage() {
       {/* Saudação */}
       <section className="mx-auto max-w-5xl px-5 pt-8">
         <h1 className="text-[28px] md:text-[36px] font-bold text-[var(--m360-navy)]">
-          {greeting}, <span className="text-[var(--m360-navy)]">{displayName}</span>{" "}
-          <span>👋</span>
+          {greeting}, <span className="text-[var(--m360-navy)]">{displayName}</span> 👋
         </h1>
         <p className="mt-2 text-[color:var(--m360-navy)]/60 text-lg md:text-xl">
           Atalhos do dia
@@ -141,7 +141,7 @@ export default function MeuDiaPage() {
 
       <DailyMessage />
 
-      {/* 👀 Visão rápida da semana */}
+      {/* 👀 Visão rápida da semana (notas + progresso) */}
       <section className="mx-auto max-w-5xl px-5 mt-2">
         <PlannerNotesPeek />
       </section>
@@ -151,7 +151,7 @@ export default function MeuDiaPage() {
         <PlannerWeekly />
       </section>
 
-      {/* 🗓️ Planner + resumo do dia */}
+      {/* 🗓️ Planner semanal com notas + resumo do dia selecionado */}
       <section className="mx-auto max-w-5xl px-5 mt-4">
         <h2 className="text-lg font-semibold mb-2 text-[var(--m360-navy)]">
           Planner
@@ -170,11 +170,18 @@ export default function MeuDiaPage() {
       {/* Humor do dia (teaser) */}
       <section className="mx-auto max-w-5xl px-5 pt-6 pb-28">
         <div className="rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] p-5 md:p-6 m360-animate-in">
-          <h2 className="text-xl md:text-2xl font-semibold text-[var(--m360-navy)]">Como você está hoje?</h2>
-          <p className="mt-1 text-[color:var(--m360-navy)]/60 text-sm">Registre seu humor no Eu360</p>
+          <h2 className="text-xl md:text-2xl font-semibold text-[var(--m360-navy)]">
+            Como você está hoje?
+          </h2>
+          <p className="mt-1 text-[color:var(--m360-navy)]/60 text-sm">
+            Registre seu humor no Eu360
+          </p>
           <div className="mt-4 flex items-center gap-3 md:gap-4">
-            {["😞","😐","🙂","😊","🤩"].map((e) => (
-              <span key={e} className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
+            {["😞", "😐", "🙂", "😊", "🤩"].map((e) => (
+              <span
+                key={e}
+                className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl"
+              >
                 {e}
               </span>
             ))}
