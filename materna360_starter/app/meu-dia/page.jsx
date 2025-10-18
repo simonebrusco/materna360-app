@@ -22,16 +22,27 @@ function Card({ emoji, title, subtitle, href = "#" }) {
   return (
     <Link
       href={href}
-      className="block rounded-2xl bg-white ring-1 ring-black/5 shadow-sm hover:shadow-md transition-shadow p-5 md:p-6"
+      className={[
+        "block",
+        "rounded-[var(--r-lg)]",
+        "bg-[var(--m360-white)]",
+        "m360-card-border",
+        "shadow-[var(--elev-1)] hover:shadow-[var(--elev-2)]",
+        "transition-all duration-300 ease-[var(--ease-soft)]",
+        "p-5 md:p-6",
+        "m360-animate-in",
+      ].join(" ")}
     >
       <div className="flex items-start gap-3">
         <div className="text-2xl leading-none">{emoji}</div>
         <div>
-          <h3 className="text-lg md:text-xl font-semibold text-[#1A2240]">
+          <h3 className="text-lg md:text-xl font-semibold text-[var(--m360-navy)]">
             {title}
           </h3>
           {subtitle ? (
-            <p className="text-sm md:text-base text-[#1A2240]/60">{subtitle}</p>
+            <p className="text-sm md:text-base text-[color:var(--m360-navy)]/60">
+              {subtitle}
+            </p>
           ) : null}
         </div>
       </div>
@@ -62,9 +73,17 @@ function DailyMessage() {
 
   return (
     <section className="mx-auto max-w-5xl px-5 mt-4">
-      <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-4 md:p-5">
-        <div className="text-sm text-[#1A2240]/60 mb-1">Mensagem do dia</div>
-        <p className="text-[#1A2240] text-lg md:text-xl">{text}</p>
+      <div
+        className={[
+          "rounded-[var(--r-lg)] bg-[var(--m360-white)]",
+          "m360-card-border shadow-[var(--elev-1)]",
+          "p-4 md:p-5 m360-animate-in",
+        ].join(" ")}
+      >
+        <div className="text-sm text-[color:var(--m360-navy)]/60 mb-1">
+          Mensagem do dia
+        </div>
+        <p className="text-[var(--m360-navy)] text-lg md:text-xl">{text}</p>
       </div>
     </section>
   );
@@ -90,15 +109,21 @@ export default function MeuDiaPage() {
   const displayName = motherName?.trim() || "Mãe";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-rose-100 to-rose-50">
+    {/* Fundo global já vem do layout (m360-screen-bg). Mantemos apenas containers aqui. */}
+    <main className="min-h-screen">
       {/* Topbar */}
       <header className="mx-auto max-w-5xl px-5 pt-6 flex items-center justify-between">
-        <div className="text-sm md:text-base font-medium text-[#1A2240]/70">
-          Materna<strong className="text-rose-500">360</strong>
+        <div className="text-sm md:text-base font-medium text-[color:var(--m360-navy)]/70">
+          Materna<strong className="text-[var(--m360-primary)]">360</strong>
         </div>
         <Link
           href="/eu360"
-          className="rounded-full bg-white px-4 py-1.5 text-sm md:text-base ring-1 ring-black/5 shadow-sm"
+          className={[
+            "rounded-[999px] bg-[var(--m360-white)]",
+            "px-4 py-1.5 text-sm md:text-base",
+            "m360-card-border shadow-[var(--elev-1)] hover:shadow-[var(--elev-2)]",
+            "transition-all duration-300 ease-[var(--ease-soft)]",
+          ].join(" ")}
         >
           Eu360
         </Link>
@@ -106,11 +131,11 @@ export default function MeuDiaPage() {
 
       {/* Saudação */}
       <section className="mx-auto max-w-5xl px-5 pt-8">
-        <h1 className="text-[28px] md:text-[36px] font-bold text-[#1A2240]">
-          {greeting}, <span className="text-[#1A2240]">{displayName}</span>{" "}
+        <h1 className="text-[28px] md:text-[36px] font-bold text-[var(--m360-navy)]">
+          {greeting}, <span className="text-[var(--m360-navy)]">{displayName}</span>{" "}
           <span>👋</span>
         </h1>
-        <p className="mt-2 text-[#1A2240]/60 text-lg md:text-xl">
+        <p className="mt-2 text-[color:var(--m360-navy)]/60 text-lg md:text-xl">
           Atalhos do dia
         </p>
       </section>
@@ -129,7 +154,9 @@ export default function MeuDiaPage() {
 
       {/* 🗓️ Planner semanal com notas por dia + resumo do checklist do dia selecionado */}
       <section className="mx-auto max-w-5xl px-5 mt-4">
-        <h2 className="text-lg font-semibold mb-2">Planner</h2>
+        <h2 className="text-lg font-semibold mb-2 text-[var(--m360-navy)]">
+          Planner
+        </h2>
         <PlannerWeeklyNotes />
       </section>
 
@@ -163,34 +190,40 @@ export default function MeuDiaPage() {
 
       {/* Humor do dia (teaser) */}
       <section className="mx-auto max-w-5xl px-5 pt-6 pb-28">
-        <div className="rounded-2xl bg-white/80 ring-1 ring-black/5 shadow-sm p-5 md:p-6">
-          <h2 className="text-xl md:text-2xl font-semibold text-[#1A2240]">
+        <div className="rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] p-5 md:p-6 m360-animate-in">
+          <h2 className="text-xl md:text-2xl font-semibold text-[var(--m360-navy)]">
             Como você está hoje?
           </h2>
-          <p className="mt-1 text-[#1A2240]/60 text-sm">
+          <p className="mt-1 text-[color:var(--m360-navy)]/60 text-sm">
             Registre seu humor no Eu360
           </p>
           <div className="mt-4 flex items-center gap-3 md:gap-4">
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
               😞
             </span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
               😐
             </span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
               🙂
             </span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
               😊
             </span>
-            <span className="rounded-full bg-white ring-1 ring-black/5 shadow-sm px-3 py-2 text-xl">
+            <span className="rounded-full bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] px-3 py-2 text-xl">
               🤩
             </span>
           </div>
           <div className="mt-4">
             <Link
               href="/eu360"
-              className="inline-flex items-center gap-2 rounded-xl bg-white ring-1 ring-black/5 px-4 py-2 text-sm hover:shadow"
+              className={[
+                "inline-flex items-center gap-2",
+                "rounded-[var(--r-lg)] bg-[var(--m360-white)]",
+                "m360-card-border px-4 py-2 text-sm",
+                "shadow-[var(--elev-1)] hover:shadow-[var(--elev-2)]",
+                "transition-all duration-300 ease-[var(--ease-soft)]",
+              ].join(" ")}
             >
               Abrir Eu360 →
             </Link>
