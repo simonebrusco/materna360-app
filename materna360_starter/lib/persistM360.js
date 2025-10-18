@@ -1,11 +1,11 @@
 // lib/persistM360.js
 // Persistência de Planner (notes) e Awards com fallback automático para localStorage.
 
-import { getSupabase } from "./supaClient";
+import { getSupabase } from "./supaClient.js"; // ✅ extensão .js é obrigatória no Next 13/14 com ESM
 
 // ===== LocalStorage helpers =====
 const K_NOTES = "m360:planner_notes";   // { "yyyy-mm-dd": "texto\n..." }
-const K_AWARDS = "m360:awards_log";      // { items: [{id, ts, label, emoji}], lastTs: number }
+const K_AWARDS = "m360:awards_log";     // { items: [{id, ts, label, emoji}], lastTs: number }
 
 function isBrowser(){ return typeof window !== "undefined"; }
 function readLS(key, fb){
@@ -17,38 +17,16 @@ function writeLS(key, val){
   localStorage.setItem(key, JSON.stringify(val));
 }
 
-// ===== Supabase schemas esperados (não obriga existência) =====
-// Tabelas sugeridas (crie quando quiser):
-// create table if not exists planner_notes (
-//   user_id text not null,
-//   day text not null,          -- 'yyyy-mm-dd'
-//   notes text,
-//   updated_at timestamptz default now(),
-//   primary key (user_id, day)
-// );
-// create table if not exists awards_log (
-//   user_id text not null,
-//   id text not null,
-//   ts timestamptz not null default now(),
-//   label text,
-//   emoji text,
-//   primary key (user_id, id, ts)
-// );
-
+// ===== Supabase tables =====
+// public.planner_notes(user_id text, day text, notes text, updated_at timestamptz, PK(user_id,day))
+// public.awards_log  (user_id text, id text, ts timestamptz, label text, emoji text, PK(user_id,id,ts))
 const TB_NOTES = "planner_notes";
 const TB_AWARDS = "awards_log";
 
 // ===== Public API (Planner) =====
-
-/**
- * Carrega todas as notas do Planner do usuário.
- * Se userId faltar, usa somente localStorage.
- * Faz merge Supabase->Local sem sobrescrever notas mais novas no local.
- */
 export async function getPlannerNotes(userId) {
   const local = readLS(K_NOTES, {});
   const supa = getSupabase();
-
   if (!userId || !supa) return local;
 
   try {
@@ -63,12 +41,10 @@ export async function getPlannerNotes(userId) {
     for (const row of data) {
       const day = row.day;
       const notes = row.notes || "";
-      // se não existe local ou local está vazio, traz do Supabase
       if (!merged[day] || String(merged[day]).trim().length === 0) {
         merged[day] = notes;
       }
     }
-    // salva merge local (não escreve nada no Supabase aqui)
     writeLS(K_NOTES, merged);
     return merged;
   } catch {
@@ -76,18 +52,12 @@ export async function getPlannerNotes(userId) {
   }
 }
 
-/**
- * Define/atualiza a nota de um dia. Sempre atualiza localStorage.
- * Se Supabase estiver configurado e houver userId, faz upsert na tabela.
- */
 export async function setPlannerNote(userId, dayKey, text) {
-  // 1) Local
   const local = readLS(K_NOTES, {});
   local[dayKey] = String(text || "");
   writeLS(K_NOTES, local);
   safeDispatch("m360:planner:changed");
 
-  // 2) Supabase (opcional)
   const supa = getSupabase();
   if (!userId || !supa) return { ok: true, via: "local" };
 
@@ -102,12 +72,7 @@ export async function setPlannerNote(userId, dayKey, text) {
   }
 }
 
-/**
- * Exporta várias notas de uma vez (ex.: merge do histórico para o Planner).
- * Recebe objeto { "yyyy-mm-dd": "texto" }. Atualiza local e tenta upsert em lote.
- */
 export async function upsertPlannerNotes(userId, notesMap) {
-  // Local
   const local = readLS(K_NOTES, {});
   const merged = { ...local, ...(notesMap || {}) };
   writeLS(K_NOTES, merged);
@@ -130,11 +95,9 @@ export async function upsertPlannerNotes(userId, notesMap) {
 }
 
 // ===== Public API (Awards / Conquistas) =====
-
 export async function getAwardsLog(userId) {
   const local = readLS(K_AWARDS, { items: [], lastTs: 0 });
   const supa = getSupabase();
-
   if (!userId || !supa) return local;
 
   try {
@@ -146,7 +109,6 @@ export async function getAwardsLog(userId) {
 
     if (error || !Array.isArray(data)) return local;
 
-    // merge superficial: mantemos os locais e acrescentamos os remotos que não existem
     const existingKeys = new Set(local.items.map(i => `${i.id}-${new Date(i.ts).toISOString()}`));
     const mergedItems = [...local.items];
 
@@ -170,13 +132,7 @@ export async function getAwardsLog(userId) {
   }
 }
 
-/**
- * Acrescenta uma conquista (também usada quando “m360:win” é emitido).
- * Se houver Supabase e userId, grava a linha remota.
- * award = { id, ts(ms), label, emoji }
- */
 export async function appendAward(userId, award) {
-  // Local
   const s = readLS(K_AWARDS, { items: [], lastTs: 0 });
   s.items.unshift({
     id: award.id,
@@ -209,7 +165,6 @@ export async function appendAward(userId, award) {
 
 // ===== Helpers =====
 function safeDispatch(name){ try{ if(isBrowser()) window.dispatchEvent(new CustomEvent(name)); }catch{} }
-
 function dedupeDailyPerId(arr){
   const seen = new Set(); const out=[];
   for (const it of arr){
