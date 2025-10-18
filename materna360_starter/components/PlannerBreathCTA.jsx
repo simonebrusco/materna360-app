@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Button from "@/components/Button";
 
 const K_NOTES = "m360:planner_notes";
 
@@ -31,11 +32,15 @@ export default function PlannerBreathCTA({ className = "" }) {
   useEffect(() => {
     check();
     const onAny = () => check();
-    window.addEventListener("m360:planner:changed", onAny);
-    window.addEventListener("m360:checklist:changed", onAny);
+    try {
+      window.addEventListener("m360:planner:changed", onAny);
+      window.addEventListener("m360:checklist:changed", onAny);
+    } catch {}
     return () => {
-      window.removeEventListener("m360:planner:changed", onAny);
-      window.removeEventListener("m360:checklist:changed", onAny);
+      try {
+        window.removeEventListener("m360:planner:changed", onAny);
+        window.removeEventListener("m360:checklist:changed", onAny);
+      } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -44,22 +49,34 @@ export default function PlannerBreathCTA({ className = "" }) {
 
   return (
     <div
-      className={`rounded-xl bg-white ring-1 ring-black/5 shadow-sm p-4 flex items-center justify-between ${className}`}
       role="status"
       aria-live="polite"
+      className={[
+        "rounded-[var(--r-lg)] bg-[var(--m360-white)]",
+        "m360-card-border shadow-[var(--elev-1)] p-4",
+        "flex items-center justify-between gap-4",
+        "m360-animate-in",
+        className,
+      ].join(" ")}
     >
       <div className="flex items-center gap-3">
-        <span className="text-2xl" aria-hidden>✅</span>
+        <span className="text-2xl" aria-hidden>
+          ✅
+        </span>
         <div>
-          <div className="font-medium text-[#1A2240]">Respiração já registrada hoje</div>
-          <div className="text-sm text-[#1A2240]/60">Parabéns por cumprir seus 60s 💛</div>
+          <div className="font-medium text-[var(--m360-navy)]">
+            Respiração já registrada hoje
+          </div>
+          <div className="text-sm text-[color:var(--m360-navy)]/60">
+            Parabéns por cumprir seus 60s 💛
+          </div>
         </div>
       </div>
-      <Link
-        href="/meu-dia/planner"
-        className="px-3 py-1.5 rounded-lg bg-[#ff005e] text-white text-sm"
-      >
-        Ver no Planner
+
+      <Link href="/meu-dia/planner">
+        <Button variant="primary" size="sm" aria-label="Ver registro no Planner">
+          Ver no Planner
+        </Button>
       </Link>
     </div>
   );
