@@ -1,14 +1,15 @@
 // materna360_starter/app/meu-dia/planner/page.jsx
 "use client";
-<PlannerBreathCTA className="mt-4" />
-
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import AppBar from "../../../components/AppBar";
-import { get, set, keys } from "../../../lib/storage";
-import { toast } from "../../../lib/toast";
+
+import AppBar from "@/components/AppBar";
 import PlannerBreathCTA from "@/components/PlannerBreathCTA";
+import Button from "@/components/Button";
+
+import { get, set, keys } from "@/lib/storage";
+import { toast } from "@/lib/toast";
 
 // ----- tipos e helpers ------------------------------------------------------
 const DEFAULT_PLANNER = { casa: [], filhos: [], eu: [] };
@@ -29,7 +30,7 @@ function ProgressBar({ value }) {
   return (
     <div className="w-full h-3 rounded-full bg-black/5 ring-1 ring-black/5 overflow-hidden">
       <div
-        className="h-full bg-[var(--brand)] transition-all"
+        className="h-full bg-[var(--m360-primary)] transition-all"
         style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
       />
     </div>
@@ -44,20 +45,21 @@ function Row({ item, onToggle, onDelete }) {
         onClick={() => onToggle(item.id)}
         className={`h-5 w-5 rounded-md border transition shadow-sm ${
           item.done
-            ? "bg-[var(--brand)] border-[var(--brand)]"
-            : "bg-white border-black/10"
+            ? "bg-[var(--m360-primary)] border-[var(--m360-primary)]"
+            : "bg-[var(--m360-white)] border-black/10"
         }`}
         aria-label="Marcar concluído"
       />
-      <div className={`flex-1 text-sm ${item.done ? "line-through text-slate-400" : "text-slate-800"}`}>
+      <div
+        className={`flex-1 text-sm ${
+          item.done ? "line-through text-[color:var(--m360-navy)]/40" : "text-[var(--m360-navy)]"
+        }`}
+      >
         {item.title}
       </div>
-      <button
-        onClick={() => onDelete(item.id)}
-        className="text-xs px-2 py-1 rounded-lg bg-white ring-1 ring-black/10 hover:bg-black/5"
-      >
+      <Button variant="secondary" size="sm" onClick={() => onDelete(item.id)}>
         Remover
-      </button>
+      </Button>
     </div>
   );
 }
@@ -86,10 +88,7 @@ export default function PlannerPage() {
 
   // listas e progresso
   const currentList = data[tab] || [];
-  const { total, done, percent } = useMemo(
-    () => calcProgress(currentList),
-    [currentList]
-  );
+  const { total, done, percent } = useMemo(() => calcProgress(currentList), [currentList]);
 
   const overall = useMemo(() => {
     const merged = [...data.casa, ...data.filhos, ...data.eu];
@@ -99,9 +98,7 @@ export default function PlannerPage() {
   // ações
   function toggle(id) {
     setData((prev) => {
-      const list = (prev[tab] || []).map((i) =>
-        i.id === id ? { ...i, done: !i.done } : i
-      );
+      const list = (prev[tab] || []).map((i) => (i.id === id ? { ...i, done: !i.done } : i));
       const next = { ...prev, [tab]: list };
 
       // toast de feedback
@@ -153,16 +150,26 @@ export default function PlannerPage() {
     <main className="max-w-3xl mx-auto px-5 pb-28">
       <AppBar title="Planner da Família" backHref="/meu-dia" />
 
+      {/* CTA de respiração/pausa (glass) */}
+      <section
+        className={[
+          "mt-4 rounded-[var(--r-lg)] bg-[var(--m360-white)]",
+          "m360-card-border shadow-[var(--elev-1)] p-4",
+        ].join(" ")}
+      >
+        <PlannerBreathCTA />
+      </section>
+
       {/* Resumo geral */}
-      <section className="mt-4 rounded-2xl bg-white ring-1 ring-black/5 p-4 shadow-sm">
+      <section className="mt-4 rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border p-4 shadow-[var(--elev-1)]">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <div className="text-sm text-slate-500">Progresso geral</div>
-            <div className="text-2xl font-semibold">{overall.percent}%</div>
+            <div className="text-sm text-[color:var(--m360-navy)]/60">Progresso geral</div>
+            <div className="text-2xl font-semibold text-[var(--m360-navy)]">{overall.percent}%</div>
           </div>
           <div className="min-w-[50%]">
             <ProgressBar value={overall.percent} />
-            <div className="mt-1 text-xs text-slate-500">
+            <div className="mt-1 text-xs text-[color:var(--m360-navy)]/60">
               {overall.done} de {overall.total} concluídas
             </div>
           </div>
@@ -171,34 +178,39 @@ export default function PlannerPage() {
 
       {/* Tabs */}
       <nav className="mt-4 grid grid-cols-3 gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`px-3 py-2 rounded-xl ring-1 ring-black/10 transition ${
-              tab === t.id
-                ? "bg-[var(--brand)] text-white"
-                : "bg-white hover:bg-black/5"
-            }`}
-          >
-            <span className="mr-1">{t.emoji}</span>
-            {t.label}
-          </button>
-        ))}
+        {TABS.map((t) => {
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={[
+                "px-3 py-2 rounded-[var(--r-lg)] transition",
+                active
+                  ? "bg-[var(--m360-primary)] text-white"
+                  : "bg-[var(--m360-soft)] text-[var(--m360-navy)]",
+                "shadow-[var(--elev-1)] hover:shadow-[var(--elev-2)]",
+              ].join(" ")}
+            >
+              <span className="mr-1">{t.emoji}</span>
+              {t.label}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Progresso da aba */}
-      <section className="mt-3 rounded-2xl bg-white ring-1 ring-black/5 p-4 shadow-sm">
+      <section className="mt-3 rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border p-4 shadow-[var(--elev-1)]">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-[color:var(--m360-navy)]/60">
               {TABS.find((t) => t.id === tab)?.label}
             </div>
-            <div className="text-xl font-semibold">{percent}%</div>
+            <div className="text-xl font-semibold text-[var(--m360-navy)]">{percent}%</div>
           </div>
           <div className="min-w-[50%]">
             <ProgressBar value={percent} />
-            <div className="mt-1 text-xs text-slate-500">
+            <div className="mt-1 text-xs text-[color:var(--m360-navy)]/60">
               {done} de {total} concluídas
             </div>
           </div>
@@ -211,30 +223,22 @@ export default function PlannerPage() {
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           placeholder="Adicionar tarefa..."
-          className="flex-1 rounded-xl bg-white ring-1 ring-black/10 px-3 py-2 text-sm"
+          className="flex-1 rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border px-3 py-2 text-sm text-[var(--m360-navy)]"
         />
-        <button
-          type="submit"
-          className="rounded-xl px-4 py-2 text-sm bg-[var(--brand)] text-white"
-        >
+        <Button type="submit" variant="primary" size="md">
           Adicionar
-        </button>
+        </Button>
       </form>
 
       {/* Lista */}
-      <section className="mt-2 rounded-2xl bg-white ring-1 ring-black/5 p-2 md:p-3 shadow-sm">
+      <section className="mt-2 rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border p-2 md:p-3 shadow-[var(--elev-1)]">
         {currentList.length === 0 ? (
-          <div className="p-4 text-sm text-slate-500">
+          <div className="p-4 text-sm text-[color:var(--m360-navy)]/60">
             Sem itens por aqui. Que tal adicionar um agora? 🙂
           </div>
         ) : (
           currentList.map((it) => (
-            <Row
-              key={it.id}
-              item={it}
-              onToggle={toggle}
-              onDelete={removeItem}
-            />
+            <Row key={it.id} item={it} onToggle={toggle} onDelete={removeItem} />
           ))
         )}
       </section>
@@ -243,7 +247,7 @@ export default function PlannerPage() {
       <div className="mt-6 flex justify-end">
         <Link
           href="/meu-dia/checklist"
-          className="text-sm px-3 py-2 rounded-xl bg-white ring-1 ring-black/10 hover:bg-black/5"
+          className="text-sm px-3 py-2 rounded-[var(--r-lg)] bg-[var(--m360-white)] m360-card-border shadow-[var(--elev-1)] hover:shadow-[var(--elev-2)] transition-all"
         >
           Abrir Checklist do Dia →
         </Link>
