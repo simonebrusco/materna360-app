@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Button from "@/components/Button";
 
 /**
  * Botões de compartilhamento do conteúdo do dia.
@@ -14,9 +15,10 @@ export default function ShareDayButtons({ dayKey, title, notes, checklistEntry }
   const textToShare = useMemo(() => {
     const lines = [];
     lines.push(`Dia ${title} (${dayKey})`);
-    const progress = (typeof checklistEntry?.progress === "number")
-      ? Math.max(0, Math.min(100, Math.round(checklistEntry.progress)))
-      : inferProgress(checklistEntry);
+    const progress =
+      typeof checklistEntry?.progress === "number"
+        ? Math.max(0, Math.min(100, Math.round(checklistEntry.progress)))
+        : inferProgress(checklistEntry);
     lines.push(`Checklist: ${progress}% concluído`);
     if (Array.isArray(checklistEntry?.items) && checklistEntry.items.length) {
       lines.push("");
@@ -58,24 +60,22 @@ export default function ShareDayButtons({ dayKey, title, notes, checklistEntry }
   }
 
   function shareWhatsApp() {
-    // usa API de URL para evitar problemas com encoding
-    const url = new URL("https://wa.me/");
-    url.searchParams.set("text", textToShare);
-    // abre em nova aba/guia
-    window.open(url.toString(), "_blank", "noopener,noreferrer");
+    // encoding seguro; funciona com app e web
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(textToShare)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <button onClick={shareNative} className="px-3 py-1.5 rounded-md border">
+    <div className="flex flex-wrap gap-3">
+      <Button variant="secondary" onClick={shareNative} aria-label="Compartilhar resumo do dia">
         Compartilhar
-      </button>
-      <button onClick={shareWhatsApp} className="px-3 py-1.5 rounded-md border">
+      </Button>
+      <Button variant="primary" onClick={shareWhatsApp} aria-label="Compartilhar no WhatsApp">
         WhatsApp
-      </button>
-      <button onClick={copy} className="px-3 py-1.5 rounded-md border">
+      </Button>
+      <Button variant="ghost" onClick={copy} aria-label="Copiar texto do dia">
         Copiar texto
-      </button>
+      </Button>
     </div>
   );
 }
