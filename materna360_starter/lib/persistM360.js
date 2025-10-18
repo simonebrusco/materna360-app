@@ -2,7 +2,7 @@
 // lib/persistM360.js
 // Persistência de Planner (notes) e Awards com fallback automático para localStorage.
 
-import { getSupabase } from "@/lib/supaClient"; // ✅ alias estável
+import { getSupabase } from "@/lib/supaClient.js"; // ✅ aponta direto para o arquivo .js
 
 // ===== LocalStorage helpers =====
 const K_NOTES = "m360:planner_notes";   // { "yyyy-mm-dd": "texto\n..." }
