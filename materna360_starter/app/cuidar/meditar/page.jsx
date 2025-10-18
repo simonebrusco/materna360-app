@@ -1,15 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AppBar from "../../../components/AppBar";
 import GlassCard from "../../../components/GlassCard";
+import MiniAudioPlayer from "@/components/MiniAudioPlayer";
 import { get, set, keys } from "../../../lib/storage";
+import { setPlannerNote } from "@/lib/persistM360.js"; // grava Planner (local + Supabase)
 
+/**
+ * Coloque seus MP3 em /public/audio e ajuste os 'src' abaixo.
+ * Se 'src' estiver ausente ou falhar, fazemos fallback e registramos mesmo assim.
+ */
 const TRACKS = [
-  { id: "calma-3",  title: "Calma em 3 minutos",       minutes: 3 },
-  { id: "foco-5",   title: "Foco gentil (5 min)",      minutes: 5 },
-  { id: "sono-8",   title: "Acalmar para dormir (8)",  minutes: 8 },
+  { id: "calma-3", title: "Calma em 3 minutos",      minutes: 3,  src: "/audio/calma-3.mp3" },
+  { id: "foco-5",  title: "Foco gentil (5 min)",     minutes: 5,  src: "/audio/foco-5.mp3" },
+  { id: "sono-8",  title: "Acalmar para dormir (8)", minutes: 8,  src: "/audio/sono-8.mp3" },
 ];
+
+const PROFILE_KEY = "m360:profile";
+const K_NOTES = "m360:planner_notes";
+
+function todayKey() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+function getProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+function readNotes() {
+  try {
+    const raw = localStorage.getItem(K_NOTES);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+function writeNotes(map) {
+  try {
+    localStorage.setItem(K_NOTES, JSON.stringify(map));
+    window.dispatchEvent(new CustomEvent("m360:planner:changed"));
+  } catch {}
+}
 
 function addMinutes(minutes) {
   const kMin = keys.minutes || "m360:minutes";
@@ -23,39 +62,136 @@ function addMinutes(minutes) {
   log.push({ type: "meditation", minutes, date: new Date().toISOString() });
   set(kLog, log);
 
-  if (typeof window !== "undefined") {
+  try {
     window.dispatchEvent(new CustomEvent("m360:win", { detail: { type: "badge", name: "Cuidar de Mim" } }));
     window.dispatchEvent(new CustomEvent("m360:toast", { detail: { message: `+${minutes} min de meditação 🌿` } }));
-  }
+  } catch {}
+}
+
+async function saveMeditationToPlanner(minutes) {
+  const dk = todayKey();
+  const profile = getProfile();
+  const userId = profile?.userId || null;
+
+  const map = readNotes();
+  const prev = String(map[dk] || "");
+  const line = `• Meditação concluída (${minutes} min)`;
+  const already = prev.split("\n").some((l) => l.trim().startsWith(`• Meditação concluída (${minutes} min)`));
+  const nextText = already ? prev : (prev ? prev + "\n" : "") + line;
+
+  const nextMap = { ...map, [dk]: nextText };
+  writeNotes(nextMap);
+  await setPlannerNote(userId, dk, nextText);
 }
 
 export default function MeditarPage() {
-  const [playing, setPlaying] = useState(null);
+  const [playing, setPlaying] = useState(null);   // track.id ou null
+  const [active, setActive] = useState(null);     // track object ou null
+  const audioRef = useRef(null);
 
-  function onPlay(t) {
-    setPlaying(t.id);
-    // Aqui você pode integrar o áudio real. Por enquanto, simulamos fim imediato:
-    addMinutes(t.minutes);
+  const finishFlow = async (track, reason = "ended") => {
+    addMinutes(track.minutes);
+    await saveMeditationToPlanner(track.minutes);
+    try {
+      window.dispatchEvent(
+        new CustomEvent("m360:toast", {
+          detail: {
+            message:
+              reason === "error"
+                ? "Áudio indisponível — progresso salvo mesmo assim 💛"
+                : reason === "manual"
+                ? "Concluído manualmente — salvo no Planner 💛"
+                : "Meditação salva no Planner 💛",
+          },
+        })
+      );
+    } catch {}
     setPlaying(null);
-  }
+    setActive(null);
+  };
+
+  const onPlay = async (t) => {
+    // se não houver src, registramos imediatamente (fallback)
+    if (!t.src) {
+      await finishFlow(t, "nosrc");
+      return;
+    }
+    try {
+      let el = audioRef.current;
+      if (!el) return;
+      el.pause();
+      el.src = t.src;
+      el.currentTime = 0;
+
+      // zera handlers anteriores
+      el.onended = null;
+      el.onerror = null;
+
+      el.onended = () => finishFlow(t, "ended");
+      el.onerror = () => finishFlow(t, "error");
+
+      setActive(t);
+      setPlaying(t.id);
+      await el.play();
+    } catch {
+      await finishFlow(t, "error");
+    }
+  };
+
+  const onStop = () => {
+    const el = audioRef.current;
+    try { el?.pause(); } catch {}
+    setPlaying(null);
+    setActive(null);
+  };
+
+  const onConcludeNow = async () => {
+    const t = active;
+    if (!t) return;
+    try {
+      const el = audioRef.current;
+      el?.pause();
+    } catch {}
+    await finishFlow(t, "manual");
+  };
 
   return (
     <main className="max-w-5xl mx-auto px-5 pb-24">
       <AppBar title="Meditar" backHref="/cuidar" />
+
+      {/* player oculto (controlado) */}
+      <audio ref={audioRef} preload="auto" className="hidden" />
+
+      {/* CTA mini player visível quando estiver tocando alguma faixa */}
+      {active && playing && (
+        <section className="mt-4">
+          <MiniAudioPlayer
+            audioRef={audioRef}
+            title={active.title}
+            onStop={onStop}
+            onConcludeNow={onConcludeNow}
+          />
+        </section>
+      )}
+
       <section className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
         {TRACKS.map((t) => (
           <GlassCard key={t.id} className="p-4 flex items-center justify-between">
             <div>
               <div className="font-medium">{t.title}</div>
-              <div className="text-sm opacity-60">{t.minutes} min</div>
+              <div className="text-sm opacity-60">
+                {t.minutes} min {t.src ? "" : "• (sem arquivo — fallback)"}
+              </div>
             </div>
-            <button
-              onClick={() => onPlay(t)}
-              className="btn btn-primary min-w-[110px]"
-              disabled={playing === t.id}
-            >
-              {playing === t.id ? "Tocando..." : "Tocar"}
-            </button>
+            {playing === t.id ? (
+              <button onClick={onStop} className="btn bg-white border border-slate-200 min-w-[110px]">
+                Parar
+              </button>
+            ) : (
+              <button onClick={() => onPlay(t)} className="btn btn-primary min-w-[110px]">
+                Tocar
+              </button>
+            )}
           </GlassCard>
         ))}
       </section>
