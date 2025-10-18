@@ -1,0 +1,15 @@
+{
+  "name": "materna360-root",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "install-deps": "npm ci --prefix materna360_starter || npm install --prefix materna360_starter",
+    "dev": "npm run dev --prefix materna360_starter",
+    "build": "npm run build --prefix materna360_starter",
+    "start": "npm run start --prefix materna360_starter",
+    "lint": "npm run lint --prefix materna360_starter"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
